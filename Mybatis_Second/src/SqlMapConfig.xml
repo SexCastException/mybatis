@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+    
+    <!-- 加载外部文件 -->
+    <properties resource="db.properties">
+    </properties>
+    
+    <!-- 全局参数配置 -->
+    <settings>
+        <!-- 全局性设置懒加载，默认为false -->
+       <setting name="lazyLoadingEnabled" value="true"/> 
+       <!-- 当设置为‘true’的时候，懒加载的对象可能被任何懒属性全部加载。否则，每个属性都按需加载,默认为true -->
+       <setting name="aggressiveLazyLoading" value="false"/>
+       <!-- 开启二级缓存,对在此配置文件下的所有cache 进行全局性开/关设置，默认为true,显示设置为了更好的可读性 -->
+       <setting name="cacheEnabled" value="true"/>
+    </settings>
+    
+    <!-- 指定包下的类,定义别名 -->
+    <typeAliases>
+        <package name="com.example.mybatis.onetoone.bean" />
+    </typeAliases>
+    
+	<environments default="development">
+		<environment id="development">
+			<!-- 使用jdbc事务管理 -->
+			<transactionManager type="JDBC" />
+			<!-- 数据库连接池 -->
+			<dataSource type="POOLED">
+				<property name="driver" value="${jdbc.driver}" />
+				<property name="url" value="${jdbc.url}" />
+				<property name="username" value="${jdbc.username}" />
+				<property name="password" value="${jdbc.password}" />
+			</dataSource>
+		</environment>
+	</environments>
+	
+	<mappers>
+	    <!-- <mapper class="com.example.mybatis.onetoone.mapper.Mapper"/> -->
+	    <package name="com.example.mybatis.onetoone.mapper"/>
+	</mappers>
+</configuration>

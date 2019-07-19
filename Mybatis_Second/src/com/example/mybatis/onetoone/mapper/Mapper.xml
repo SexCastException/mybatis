@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.mybatis.onetoone.mapper.Mapper">
+    
+    <!-- 开启本mapper的namespace的二级缓存 -->
+    <cache />
+    <!-- 将订单和用户关联起来 -->
+    <resultMap type="orders" id="ordersUserResultMap">
+        <!-- column:数据库中的列名或别名
+        	 properties:要映射对象的属性
+         -->
+        <id column="orders_id" property="id" />
+        <result column="user_id" property="user_id"/>
+        <result column="number" property="number"/>
+        <result column="createTime" property="createTime"/>
+        <result column="note" property="note"/>
+        <!-- properties:要关联对象
+        	 javaType:要关联对象类型
+         -->
+        <association property="user" javaType="com.example.mybatis.onetoone.bean.User">
+            <!-- column:内连接结果集数据库的列名或别名 -->
+            <id column="user_id" property="id"/>
+            <result column="username" property="username"/>
+            <result column="sex" property="sex"/>
+            <result column="birthday" property="birthday"/>
+            <result column="address" property="address"/>
+        </association>
+    </resultMap>
+    
+    <!-- 将订单、订单详情和用户关联起来 -->
+    <resultMap type="orders" id="ordersUserOrderDetailResultMap" extends="ordersUserResultMap">
+        <!-- ofType:指定映射到list集合属性中pojo的类型 -->
+        <collection property="orderDetails" ofType="orderDetail">
+            <id column="orderdetail_id" property="id"/>
+            <result column="orders_id" property="ordersId"/>
+            <result column="items_id" property="itemsId"/>
+            <result column="items_num" property="itemsNum"/>
+        </collection>
+    </resultMap>
+    
+    <!-- 将用户、订单、订单详情和商品关联起来 -->
+    <resultMap type="user" id="userOrdersOrderDetailItemMap">
+        <id column="user_id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="sex" property="sex"/>
+        <result column="birthday" property="birthday"/>
+        <result column="address" property="address"/>
+        <!-- 映射订单 -->
+        <collection property="orders" ofType="orders">
+            <id column="orders_id" property="id"/>
+            <result column="user_id" property="user_id"/>
+        	<result column="number" property="number"/>
+        	<result column="createTime" property="createTime"/>
+        	<result column="note" property="note"/>
+            <!-- 映射订单详情 -->
+            <collection property="orderDetails" ofType="orderDetail">
+                <id column="orderdetail_id" property="id"/>
+                <result column="orders_id" property="ordersId"/>
+                <result column="items_id" property="itemsId"/>
+                <result column="items_num" property="itemsNum"/>
+                <association property="items" javaType="items">
+                    <id column="items_id" property="id"/>
+                    <result column="name" property="name"/>
+                    <result column="price" property="price"/>
+                    <result column="pic" property="pic"/>
+                    <result column="createTime" property="createTime"/>
+                </association>
+            </collection>
+        </collection>
+    </resultMap>
+    
+    <!-- 使用association来延迟加载的resultMap -->
+    <resultMap type="orders" id="ordersUserLazyLoadingResultMap">
+        <id column="id" property="id"/>
+        <result column="user_id" property="user_id"/>
+        <result column="number" property="number"/>
+       	<result column="createTime" property="createTime"/>
+        <result column="note" property="note"/>
+        <!-- 延迟加载用户
+        	select:指定延迟加载的statement的id,如果该id不在本地的mapper中id前边还需添加namespace
+        	column:订单中关联用户查询的列名或别名，写其他不存在的名字不会保存，但关联查询的数据为空
+        	扩展：如果需要传多个列的，格式为{key1=value1,key2=value2,...},key为select指定的statement语句要查询的条件占位符的名字，value必须为主动关联表的列名或者别名，而不是bean的字段名
+        	注意：如果select指定的statement语句查询条件有判断(如：<if test="param!=null"></if>)，否则会报xx no getter..异常。
+         -->
+        <association property="user" javaType="com.example.mybatis.onetoone.bean.User" select="findUserById" column="user_id">
+        </association>
+    </resultMap>
+    
+    <!-- 通过collecting实现延迟加载 -->
+    <resultMap type="orders" id="ordersOrderDetailResultMap">
+        <id column="id" property="id"/>
+        <result column="user_id" property="user_id"/>
+        <result column="number" property="number"/>
+       	<result column="createTime" property="createTime"/>
+        <result column="note" property="note"/>
+        <collection property="orderDetails" ofType="com.example.mybatis.onetoone.bean.OrderDetail" select="findOrderDetailById" column="id"></collection>
+    </resultMap>
+    
+	<!-- 通过resultType完成orders到user的一对一查询 -->    
+	<select id="findOrderByUser" resultType="ordersAndUser">
+	    SELECT * FROM orders, `user` where orders.user_id=`user`.id;
+	</select>
+	
+	<!-- 使用resultMap完成orders到user一对一查询 -->
+	<select id="findOrderByUser1" resultMap="ordersUserResultMap">
+	    SELECT * FROM orders, `user` where orders.user_id=`user`.id;
+	</select>
+	
+	<!-- 使用orders完成对orderDetail的一对多查询和orders对user的一对一查询 -->
+	<select id="findOrderUserAndOrderDetail" resultMap="ordersUserOrderDetailResultMap">
+	    SELECT * , orderdetail.id orderdetail_id from `user`,orders,orderdetail where `user`.id=orders.user_id and orders.id=orderdetail.orders_id;
+	</select>
+	
+	<!-- 使用resultMap完成多表的复杂查询 -->
+	<select id="findUserOrdersOrderDetailItem" resultMap="userOrdersOrderDetailItemMap">
+		SELECT
+			*, orderdetail.id orderdetail_id
+		FROM
+			`user`,
+			orders,
+			orderdetail,
+			items
+		WHERE
+			`user`.id = orders.user_id
+			AND orders.id = orderdetail.orders_id
+			AND orderdetail.items_id = items.id
+	</select>
+	
+	<!-- 使用association实现延迟加载 -->
+	<select id="findOrdersUserLazyLoading" resultMap="ordersUserLazyLoadingResultMap">
+	    SELECT * FROM orders
+	</select>
+	
+	<!-- 通过id查询用户 -->
+	<!-- useCache=false可以禁用当前select语句的二级缓存，即每次查询都会发出sql去查询，默认情况是true，即该sql使用二级缓存 -->
+	<!-- 刷新缓存(就是清空缓存),在commit之后是否刷新缓存,默认为true,设为false之后commit之后不会刷新缓存，会出现脏读的可能 -->
+	<select id="findUserById" parameterType="int" resultType="user" useCache="true">
+	    SELECT * FROM `user` WHERE id = #{id}
+	</select> 
+	
+	<!-- 使用collection实现延迟加载 -->
+	<select id="findOrdersOrderDetailLazuLoading" resultMap="ordersOrderDetailResultMap">
+	    SELECT * FROM orders
+	</select>
+	
+	<!-- 通过id查询订单详情 -->
+	<select id="findOrderDetailById" parameterType="int" resultType="orderDetail">
+	    SELECT id id,orders_id ordersId,items_id itemsId,items_num itemsNum FROM orderdetail WHERE orders_id = #{id}
+	</select>
+	
+	<update id="updateUser" parameterType="user" flushCache="true">
+	    UPDATE `user` set username = #{username} WHERE id = #{id}
+	</update>
+</mapper>

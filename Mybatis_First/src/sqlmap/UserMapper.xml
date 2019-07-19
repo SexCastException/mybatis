@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="test">
+    <!-- 传入的参数是基本类型的时候参数名随意 -->
+    <select id="findUserById" parameterType="int" resultType="user">
+        SELECT * FROM `user` WHERE id = #{id}
+    </select>
+    
+    <select id="findUserByName" parameterType="java.lang.String" resultType="user">
+        SELECT * FROM `user` WHERE username LIKE "%${value}%"
+    </select>
+    
+    <insert id="addUser" parameterType="cn.test.bean.User">
+        <!-- selectKey:实现将主键返回，需要在返回 -->
+        <!-- keyProperty:返回的主键存储在pojo的哪个属性里 -->
+        <!-- order:selectKey执行顺序，是相对insert语句来说的，
+        	  由于MySQL的自增原理执行 执行完insert语句之后才将主键生成，所以这里selectKey的执行顺序为after,如果设为BEFORE，则id将为默认值0-->
+        <!-- resultType:返回的主键是什么类型 -->
+        <!-- LAST_INSERT_ID():是MySQL的函数，返回auto_increment自增列新记录的id -->
+        <selectKey keyProperty="id" order="AFTER" resultType="int">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO `user`(username,birthday,sex,address) VALUE (#{username},#{birthday},#{sex},#{address})
+    </insert>
+    
+    <!-- <insert id="addUser1" parameterType="cn.test.bean.User">
+        <selectKey order="BEFORE" resultType="java.lang.String" keyProperty="id">
+            select UUID()
+        </selectKey>
+		INSERT INTO `user`(id,username,birthday,sex,address) VALUE (#{id},#{username},#{birthday},#{sex},#{address})        
+    </insert> -->
+    
+    <delete id="deleteById" parameterType="int">
+		DELETE FROM `user` WHERE  id = #{id}        
+    </delete>
+    
+    <update id="updateUser" parameterType="cn.test.bean.User">
+        update user set username=#{username},birthday=#{birthday},sex=#{sex},address=#{address}
+		where id=#{id}
+    </update>
+</mapper>
