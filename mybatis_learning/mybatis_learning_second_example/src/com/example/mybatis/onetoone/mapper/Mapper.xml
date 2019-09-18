@@ -83,7 +83,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         	select:指定延迟加载的statement的id,如果该id不在本地的mapper中id前边还需添加namespace
         	column:订单中关联用户查询的列名或别名，写其他不存在的名字不会保存，但关联查询的数据为空
         	扩展：如果需要传多个列的，格式为{key1=value1,key2=value2,...},key为select指定的statement语句要查询的条件占位符的名字，value必须为主动关联表的列名或者别名，而不是bean的字段名
-        	注意：如果select指定的statement语句查询条件有判断(如：<if test="param!=null"></if>)，否则会报xx no getter..异常。
+        	注意：如果select指定的statement语句查询条件有判断(如：<if test="param!=null"></if>)，需满足关联查询的条件进入if语句，否则会报xx no getter..异常。
          -->
         <association property="user" javaType="com.example.mybatis.onetoone.bean.User" select="findUserById" column="user_id">
         </association>
