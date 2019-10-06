@@ -104,11 +104,14 @@ public class Configuration {
 
   protected boolean safeRowBoundsEnabled;
   protected boolean safeResultHandlerEnabled = true;
+  // 是否下划线命名风格代替驼峰命名风格，默认false
   protected boolean mapUnderscoreToCamelCase;
+  // 是否积极懒加载，即是否按需加载，默认false
   protected boolean aggressiveLazyLoading;
   protected boolean multipleResultSetsEnabled = true;
   protected boolean useGeneratedKeys;
   protected boolean useColumnLabel = true;
+  // 默认开启一级缓存
   protected boolean cacheEnabled = true;
   protected boolean callSettersOnNulls;
   protected boolean useActualParamName = true;
@@ -119,10 +122,12 @@ public class Configuration {
   protected Class<? extends VFS> vfsImpl;
   protected LocalCacheScope localCacheScope = LocalCacheScope.SESSION;
   protected JdbcType jdbcTypeForNull = JdbcType.OTHER;
+  // 延迟加载时触发加载数据的方法，默认equals、clone、hashCode、toString方法
   protected Set<String> lazyLoadTriggerMethods = new HashSet<>(Arrays.asList("equals", "clone", "hashCode", "toString"));
   protected Integer defaultStatementTimeout;
   protected Integer defaultFetchSize;
   protected ResultSetType defaultResultSetType;
+  // 默认简单执行器
   protected ExecutorType defaultExecutorType = ExecutorType.SIMPLE;
   protected AutoMappingBehavior autoMappingBehavior = AutoMappingBehavior.PARTIAL;
   protected AutoMappingUnknownColumnBehavior autoMappingUnknownColumnBehavior = AutoMappingUnknownColumnBehavior.NONE;
@@ -132,6 +137,7 @@ public class Configuration {
   protected ObjectFactory objectFactory = new DefaultObjectFactory();
   protected ObjectWrapperFactory objectWrapperFactory = new DefaultObjectWrapperFactory();
 
+  // 默认禁用延迟加载
   protected boolean lazyLoadingEnabled = false;
   protected ProxyFactory proxyFactory = new JavassistProxyFactory(); // #224 Using internal Javassist instead of OGNL
 
@@ -144,9 +150,13 @@ public class Configuration {
    */
   protected Class<?> configurationFactory;
 
+  // 映射注册器
   protected final MapperRegistry mapperRegistry = new MapperRegistry(this);
+  // 拦截器链
   protected final InterceptorChain interceptorChain = new InterceptorChain();
+  // 类型处理器注册器
   protected final TypeHandlerRegistry typeHandlerRegistry = new TypeHandlerRegistry();
+  // 类型别名注册器
   protected final TypeAliasRegistry typeAliasRegistry = new TypeAliasRegistry();
   protected final LanguageDriverRegistry languageRegistry = new LanguageDriverRegistry();
 
@@ -155,6 +165,7 @@ public class Configuration {
           ". please check " + savedValue.getResource() + " and " + targetValue.getResource());
   protected final Map<String, Cache> caches = new StrictMap<>("Caches collection");
   protected final Map<String, ResultMap> resultMaps = new StrictMap<>("Result Maps collection");
+  //
   protected final Map<String, ParameterMap> parameterMaps = new StrictMap<>("Parameter Maps collection");
   protected final Map<String, KeyGenerator> keyGenerators = new StrictMap<>("Key Generators collection");
 
@@ -179,6 +190,7 @@ public class Configuration {
   }
 
   public Configuration() {
+    // 默认注册别名
     typeAliasRegistry.registerAlias("JDBC", JdbcTransactionFactory.class);
     typeAliasRegistry.registerAlias("MANAGED", ManagedTransactionFactory.class);
 
@@ -900,6 +912,10 @@ public class Configuration {
     }
   }
 
+  /**
+   * 严格的map，不支持覆盖原有的key，不支持获取null值
+   * @param <V>
+   */
   protected static class StrictMap<V> extends HashMap<String, V> {
 
     private static final long serialVersionUID = -4950446264854982944L;
@@ -939,6 +955,12 @@ public class Configuration {
       return this;
     }
 
+    /**
+     * 保存键值对，不支持覆盖原有key
+     * @param key
+     * @param value
+     * @return
+     */
     @Override
     @SuppressWarnings("unchecked")
     public V put(String key, V value) {
@@ -957,6 +979,11 @@ public class Configuration {
       return super.put(key, value);
     }
 
+    /**
+     * 不支持获取空值，当没有传命名空间的时候可能发生二义性，抛出异常
+     * @param key
+     * @return
+     */
     @Override
     public V get(Object key) {
       V value = super.get(key);

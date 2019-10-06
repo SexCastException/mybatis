@@ -60,7 +60,7 @@ public class PropertyParser {
   /**
    * 新增支持传入默认值功能，格式：key+分隔符+默认值，默认分隔符是：“:”
    * 假设分隔符为默认分隔符，例如调用handleToken("username")，可以获取内容为root，handleToken("password")获取不到内容
-   * 改成handleToken("username")，结果为root，handleToken("password:123456")，结果为123456
+   * 改成handleToken("username:test")，结果为root，handleToken("password:123456")，结果为123456
    */
   private static class VariableTokenHandler implements TokenHandler {
     private final Properties variables;

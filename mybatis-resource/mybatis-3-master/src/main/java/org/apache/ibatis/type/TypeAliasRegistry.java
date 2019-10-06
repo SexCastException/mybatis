@@ -1,38 +1,30 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2019 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.type;
-
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 
 import org.apache.ibatis.io.ResolverUtil;
 import org.apache.ibatis.io.Resources;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.ResultSet;
+import java.util.*;
+
 /**
+ * 类型别名注册器
  * @author Clinton Begin
  */
 public class TypeAliasRegistry {
@@ -40,6 +32,7 @@ public class TypeAliasRegistry {
   private final Map<String, Class<?>> typeAliases = new HashMap<>();
 
   public TypeAliasRegistry() {
+    // mybatis默认支持的别名
     registerAlias("string", String.class);
 
     registerAlias("byte", Byte.class);
@@ -100,8 +93,16 @@ public class TypeAliasRegistry {
     registerAlias("ResultSet", ResultSet.class);
   }
 
+  /**
+   * 解析别名
+   * 通过别名获取具体的类型，如果获取不到则加载并初始化返回Class对象
+   * @param string
+   * @param <T>
+   * @return
+   */
   @SuppressWarnings("unchecked")
   // throws class cast exception as well if types cannot be assigned
+  // 如果无法分配类型，则也会引发类强制转换异常
   public <T> Class<T> resolveAlias(String string) {
     try {
       if (string == null) {
@@ -111,8 +112,10 @@ public class TypeAliasRegistry {
       String key = string.toLowerCase(Locale.ENGLISH);
       Class<T> value;
       if (typeAliases.containsKey(key)) {
+        // 通过别名获取类型
         value = (Class<T>) typeAliases.get(key);
       } else {
+        // 不存在则加载并初始化
         value = (Class<T>) Resources.classForName(string);
       }
       return value;
@@ -121,6 +124,10 @@ public class TypeAliasRegistry {
     }
   }
 
+  /**
+   * 扫描包批量注册别名
+   * @param packageName
+   */
   public void registerAliases(String packageName) {
     registerAliases(packageName, Object.class);
   }
@@ -168,6 +175,7 @@ public class TypeAliasRegistry {
   }
 
   /**
+   * 获取类型别名
    * @since 3.2.2
    */
   public Map<String, Class<?>> getTypeAliases() {

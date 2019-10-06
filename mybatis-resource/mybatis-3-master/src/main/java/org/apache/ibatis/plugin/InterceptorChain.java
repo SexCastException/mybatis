@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * 拦截器链，责任链模式
  * @author Clinton Begin
  */
 public class InterceptorChain {

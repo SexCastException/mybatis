@@ -26,6 +26,7 @@ import org.xml.sax.SAXException;
 
 /**
  * Offline entity resolver for the MyBatis DTDs.
+ * 继承解析实体的基本接口
  *
  * @author Clinton Begin
  * @author Eduardo Macarron

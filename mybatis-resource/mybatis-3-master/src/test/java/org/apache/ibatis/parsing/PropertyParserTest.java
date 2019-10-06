@@ -25,6 +25,7 @@ class PropertyParserTest {
   @Test
   void replaceToVariableValue() {
     Properties props = new Properties();
+    // 支持默认值
     props.setProperty(PropertyParser.KEY_ENABLE_DEFAULT_VALUE, "true");
     props.setProperty("key", "value");
     props.setProperty("tableName", "members");
@@ -34,14 +35,21 @@ class PropertyParserTest {
     Assertions.assertThat(PropertyParser.parse("${key:aaaa}", props)).isEqualTo("value");
     Assertions.assertThat(PropertyParser.parse("SELECT * FROM ${tableName:users} ORDER BY ${orderColumn:id}", props)).isEqualTo("SELECT * FROM members ORDER BY member_id");
 
+    // 不支持默认值
     props.setProperty(PropertyParser.KEY_ENABLE_DEFAULT_VALUE, "false");
     Assertions.assertThat(PropertyParser.parse("${a:b}", props)).isEqualTo("c");
 
     props.remove(PropertyParser.KEY_ENABLE_DEFAULT_VALUE);
     Assertions.assertThat(PropertyParser.parse("${a:b}", props)).isEqualTo("c");
 
+    // 配置分隔符，默认：“:”
+    props.setProperty(PropertyParser.KEY_DEFAULT_VALUE_SEPARATOR, ":");
+
   }
 
+  /**
+   * 没开启支持默认值测试
+   */
   @Test
   void notReplace() {
     Properties props = new Properties();

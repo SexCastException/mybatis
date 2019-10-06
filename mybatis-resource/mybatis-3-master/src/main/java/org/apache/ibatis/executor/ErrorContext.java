@@ -16,6 +16,8 @@
 package org.apache.ibatis.executor;
 
 /**
+ * 错误上下文，使用了 ThreadLocal<T>将执行上下文信息的收集独立出来并集中到一处
+ * 职责：记录本次执行过程中相关上下文信息，待发生Error时候其他组件就可以从本类实例中获取到相关的上下文信息
  * @author Clinton Begin
  */
 public class ErrorContext {
@@ -31,6 +33,9 @@ public class ErrorContext {
   private String sql;
   private Throwable cause;
 
+  /**
+   * 构造器私有化
+   */
   private ErrorContext() {
   }
 

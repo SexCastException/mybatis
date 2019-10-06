@@ -35,6 +35,7 @@ class ConfigurationTest {
   void applyDefaultValueOnXmlConfiguration() throws IOException {
 
     Properties props = new Properties();
+    // 开启支持默认值
     props.setProperty(PropertyParser.KEY_ENABLE_DEFAULT_VALUE, "true");
 
     Reader reader = Resources.getResourceAsReader("org/apache/ibatis/submitted/global_variables_defaults/mybatis-config.xml");
@@ -54,6 +55,7 @@ class ConfigurationTest {
   void applyPropertyValueOnXmlConfiguration() throws IOException {
 
     Properties props = new Properties();
+    // 开启默认值
     props.setProperty(PropertyParser.KEY_ENABLE_DEFAULT_VALUE, "true");
     props.setProperty("settings.jdbcTypeForNull", JdbcType.CHAR.name());
     props.setProperty("db.name", "global_variables_defaults_custom");
