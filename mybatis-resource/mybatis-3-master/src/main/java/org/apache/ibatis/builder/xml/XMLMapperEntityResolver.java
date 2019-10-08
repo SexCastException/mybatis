@@ -26,7 +26,12 @@ import org.xml.sax.SAXException;
 
 /**
  * Offline entity resolver for the MyBatis DTDs.
- * 继承解析实体的基本接口
+ * 离线解析MyBatis DTDs 文档
+ *
+ * 如果解析 mybatis-config.xml 配置文件，默认联网加载 http://mybatis.org/dtd/mybatis-3-config.dtd 这个 DTD 文档，
+ * 当网络比较慢时会导致验证过程缓慢。在实践 往往会提前设置 EntityResolver 接口对象加载本地的 DTD 文件，从而避免联网加载文件。
+ *
+ * XMLMapperEntityResolver 是 MyBatis 提供的 EntityResolver 接口的实现 ，
  *
  * @author Clinton Begin
  * @author Eduardo Macarron
@@ -38,14 +43,17 @@ public class XMLMapperEntityResolver implements EntityResolver {
   private static final String MYBATIS_CONFIG_SYSTEM = "mybatis-3-config.dtd";
   private static final String MYBATIS_MAPPER_SYSTEM = "mybatis-3-mapper.dtd";
 
+  /**
+   * mybatis-config.xml和mybatis-mapper.xml在本地DTD文件
+   */
   private static final String MYBATIS_CONFIG_DTD = "org/apache/ibatis/builder/xml/mybatis-3-config.dtd";
   private static final String MYBATIS_MAPPER_DTD = "org/apache/ibatis/builder/xml/mybatis-3-mapper.dtd";
 
   /**
    * Converts a public DTD into a local one.
    *
-   * @param publicId The public id that is what comes after "PUBLIC"
-   * @param systemId The system id that is what comes after the public id.
+   * @param publicId The public id that is what comes after "PUBLIC" 对应XML文档声明的 "PUBLIC"——联网
+   * @param systemId The system id that is what comes after the public id. 对应XML文档声明的 "SYSTEM"——本地
    * @return The InputSource for the DTD
    *
    * @throws org.xml.sax.SAXException If anything goes wrong
@@ -55,6 +63,7 @@ public class XMLMapperEntityResolver implements EntityResolver {
     try {
       if (systemId != null) {
         String lowerCaseSystemId = systemId.toLowerCase(Locale.ENGLISH);
+        // 读取本地DTD文件
         if (lowerCaseSystemId.contains(MYBATIS_CONFIG_SYSTEM) || lowerCaseSystemId.contains(IBATIS_CONFIG_SYSTEM)) {
           return getInputSource(MYBATIS_CONFIG_DTD, publicId, systemId);
         } else if (lowerCaseSystemId.contains(MYBATIS_MAPPER_SYSTEM) || lowerCaseSystemId.contains(IBATIS_MAPPER_SYSTEM)) {
@@ -67,6 +76,13 @@ public class XMLMapperEntityResolver implements EntityResolver {
     }
   }
 
+  /**
+   * 负责读取 DTD 文档并封装成 InputSource 对象
+   * @param path
+   * @param publicId
+   * @param systemId
+   * @return
+   */
   private InputSource getInputSource(String path, String publicId, String systemId) {
     InputSource source = null;
     if (path != null) {
