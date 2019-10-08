@@ -27,22 +27,42 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
+ * {@link Node}对象的封装和解析
  * @author Clinton Begin
  */
 public class XNode {
 
+  /**
+   * 正在解析的xml节点对象
+   */
   private final Node node;
+  /**
+   * node节点名称
+   */
   private final String name;
+  /**
+   * 节点内容
+   */
   private final String body;
+  /**
+   * 节点属性集合
+   */
   private final Properties attributes;
+  /**
+   * mybatis-config.xml 配置文件中 <properties>节点下定义的键值对
+   */
   private final Properties variables;
+  /**
+   * xpath解析器，当前XDode对象由此xpathParser生成
+   */
   private final XPathParser xpathParser;
 
   public XNode(XPathParser xpathParser, Node node, Properties variables) {
     this.xpathParser = xpathParser;
     this.node = node;
-    this.name = node.getNodeName();
     this.variables = variables;
+    // 获取node的信息初始化name、attributes和body成员变量
+    this.name = node.getNodeName();
     this.attributes = parseAttributes(node);
     this.body = parseBody(node);
   }
@@ -362,6 +382,7 @@ public class XNode {
 
   private Properties parseAttributes(Node n) {
     Properties attributes = new Properties();
+    // 获取节点的属性集合
     NamedNodeMap attributeNodes = n.getAttributes();
     if (attributeNodes != null) {
       for (int i = 0; i < attributeNodes.getLength(); i++) {

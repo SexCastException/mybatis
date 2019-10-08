@@ -100,7 +100,7 @@ public class XMLConfigBuilder extends BaseBuilder {
    * @return
    */
   public Configuration parse() {
-    // XML只被解析一次，超过一次抛出异常
+    // 每个XMLConfigBuilder只能解析一次配置文件，超过一次抛出异常
     if (parsed) {
       throw new BuilderException("Each XMLConfigBuilder can only be used once.");
     }
@@ -380,6 +380,7 @@ public class XMLConfigBuilder extends BaseBuilder {
 
   private void mapperElement(XNode parent) throws Exception {
     if (parent != null) {
+      // 遍历mappers标签下所有子标签，优先级：package > resource > url > class
       for (XNode child : parent.getChildren()) {
         if ("package".equals(child.getName())) {
           String mapperPackage = child.getStringAttribute("name");
@@ -402,6 +403,7 @@ public class XMLConfigBuilder extends BaseBuilder {
             Class<?> mapperInterface = Resources.classForName(mapperClass);
             configuration.addMapper(mapperInterface);
           } else {
+            // 当配置resource、url和class超过一个时将抛出此异常
             throw new BuilderException("A mapper element may only specify a url, resource or class, but not more than one.");
           }
         }

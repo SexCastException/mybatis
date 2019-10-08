@@ -56,7 +56,7 @@ public class XPathParser {
    */
   private EntityResolver entityResolver;
   /**
-   * mybatis -config.xml中<properties></properties>标签定义的键位对集合
+   * mybatis-config.xml中<properties></properties>标签定义的键位对集合
    */
   private Properties variables;
   /**
@@ -136,6 +136,7 @@ public class XPathParser {
 
   public XPathParser(InputStream inputStream, boolean validation, Properties variables, EntityResolver entityResolver) {
     commonConstructor(validation, variables, entityResolver);
+    // 初始化XML文档对象
     this.document = createDocument(new InputSource(inputStream));
   }
 
@@ -153,9 +154,9 @@ public class XPathParser {
   }
 
   public String evalString(Object root, String expression) {
-    // 1.先用xpath解析
+    // 1.先用xpath解析xml数据
     String result = (String) evaluate(expression, root, XPathConstants.STRING);
-    // 2.再调用PropertyParser去解析,也就是替换 ${} 这种格式的字符串
+    // 2.再调用PropertyParser去解析,例如替换 ${} 格式的字符串
     result = PropertyParser.parse(result, variables);
     return result;
   }
@@ -290,10 +291,17 @@ public class XPathParser {
     }
   }
 
+  /**
+   * 做一些共同初始化操作
+   * @param validation
+   * @param variables
+   * @param entityResolver
+   */
   private void commonConstructor(boolean validation, Properties variables, EntityResolver entityResolver) {
     this.validation = validation;
     this.entityResolver = entityResolver;
     this.variables = variables;
+    // 初始化xpath对象
     XPathFactory factory = XPathFactory.newInstance();
     this.xpath = factory.newXPath();
   }

@@ -21,11 +21,11 @@ package org.apache.ibatis.parsing;
 public class GenericTokenParser {
 
   /**
-   * 解析开始标签
+   * 占位符开始标记
    */
   private final String openToken;
   /**
-   * 解析结束标签
+   * 占位符结束标记
    */
   private final String closeToken;
   /**
@@ -44,21 +44,21 @@ public class GenericTokenParser {
       return "";
     }
     // search open token
-    // openToken索引
+    // 查找开始标记
     int start = text.indexOf(openToken);
     if (start == -1) {
       return text;
     }
     char[] src = text.toCharArray();
     int offset = 0;
-    // 用于保存处理器handler解析和普通文本内容，并用于方法返回
+    // 用于记录处理器handler解析和普通文本内容，并用于方法返回
     final StringBuilder builder = new StringBuilder();
-    // 用于保存每一次openToken和closeToken之间内容
+    // 用于记录每一次占位符字面值
     StringBuilder expression = null;
     while (start > -1) {
       if (start > 0 && src[start - 1] == '\\') {
         // this open token is escaped. remove the backslash and continue.
-        // 如果openToken被转义了，则删除反斜杠，即把openToken视为普通文本，不需要解析，直接保存
+        // 遇到转义的开始标记，则直接将前面的字符串以及开始标记追加到builder中
         builder.append(src, offset, start - offset - 1).append(openToken);
         offset = start + openToken.length();
       } else {
@@ -66,27 +66,28 @@ public class GenericTokenParser {
         if (expression == null) {
           expression = new StringBuilder();
         } else {
-          // 清空内容
+          // 清空上一次已经解析占位符字面值
           expression.setLength(0);
         }
-        // 保存普通文本
+        // 保存当前正在解析的占位符开始标记前面未保存的普通文本
         builder.append(src, offset, start - offset);
         offset = start + openToken.length();
+        // 从offset后面查找占位符结束标记
         int end = text.indexOf(closeToken, offset);
         while (end > -1) {
           if (end > offset && src[end - 1] == '\\') {
             // this close token is escaped. remove the backslash and continue.
-            // 如果closeToken被转义了，则删除反斜杠，即把closeToken视为普通文本，不需要解析，直接保存
+            // 遇到转义的结束标记，则直接将前面的字符串以及结束标记追加到builder中
             expression.append(src, offset, end - offset - 1).append(closeToken);
             offset = end + closeToken.length();
             end = text.indexOf(closeToken, offset);
           } else {
-            // 保存当前偏移在openToken和closeToken之间的内容
+            // 保存当前正在解析的开始标记和结束标记之间的内容
             expression.append(src, offset, end - offset);
             break;
           }
         }
-        // 没有结束标签，表明当前解析的位置到文本最后位置只是带开始标签的普通文本，不需要解析，普通文本直接保存
+        // 没有占位结束标记，表明当前解析的位置到文本最后位置只是带占位符开始标记的普通文本，不需要解析，普通文本直接保存
         if (end == -1) {
           // close token was not found.
           builder.append(src, start, src.length - start);
