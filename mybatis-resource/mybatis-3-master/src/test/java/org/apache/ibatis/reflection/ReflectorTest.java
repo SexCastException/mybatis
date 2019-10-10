@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.ibatis.domain.blog.Author;
 import org.apache.ibatis.reflection.invoker.Invoker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -33,7 +34,7 @@ class ReflectorTest {
   @Test
   void testGetSetterType() {
     ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
-    Reflector reflector = reflectorFactory.findForClass(Section.class);
+    Reflector reflector = reflectorFactory.findForClass(Author.class);
     Assertions.assertEquals(Long.class, reflector.getSetterType("id"));
   }
 

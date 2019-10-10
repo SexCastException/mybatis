@@ -15,9 +15,11 @@
  */
 package org.apache.ibatis.domain.blog;
 
+import org.apache.ibatis.domain.AbstractEntity;
+
 import java.io.Serializable;
 
-public class Author implements Serializable {
+public class Author extends AbstractEntity implements Serializable {
 
   protected int id;
   protected String username;
@@ -43,7 +45,7 @@ public class Author implements Serializable {
     this(id, null, null, null, null, null);
   }
 
-  public void setId(int id) {
+  public void setId(Integer id) {
     this.id = id;
   }
 
@@ -67,7 +69,7 @@ public class Author implements Serializable {
     this.favouriteSection = favouriteSection;
   }
 
-  public int getId() {
+  public Integer getId() {
     return id;
   }
 

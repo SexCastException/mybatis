@@ -25,7 +25,7 @@ import java.util.Map.Entry;
 
 /**
  * 此类表示一组缓存的类定义信息，可轻松在属性名称和getter / setter方法之间进行映射。
- *
+ * <p>
  * This class represents a cached set of class definition information that
  * allows for easy mapping between property names and getter/setter methods.
  *
@@ -78,6 +78,7 @@ public class Reflector {
 
   /**
    * 使用了lambda表达式，所以该版本的mybatis要求最低JDK环境为 1.8
+   *
    * @param clazz
    */
   private void addDefaultConstructor(Class<?> clazz) {
@@ -90,6 +91,7 @@ public class Reflector {
 
   /**
    * 负责解析类中定义的 getter 方法，
+   *
    * @param clazz
    */
   private void addGetMethods(Class<?> clazz) {
@@ -102,6 +104,7 @@ public class Reflector {
   }
 
   private void resolveGetterConflicts(Map<String, List<Method>> conflictingGetters) {
+    // 遍历集合
     for (Entry<String, List<Method>> entry : conflictingGetters.entrySet()) {
       Method winner = null;
       String propName = entry.getKey();
@@ -125,6 +128,7 @@ public class Reflector {
         } else if (winnerType.isAssignableFrom(candidateType)) {
           winner = candidate;
         } else {
+          // 产生歧义
           isAmbiguous = true;
           break;
         }
@@ -272,6 +276,7 @@ public class Reflector {
 
   /**
    * 不以$开头、且不是serialVersionUID字段和不是class的方法名称才算是有效的属性的方法名称
+   *
    * @param name
    * @return
    */
@@ -281,7 +286,7 @@ public class Reflector {
 
   /**
    * 获取指定类中以及父类和接口中所有不重复的方法（不包含被子类覆盖的方法以及Object的方法）
-   *
+   * <p>
    * This method returns an array containing all methods
    * declared in this class and any superclass.
    * We use this method, instead of the simpler <code>Class.getMethods()</code>,
@@ -318,6 +323,7 @@ public class Reflector {
 
   private void addUniqueMethods(Map<String, Method> uniqueMethods, Method[] methods) {
     for (Method currentMethod : methods) {
+      // 忽略桥接方法
       if (!currentMethod.isBridge()) {
         // 获取方法签名
         String signature = getSignature(currentMethod);
@@ -336,6 +342,7 @@ public class Reflector {
   /**
    * 获取方法签名，格式：返回值类型#方法名称:参数类型列表，此方法得到的方法签名是全局唯一的，可以作为该方法的唯一标识
    * 例如此方法的返回值是：java.lang.String#getSignature:java.lang.reflect.Method
+   *
    * @param method
    * @return
    */
