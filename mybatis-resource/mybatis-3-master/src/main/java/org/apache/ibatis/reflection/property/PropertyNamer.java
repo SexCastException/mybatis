@@ -48,10 +48,20 @@ public final class PropertyNamer {
     return isGetter(name) || isSetter(name);
   }
 
+  /**
+   * 判断是否为JavaBean规范中的getter方法
+   * @param name
+   * @return
+   */
   public static boolean isGetter(String name) {
     return (name.startsWith("get") && name.length() > 3) || (name.startsWith("is") && name.length() > 2);
   }
 
+  /**
+   * 判断是否为JavaBean规范中的setter方法
+   * @param name
+   * @return
+   */
   public static boolean isSetter(String name) {
     return name.startsWith("set") && name.length() > 3;
   }

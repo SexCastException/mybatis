@@ -60,7 +60,7 @@ public class Reflector {
     addGetMethods(clazz);
     // 处理 clazz 中的 setter 方法，初始化 setMethods 集合和 setTypes 集合
     addSetMethods(clazz);
-    // 处理没有 getter 和 setter 方法的字段
+    // 处理没有 getter 和 setter 方法的字段，并且该字段不是 final 且是 static 的
     addFields(clazz);
 
     // 根据 getMethods和setMethods 集合，初始化 readablePropertyNames 和 writablePropertyNames 属性的名称集合
@@ -95,14 +95,22 @@ public class Reflector {
    * @param clazz
    */
   private void addGetMethods(Class<?> clazz) {
+    // key 为属性名称，value为相应的getter方法的Method集合，可能发生子类覆盖父类，所以同一属性可能有多个getter方法
     Map<String, List<Method>> conflictingGetters = new HashMap<>();
-    // 获取指定类中以及父类和接口中所有不重复的方法（不包含被子类覆盖的方法以及Object的方法）
+    // 1、获取指定类中以及父类和接口中定义的方法（不包含Object的方法）
     Method[] methods = getClassMethods(clazz);
+    // 2、按照 JavaBean 规范查找 getter 法（过滤不是getter的方法并且参数列表不为空的方法），并保存到 conflictingGetters 集合中
     Arrays.stream(methods).filter(m -> m.getParameterTypes().length == 0 && PropertyNamer.isGetter(m.getName()))
       .forEach(m -> addMethodConflict(conflictingGetters, PropertyNamer.methodToProperty(m.getName()), m));
+    // 3、处理conflictingGetters中冲突的方法，并保存合适的getter方法到 getMethods 成员
     resolveGetterConflicts(conflictingGetters);
   }
 
+  /**
+   * 处理冲突的getter方法
+   *
+   * @param conflictingGetters
+   */
   private void resolveGetterConflicts(Map<String, List<Method>> conflictingGetters) {
     // 遍历集合
     for (Entry<String, List<Method>> entry : conflictingGetters.entrySet()) {
@@ -123,9 +131,13 @@ public class Reflector {
           } else if (candidate.getName().startsWith("is")) {
             winner = candidate;
           }
+          // 当前最适合的方法的返回佳是当前方法返回值的子类，即但前最适合的是winnerType，什么都不做
+          // 例如：Object getA() 和 String getA() ,最适合的是方法是 String getA()。
         } else if (candidateType.isAssignableFrom(winnerType)) {
           // OK getter type is descendant
+          // getter 类型是后代
         } else if (winnerType.isAssignableFrom(candidateType)) {
+          // 当前最适合的是 candidateType，更新临时变量
           winner = candidate;
         } else {
           // 产生歧义
@@ -138,6 +150,7 @@ public class Reflector {
   }
 
   private void addGetMethod(String name, Method method, boolean isAmbiguous) {
+    // 如果isAmbiguous为true，产生歧义，保存Invoker的同时保存错误信息，直到调用invoke方法时抛出
     MethodInvoker invoker = isAmbiguous
       ? new AmbiguousMethodInvoker(method, MessageFormat.format(
       "Illegal overloaded getter method with ambiguous type for property ''{0}'' in class ''{1}''. This breaks the JavaBeans specification and can cause unpredictable results.",
@@ -149,10 +162,14 @@ public class Reflector {
   }
 
   private void addSetMethods(Class<?> clazz) {
+    // key 为属性名称，value为相应的setter方法的Method集合，可能发生子类覆盖父类，所以同一属性可能有多个setter方法
     Map<String, List<Method>> conflictingSetters = new HashMap<>();
+    // 1、获取指定类中以及父类和接口中定义的方法（不包含Object的方法）
     Method[] methods = getClassMethods(clazz);
+    // 2、按照 JavaBean 规范查找 setter 法（过滤不是setter的方法并且参数列表不为1的方法），并保存到 conflictingSetters 集合中
     Arrays.stream(methods).filter(m -> m.getParameterTypes().length == 1 && PropertyNamer.isSetter(m.getName()))
       .forEach(m -> addMethodConflict(conflictingSetters, PropertyNamer.methodToProperty(m.getName()), m));
+    // 3、处理 conflictingSetters 中冲突的方法，并保存合适的setter方法到 getSethods 成员
     resolveSetterConflicts(conflictingSetters);
   }
 
@@ -167,15 +184,18 @@ public class Reflector {
     for (String propName : conflictingSetters.keySet()) {
       List<Method> setters = conflictingSetters.get(propName);
       Class<?> getterType = getTypes.get(propName);
+      // 通过属性名称判断是否该字段在getter方法中是否发生过冲突
       boolean isGetterAmbiguous = getMethods.get(propName) instanceof AmbiguousMethodInvoker;
       boolean isSetterAmbiguous = false;
       Method match = null;
       for (Method setter : setters) {
+        // 如果当前字段在 getter 没有发生过冲突，并且该字段的 setter 方法的第一个形参类型式 getter 方法的返回值，则是该字段的最佳 setter 方法
         if (!isGetterAmbiguous && setter.getParameterTypes()[0].equals(getterType)) {
           // should be the best match
           match = setter;
           break;
         }
+        // 否则该字段的 getter 方法发生冲突，并且 setter 方法没有发生冲突
         if (!isSetterAmbiguous) {
           match = pickBetterSetter(match, setter, propName);
           isSetterAmbiguous = match == null;
@@ -187,6 +207,14 @@ public class Reflector {
     }
   }
 
+  /**
+   * 挑选更好的 setter 方法
+   *
+   * @param setter1
+   * @param setter2
+   * @param property
+   * @return
+   */
   private Method pickBetterSetter(Method setter1, Method setter2, String property) {
     if (setter1 == null) {
       return setter2;
@@ -237,13 +265,16 @@ public class Reflector {
   }
 
   private void addFields(Class<?> clazz) {
+    // 获取指定类声明的字段
     Field[] fields = clazz.getDeclaredFields();
     for (Field field : fields) {
       if (!setMethods.containsKey(field.getName())) {
         // issue #379 - removed the check for final because JDK 1.5 allows
         // modification of final fields through reflection (JSR-133). (JGB)
         // pr #16 - final static can only be set by the classloader
+        // 获取字段的权限
         int modifiers = field.getModifiers();
+        // 如果不是 final 的并且是 static ，则加入 setMethods 成员
         if (!(Modifier.isFinal(modifiers) && Modifier.isStatic(modifiers))) {
           addSetField(field);
         }
@@ -253,11 +284,13 @@ public class Reflector {
       }
     }
     if (clazz.getSuperclass() != null) {
+      // 处理父类中定义的方法
       addFields(clazz.getSuperclass());
     }
   }
 
   private void addSetField(Field field) {
+    // 获取有效属性的方法名称
     if (isValidPropertyName(field.getName())) {
       setMethods.put(field.getName(), new SetFieldInvoker(field));
       Type fieldType = TypeParameterResolver.resolveFieldType(field, type);
@@ -364,6 +397,7 @@ public class Reflector {
   }
 
   /**
+   * 检查成员变量是否可以被访问
    * Checks whether can control member accessible.
    *
    * @return If can control member accessible, it return {@literal true}
