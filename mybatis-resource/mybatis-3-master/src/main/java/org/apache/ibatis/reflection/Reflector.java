@@ -60,7 +60,7 @@ public class Reflector {
     addGetMethods(clazz);
     // 处理 clazz 中的 setter 方法，初始化 setMethods 集合和 setTypes 集合
     addSetMethods(clazz);
-    // 处理没有 getter 和 setter 方法的字段，并且该字段不是 final 且是 static 的
+    // 处理没有 getter 和 setter 方法的字段，并且该字段不是 final 和 static 的
     addFields(clazz);
 
     // 根据 getMethods和setMethods 集合，初始化 readablePropertyNames 和 writablePropertyNames 属性的名称集合
@@ -274,7 +274,7 @@ public class Reflector {
         // pr #16 - final static can only be set by the classloader
         // 获取字段的权限
         int modifiers = field.getModifiers();
-        // 如果不是 final 的并且是 static ，则加入 setMethods 成员
+        // 如果不是 final 和 static ，则加入 setMethods 成员
         if (!(Modifier.isFinal(modifiers) && Modifier.isStatic(modifiers))) {
           addSetField(field);
         }
@@ -407,6 +407,7 @@ public class Reflector {
     try {
       SecurityManager securityManager = System.getSecurityManager();
       if (null != securityManager) {
+        // （允许利用反射检查任意类的私有变量）
         securityManager.checkPermission(new ReflectPermission("suppressAccessChecks"));
       }
     } catch (SecurityException e) {

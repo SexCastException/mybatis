@@ -28,7 +28,7 @@ public class Author extends AbstractEntity implements Serializable {
   protected String bio;
   protected Section favouriteSection;
 
-  protected static String testField;
+  protected String testField;
 
   public Author() {
     this(-1, null, null, null, null, null);
