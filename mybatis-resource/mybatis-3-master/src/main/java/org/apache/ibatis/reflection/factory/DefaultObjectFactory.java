@@ -53,6 +53,14 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
     return (T) instantiateClass(classToCreate, constructorArgTypes, constructorArgs);
   }
 
+  /**
+   *
+   * @param type 指定实例化的类
+   * @param constructorArgTypes 参数列表
+   * @param constructorArgs 参数值
+   * @param <T>
+   * @return
+   */
   private  <T> T instantiateClass(Class<T> type, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
     try {
       Constructor<T> constructor;
