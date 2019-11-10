@@ -24,7 +24,8 @@ import java.util.*;
 import java.util.Map.Entry;
 
 /**
- * 此类表示一组缓存的类定义信息，可轻松在属性名称和getter / setter方法之间进行映射。
+ * Reflector是MyBatis中反射模块的基础，每个Reflector 对象都对应一个类，在Reflector中缓存了反射操作需要使用的类的元信息
+ *
  * <p>
  * This class represents a cached set of class definition information that
  * allows for easy mapping between property names and getter/setter methods.
@@ -49,7 +50,7 @@ public class Reflector {
   private final Map<String, Class<?>> getTypes = new HashMap<>();
   // 保存默认的构造方法
   private Constructor<?> defaultConstructor;
-  // 保存所有属性名称的集合
+  // 保存所有属性名称的集合，不区分大小写
   private Map<String, String> caseInsensitivePropertyMap = new HashMap<>();
 
   public Reflector(Class<?> clazz) {
@@ -109,6 +110,10 @@ public class Reflector {
   /**
    * 处理冲突的getter方法
    *
+   * 例如现有类A及其子类SubA，A类中定义了getNames() 方法，其返回值类型是List<String> ,而在其子类SubA中,覆写了其getNames() 方法
+   * 且将返回值修改成ArrayList<String>类型，这种覆写在Java语言中是合法的。最终得到的两个方法签名分别是java.util.List#getNamnes
+   * 和java.util.ArrayList#getNames，在Reflector.addUniqueMethods()方法中会被认为是两个不同的方法并添加到uniqueMethods集合中，
+   * 这显然不是我们想要的结果。
    * @param conflictingGetters
    */
   private void resolveGetterConflicts(Map<String, List<Method>> conflictingGetters) {
@@ -118,6 +123,7 @@ public class Reflector {
       String propName = entry.getKey();
       boolean isAmbiguous = false;
       for (Method candidate : entry.getValue()) {
+        // 只有第一次遍历时才调用
         if (winner == null) {
           winner = candidate;
           continue;
@@ -131,7 +137,7 @@ public class Reflector {
           } else if (candidate.getName().startsWith("is")) {
             winner = candidate;
           }
-          // 当前最适合的方法的返回佳是当前方法返回值的子类，即但前最适合的是winnerType，什么都不做
+          // 当前最适合的方法是当前方法返回值的子类，即但前最适合的是winnerType，什么都不做
           // 例如：Object getA() 和 String getA() ,最适合的是方法是 String getA()。
         } else if (candidateType.isAssignableFrom(winnerType)) {
           // OK getter type is descendant
@@ -140,7 +146,8 @@ public class Reflector {
           // 当前最适合的是 candidateType，更新临时变量
           winner = candidate;
         } else {
-          // 产生歧义
+          // 产生歧义，记录歧义标识，以便在addGetMethod方法中通过AmbiguousMethodInvoker报保存异常错误信息
+          // 旧版本此处抛出ReflectorException异常
           isAmbiguous = true;
           break;
         }
@@ -157,6 +164,7 @@ public class Reflector {
       name, method.getDeclaringClass().getName()))
       : new MethodInvoker(method);
     getMethods.put(name, invoker);
+    // 获取方法返回值Type
     Type returnType = TypeParameterResolver.resolveReturnType(method, type);
     getTypes.put(name, typeToClass(returnType));
   }
@@ -226,6 +234,7 @@ public class Reflector {
     } else if (paramType2.isAssignableFrom(paramType1)) {
       return setter1;
     }
+    // 运行到此处表示 paramType1.equals(paramType2)，方法之间发生冲突
     MethodInvoker invoker = new AmbiguousMethodInvoker(setter1,
       MessageFormat.format(
         "Ambiguous setters defined for property ''{0}'' in class ''{1}'' with types ''{2}'' and ''{3}''.",
@@ -356,7 +365,7 @@ public class Reflector {
 
   private void addUniqueMethods(Map<String, Method> uniqueMethods, Method[] methods) {
     for (Method currentMethod : methods) {
-      // 忽略桥接方法
+      // 忽略桥接方法（泛型相关概念）
       if (!currentMethod.isBridge()) {
         // 获取方法签名
         String signature = getSignature(currentMethod);

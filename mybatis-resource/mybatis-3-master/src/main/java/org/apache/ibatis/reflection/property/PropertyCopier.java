@@ -20,6 +20,7 @@ import java.lang.reflect.Field;
 import org.apache.ibatis.reflection.Reflector;
 
 /**
+ * 属性拷贝工具类，核心方法是 copyBeanProperties() ，主要实现相同类型的两个对象之间的属性值拷贝，
  * @author Clinton Begin
  */
 public final class PropertyCopier {
@@ -48,6 +49,7 @@ public final class PropertyCopier {
           // Nothing useful to do, will only fail on final fields, which will be ignored.
         }
       }
+      // 继续拷贝父类中定义属性
       parent = parent.getSuperclass();
     }
   }

@@ -26,7 +26,7 @@ public class PropertyParser {
 
   private static final String KEY_PREFIX = "org.apache.ibatis.parsing.PropertyParser.";
   /**
-   * 配置是否开启默认值配置项，默认false
+   * 在mybatis-config.xml中<properties>节点下配置是否开启默认值功能的对应配置项
    *
    * The special property key that indicate whether enable a default value on placeholder.
    * <p>
@@ -114,7 +114,7 @@ public class PropertyParser {
           return variables.getProperty(key);
         }
       }
-      // variables为空
+      // variables为空，不解析，值原生返回
       return "${" + content + "}";
     }
   }

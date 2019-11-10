@@ -38,6 +38,11 @@ import java.util.Properties;
 /**
  * xpath解析器
  *
+ * 默认情况下，对XML文档进行验证时，会根据XML文档开始位置指定的网址加载对应的DTD文件或XSD文件。
+ * 如果解析mybatis-config.xml配置文件，默认联网加载htp://mybatis.org/dtd/mybatis-3-config.dtd这个DTD文档，当网络比较慢时会导致验证过程缓慢。
+ * 在实践中往往会提前设置EntityResolver 接口对象加载本地的DTD文件，从而避免联网加载DTD文件。
+ * XMLMapperEntityResolver是MyBatis提供的EntityResolver接口的实现类。
+ *
  * @author Clinton Begin
  * @author Kazuki Shimizu
  */

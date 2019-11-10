@@ -47,6 +47,7 @@ public class TypeParameterResolver {
   public static Type resolveReturnType(Method method, Type srcType) {
     // 获取方法返回值类型
     Type returnType = method.getGenericReturnType();
+    // 此方法声明的类
     Class<?> declaringClass = method.getDeclaringClass();
     return resolveType(returnType, srcType, declaringClass);
   }

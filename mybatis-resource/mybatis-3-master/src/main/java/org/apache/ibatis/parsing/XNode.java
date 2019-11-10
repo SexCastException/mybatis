@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * {@link Node}对象的封装和解析
+ * {@link Node}对象的封装和解析，提供了对节点元素，属性，文本的访问等
  *
  * @author Clinton Begin
  */

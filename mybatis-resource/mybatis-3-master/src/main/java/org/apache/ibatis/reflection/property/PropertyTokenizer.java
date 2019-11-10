@@ -1,43 +1,34 @@
 /**
- * Copyright 2009-2017 the original author or authors.
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *    Copyright 2009-2017 the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
  */
 package org.apache.ibatis.reflection.property;
 
 import java.util.Iterator;
 
 /**
- * 属性分词器，例如：orders[0].items[0].name，有[]和.组成的表达式
- *
+ * “orders[O].items[O].name”，类似这种由”.”和“[]”组成的表达式是由 PropertyTokenizer进行解析的。
  * @author Clinton Begin
  */
 public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
-  /**
-   * 表达式的名称
-   */
+  //当前表达式的名称，比如orders
   private String name;
-  /**
-   * 表达式的索引
-   */
+  // 当前表达式的索引名，比如orders[O]
   private final String indexedName;
-  /**
-   * 索引下标
-   */
+  // 索引下标
   private String index;
-  /**
-   * 子表达式
-   */
+  // 子表达式
   private final String children;
 
   /**
@@ -45,19 +36,20 @@ public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
    * @param fullname
    */
   public PropertyTokenizer(String fullname) {
-    // 查找“.”的位置，使用“.”分割表达式
-    int delim = fullname.indexOf('.');  // 9
+    // “.”作为当前表达式和子表达式的分隔符
+    int delim = fullname.indexOf('.');
     if (delim > -1) {
-      name = fullname.substring(0, delim);  // name：orders[0]
-      children = fullname.substring(delim + 1); // children：items[0].name
-    } else {  //
+      name = fullname.substring(0, delim);
+      children = fullname.substring(delim + 1);
+    } else {
       name = fullname;
       children = null;
     }
-    indexedName = name; // indexedName：orders[0]
-    delim = name.indexOf('[');  // 6
+    // 解析当前表达式带有“[]”的内容
+    indexedName = name;
+    delim = name.indexOf('[');
     if (delim > -1) {
-      index = name.substring(delim + 1, name.length() - 1); // index：0
+      index = name.substring(delim + 1, name.length() - 1);
       name = name.substring(0, delim);
     }
   }
@@ -88,6 +80,9 @@ public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
     return new PropertyTokenizer(children);
   }
 
+  /**
+   * 不提供移除功能，调用抛出异常
+   */
   @Override
   public void remove() {
     throw new UnsupportedOperationException("Remove is not supported, as it has no meaning in the context of properties.");

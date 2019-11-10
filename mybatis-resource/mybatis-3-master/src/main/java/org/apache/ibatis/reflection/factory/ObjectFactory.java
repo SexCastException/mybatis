@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Properties;
 
 /**
+ * MyBatis 有很多模块会使用到 ObjectFactory 接口，该接口提供了多个 create() 方法的重载，通过这些 create()方法可以创建指定类型的对象
  * MyBatis uses an ObjectFactory to create all needed new Objects.
  *
  * @author Clinton Begin

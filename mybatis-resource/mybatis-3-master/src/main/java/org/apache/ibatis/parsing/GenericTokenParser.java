@@ -16,6 +16,8 @@
 package org.apache.ibatis.parsing;
 
 /**
+ * 顺序查找openToken和closeToken,解析得到占位符的字面值，并将其交给TokenHandler 处理，然后将解析结果重新拼装成字符串并返回。
+ *
  * @author Clinton Begin
  */
 public class GenericTokenParser {
@@ -53,13 +55,14 @@ public class GenericTokenParser {
     int offset = 0;
     // 用于记录处理器handler解析和普通文本内容，并用于方法返回
     final StringBuilder builder = new StringBuilder();
-    // 用于记录每一次占位符字面值
+    // 用于记录每一次占位符对之间的字符
     StringBuilder expression = null;
     while (start > -1) {
       if (start > 0 && src[start - 1] == '\\') {
         // this open token is escaped. remove the backslash and continue.
-        // 遇到转义的开始标记，则直接将前面的字符串以及开始标记追加到builder中
+        // 检测startToken前面是否转义标识（\），则直接将startToken前面的字符串以及开始标记追加到builder中
         builder.append(src, offset, start - offset - 1).append(openToken);
+        // 设置偏移量，以便查找下一个openToken
         offset = start + openToken.length();
       } else {
         // found open token. let's search close token.
@@ -77,9 +80,11 @@ public class GenericTokenParser {
         while (end > -1) {
           if (end > offset && src[end - 1] == '\\') {
             // this close token is escaped. remove the backslash and continue.
-            // 遇到转义的结束标记，则直接将前面的字符串以及结束标记追加到builder中
+            // 检测endToken前面是否转义标识（\），则直接将前面的字符串以及结束标记追加到builder中
             expression.append(src, offset, end - offset - 1).append(closeToken);
+            // 设置偏移量，以便查找下一个closeToken
             offset = end + closeToken.length();
+            // 可能会有 ${xxxx\}}，其中xxx}也是需要解析的内容
             end = text.indexOf(closeToken, offset);
           } else {
             // 保存当前正在解析的开始标记和结束标记之间的内容
