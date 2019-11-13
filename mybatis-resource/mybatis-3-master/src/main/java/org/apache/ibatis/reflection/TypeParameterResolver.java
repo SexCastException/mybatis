@@ -19,13 +19,17 @@ import java.lang.reflect.*;
 import java.util.Arrays;
 
 /**
+ * 提供了一系列静态方法来解析指定类中的字段、方法返回值或方法参数的类型。
+ *
  * @author Iwao AVE!
  */
 public class TypeParameterResolver {
 
   /**
-   * 解析成员类型
+   * 解析字段
    *
+   * @param field
+   * @param srcType
    * @return The field type as {@link Type}. If it has type parameters in the declaration,<br>
    * they will be resolved to the actual runtime {@link Type}s.
    */
@@ -72,14 +76,15 @@ public class TypeParameterResolver {
   }
 
   /**
+   * Class：常见的原始类和接口，如String和Serializable
    * ParameterizedType：表示的是参数化类型，例如：List<String> 和 Map<String,Integer>
    * TypeVariable：表示的是类型变量（即：泛型参数），它用来反映在 JVM 编译该泛型前的信息，它在编译时需被转换为一个具体的类型后才能正常使用。
    * GenericArrayType：表示的是数组类型且组成元素是 ParameterizedType 或 TypeVariable，例如：List<String>[] 或 T[]
    * WildcardType：表示的是通配符泛型，例如：? extends Number 和 ? super Integer
    *
-   * @param type
-   * @param srcType
-   * @param declaringClass
+   * @param type           根据type（字段、方法返回值和方法参数类型）选择合适的方法解析
+   * @param srcType        srcType表示查找该字段、返回值或方法参数类型的起始位置
+   * @param declaringClass 表示type定义所在的类
    * @return
    */
   private static Type resolveType(Type type, Type srcType, Class<?> declaringClass) {
@@ -96,6 +101,7 @@ public class TypeParameterResolver {
     } else {  // Class 类型
       return type;
     }
+    // 字段、返回值或参数不可以直接定义成 WildcardType 类型，但可以嵌套在别的类型中，所以没有 wildcardType 分支
   }
 
   private static Type resolveGenericArrayType(GenericArrayType genericArrayType, Type srcType, Class<?> declaringClass) {
@@ -185,8 +191,10 @@ public class TypeParameterResolver {
   }
 
   /**
+   * 实际解析的是typeVar声明的类，比如Map<String,Object> 实际解析的是Map
+   *
    * @param typeVar        待解析的类型参数
-   * @param srcType
+   * @param srcType        声明typeVar的类
    * @param declaringClass typeVar所在声明的类
    * @return
    */
@@ -229,13 +237,14 @@ public class TypeParameterResolver {
         return result;
       }
     }
-    // 以上操作都没有解析成功，则返回 Object.class
+    // 若在整个集成结构中没有解析成功，则返回 Object.class
     return Object.class;
   }
 
   /**
-   * 扫描父类的类型
-   * @param typeVar 待解析的类型参数
+   * 和{@link TypeParameterResolver#resolveTypeVar}递归整个继承结构井完成类型变量的解析
+   *
+   * @param typeVar        待解析的类型参数
    * @param srcType
    * @param declaringClass typeVar所在声明的类
    * @param clazz

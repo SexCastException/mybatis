@@ -109,11 +109,12 @@ public class Reflector {
 
   /**
    * 处理冲突的getter方法
-   *
+   * <p>
    * 例如现有类A及其子类SubA，A类中定义了getNames() 方法，其返回值类型是List<String> ,而在其子类SubA中,覆写了其getNames() 方法
    * 且将返回值修改成ArrayList<String>类型，这种覆写在Java语言中是合法的。最终得到的两个方法签名分别是java.util.List#getNamnes
    * 和java.util.ArrayList#getNames，在Reflector.addUniqueMethods()方法中会被认为是两个不同的方法并添加到uniqueMethods集合中，
    * 这显然不是我们想要的结果。
+   *
    * @param conflictingGetters
    */
   private void resolveGetterConflicts(Map<String, List<Method>> conflictingGetters) {
@@ -123,7 +124,7 @@ public class Reflector {
       String propName = entry.getKey();
       boolean isAmbiguous = false;
       for (Method candidate : entry.getValue()) {
-        // 只有第一次遍历时才调用
+        // 只有第一次遍历时才调用，如果集合大小只有一个元素，第一遍便可以得到结果
         if (winner == null) {
           winner = candidate;
           continue;
@@ -203,7 +204,7 @@ public class Reflector {
           match = setter;
           break;
         }
-        // 否则该字段的 getter 方法发生冲突，并且 setter 方法没有发生冲突
+        // 没有找到setter形参类型和getter方法返回值一致的类型，则需要找到更加的setter返回形参类型
         if (!isSetterAmbiguous) {
           match = pickBetterSetter(match, setter, propName);
           isSetterAmbiguous = match == null;
@@ -227,6 +228,7 @@ public class Reflector {
     if (setter1 == null) {
       return setter2;
     }
+    // 获取setter1和setter2第一个形参
     Class<?> paramType1 = setter1.getParameterTypes()[0];
     Class<?> paramType2 = setter2.getParameterTypes()[0];
     if (paramType1.isAssignableFrom(paramType2)) {
@@ -273,6 +275,9 @@ public class Reflector {
     return result;
   }
 
+  /**
+   * @param clazz
+   */
   private void addFields(Class<?> clazz) {
     // 获取指定类声明的字段
     Field[] fields = clazz.getDeclaredFields();
@@ -288,6 +293,7 @@ public class Reflector {
           addSetField(field);
         }
       }
+      // getMethods 集合中没有该字段对应的getter方法才把该字段加入
       if (!getMethods.containsKey(field.getName())) {
         addGetField(field);
       }

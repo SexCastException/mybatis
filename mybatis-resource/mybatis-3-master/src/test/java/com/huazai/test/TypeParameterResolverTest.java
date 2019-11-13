@@ -9,16 +9,22 @@ import java.lang.reflect.Type;
 import java.util.Map;
 
 public class TypeParameterResolverTest {
+
+  private ClassA<String, Integer> ca = new ClassA();
+
   @org.junit.Test
   public void testParameterizedType() throws Exception {
     Field map = ClassA.class.getDeclaredField("map");
+    Field name = ClassA.class.getDeclaredField("name");
     System.out.println(map.getGenericType());
+    System.out.println(name.getGenericType());
     System.out.println(map.getGenericType() instanceof ParameterizedType);
+    System.out.println(name.getGenericType() instanceof ParameterizedType);
 
-    // 第一个种方式
+    // 第一种方式
     Type type = TypeParameterResolver.resolveFieldType(map, ParameterizedTypeImpl.make(SubClassA.class, new Type[]{Long.class, String.class}, TypeParameterResolverTest.class));
     // 第二种方式
-//    Type type = TypeParameterResolver.resolveFieldType(map, TypeParameterResolverTest.class.getDeclaredField("map").getGenericType());
+//    Type type = TypeParameterResolver.resolveFieldType(map, TypeParameterResolverTest.class.getDeclaredField("ca").getGenericType());
 
     System.out.println(type);
 
