@@ -211,9 +211,11 @@ public class TypeParameterResolver {
     }
 
     // 因为 SubClassA 继承了 ClassA 且 map 字段定义在 ClassA中，故这里的 srcType 与 declaringClass 并不相等。
-    // 如果 map 字段定义在 SubClassA中，则可以直接结束对 K 的解析
+    // 如果不是从某个确定了具体类型的泛型参数的子类开始解析，则解析结果是该泛型变量的上界，默认是Object
+    // 如：SubA<Long,String> 如果从子类Sub开始解析，结果：ClassA<Long,String>
+    // 如：直接从ClassA<K,V>解析，则结果为K和V的上界，默认为Object
     if (clazz == declaringClass) {
-      // 获取上界
+      // 获取上界，没有写，则为Object
       Type[] bounds = typeVar.getBounds();
       if (bounds.length > 0) {
         return bounds[0];
@@ -245,7 +247,7 @@ public class TypeParameterResolver {
    * 和{@link TypeParameterResolver#resolveTypeVar}递归整个继承结构井完成类型变量的解析
    *
    * @param typeVar        待解析的类型参数
-   * @param srcType
+   * @param srcType        从哪个子类开始解析
    * @param declaringClass typeVar所在声明的类
    * @param clazz
    * @param superclass
@@ -277,6 +279,18 @@ public class TypeParameterResolver {
     return null;
   }
 
+  /**
+   * 将父类的泛型变量如K，V转换成子类的具体类型，如Long，String
+   * SubA<Long,String> extends ClassA<K,V>  结果：SubA<Long,String> extends ClassA<Long,String>
+   * SubA<Long,String> extends ClassA<V,K>  结果：SubA<Long,String> extends ClassA<String,Long>
+   * SubA<Long,String> extends ClassA<List<K>,V>  结果：SubA<Long,String> extends ClassA<List<K>,String>
+   * SubA<Long,String> extends ClassA<List<K>,List<V>>  结果：SubA<Long,String> extends ClassA<List<K>,List<V>>
+   *
+   * @param srcType
+   * @param srcClass
+   * @param parentType
+   * @return
+   */
   private static ParameterizedType translateParentTypeVars(ParameterizedType srcType, Class<?> srcClass, ParameterizedType parentType) {
     Type[] parentTypeArgs = parentType.getActualTypeArguments();
     Type[] srcTypeArgs = srcType.getActualTypeArguments();

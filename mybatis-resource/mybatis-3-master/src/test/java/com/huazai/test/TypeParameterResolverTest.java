@@ -22,7 +22,7 @@ public class TypeParameterResolverTest {
     System.out.println(name.getGenericType() instanceof ParameterizedType);
 
     // 第一种方式
-    Type type = TypeParameterResolver.resolveFieldType(map, ParameterizedTypeImpl.make(SubClassA.class, new Type[]{Long.class, String.class}, TypeParameterResolverTest.class));
+    Type type = TypeParameterResolver.resolveFieldType(map, ParameterizedTypeImpl.make(ClassA.class, new Type[]{Long.class, String.class}, TypeParameterResolverTest.class));
     // 第二种方式
 //    Type type = TypeParameterResolver.resolveFieldType(map, TypeParameterResolverTest.class.getDeclaredField("ca").getGenericType());
 
