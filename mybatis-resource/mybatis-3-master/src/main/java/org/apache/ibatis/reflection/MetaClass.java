@@ -27,6 +27,7 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 
 /**
+ * MetaClass 是 MyBatis 类级别的元信息的封装和处理
  * 通过Reflector 和PropertyTokenizer 组合封装使用，实现了对复杂的属性表达式的解析，并实现了获取指定属性描述信息的功能。
  *
  * @author Clinton Begin
