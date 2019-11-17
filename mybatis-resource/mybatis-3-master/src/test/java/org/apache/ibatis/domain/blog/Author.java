@@ -28,6 +28,9 @@ public class Author extends AbstractEntity implements Serializable {
   protected String bio;
   protected Section favouriteSection;
 
+  // 该字段不设置setter和getter方法
+  private String desciption;
+
   protected String testField;
 
   public Author() {

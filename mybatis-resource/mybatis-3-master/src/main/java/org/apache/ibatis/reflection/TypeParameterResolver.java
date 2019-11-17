@@ -174,7 +174,16 @@ public class TypeParameterResolver {
     return new WildcardTypeImpl(lowerBounds, upperBounds);
   }
 
+  /**
+   * 解析通配符类型边界（上边界/下边界）
+   *
+   * @param bounds
+   * @param srcType
+   * @param declaringClass
+   * @return
+   */
   private static Type[] resolveWildcardTypeBounds(Type[] bounds, Type srcType, Class<?> declaringClass) {
+    // 保存边界的结果
     Type[] result = new Type[bounds.length];
     for (int i = 0; i < bounds.length; i++) {
       if (bounds[i] instanceof TypeVariable) {
@@ -191,10 +200,10 @@ public class TypeParameterResolver {
   }
 
   /**
-   * 实际解析的是typeVar声明的类，比如Map<String,Object> 实际解析的是Map
+   * 解析泛型参数变量，如：K，V
    *
    * @param typeVar        待解析的类型参数
-   * @param srcType        声明typeVar的类
+   * @param srcType        解析typeVar的开始位置
    * @param declaringClass typeVar所在声明的类
    * @return
    */
@@ -223,14 +232,14 @@ public class TypeParameterResolver {
       return Object.class;
     }
 
-    // 获取声明的父亲类型
+    // 获取声明的父亲类型，如果为接口，则为null
     Type superclass = clazz.getGenericSuperclass();
     // 扫描父类进行后续解析，递归入口，即resolveTypeVar调用scanSuperTypes，scanSuperTypes调用resolveTypeVar.......
     result = scanSuperTypes(typeVar, srcType, declaringClass, clazz, superclass);
     if (result != null) {
       return result;
     }
-
+    // 获取父接口
     Type[] superInterfaces = clazz.getGenericInterfaces();
     for (Type superInterface : superInterfaces) {
       // 扫描接口进行后续解析
@@ -244,7 +253,7 @@ public class TypeParameterResolver {
   }
 
   /**
-   * 和{@link TypeParameterResolver#resolveTypeVar}递归整个继承结构井完成类型变量的解析
+   * 和{@link TypeParameterResolver#resolveTypeVar}递归整个继承结构并完成类型变量的解析
    *
    * @param typeVar        待解析的类型参数
    * @param srcType        从哪个子类开始解析
@@ -254,7 +263,7 @@ public class TypeParameterResolver {
    * @return
    */
   private static Type scanSuperTypes(TypeVariable<?> typeVar, Type srcType, Class<?> declaringClass, Class<?> clazz, Type superclass) {
-    if (superclass instanceof ParameterizedType) {  // superclass是泛型类型
+    if (superclass instanceof ParameterizedType) {  // 如果superclass是泛型类型
       ParameterizedType parentAsType = (ParameterizedType) superclass;
       // 获取 superclass 的原始类型
       Class<?> parentAsClass = (Class<?>) parentAsType.getRawType();
@@ -273,6 +282,7 @@ public class TypeParameterResolver {
       if (declaringClass.isAssignableFrom(parentAsClass)) {
         return resolveTypeVar(typeVar, parentAsType, declaringClass);
       }
+      // 如果是子类覆盖父类的方法，则返回子类覆盖的字段、方法返回值和方法参数的类型
     } else if (superclass instanceof Class && declaringClass.isAssignableFrom((Class<?>) superclass)) {
       return resolveTypeVar(typeVar, superclass, declaringClass);
     }

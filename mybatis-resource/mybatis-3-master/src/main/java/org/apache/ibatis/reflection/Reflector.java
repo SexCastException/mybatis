@@ -44,9 +44,9 @@ public class Reflector {
   private final Map<String, Invoker> setMethods = new HashMap<>();
   // 保存属性相应getter方法，key是属性名称，value是 Invoker对象，它是对 getter方法对应的 Method对象的封装
   private final Map<String, Invoker> getMethods = new HashMap<>();
-  // 保存属性相应的 setter方法的参数值类型， key是属性名称， value是setter 方法的参数类型
+  // 保存属性相应的 setter方法的 参数值 类型， key是属性名称， value是setter 方法的参数类型
   private final Map<String, Class<?>> setTypes = new HashMap<>();
-  // 保存属性相应的 getter方法的参数值类型， key是属性名称， value是getter 方法的返回值类型
+  // 保存属性相应的 getter方法的 返回值 类型， key是属性名称， value是getter 方法的返回值类型
   private final Map<String, Class<?>> getTypes = new HashMap<>();
   // 保存默认的构造方法
   private Constructor<?> defaultConstructor;

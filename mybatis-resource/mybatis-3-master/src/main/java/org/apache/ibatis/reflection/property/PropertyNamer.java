@@ -20,7 +20,7 @@ import java.util.Locale;
 import org.apache.ibatis.reflection.ReflectionException;
 
 /**
- * 提供了静态方法帮助完成方法名到属性名的转换，以及多种检测操作。
+ * 提供了静态方法帮助完成方法名到属性名的转换，以及多种检测操作，如：是否为setter和getter
  * @author Clinton Begin
  */
 public final class PropertyNamer {
@@ -61,7 +61,7 @@ public final class PropertyNamer {
   }
 
   /**
-   * 判断是否为JavaBean规范中的getter方法
+   * 判断是否为JavaBean规范中的getter方法，isXXX也属于getter方法
    * @param name
    * @return
    */

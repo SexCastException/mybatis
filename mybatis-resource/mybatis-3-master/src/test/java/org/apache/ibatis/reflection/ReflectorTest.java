@@ -35,7 +35,7 @@ class ReflectorTest {
   void testGetSetterType() {
     ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
     Reflector reflector = reflectorFactory.findForClass(Author.class);
-    Assertions.assertEquals(Long.class, reflector.getSetterType("id"));
+    Assertions.assertEquals(Integer.class, reflector.getSetterType("id"));
   }
 
   @Test

@@ -27,7 +27,8 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 
 /**
- * 通过Reflector 和PropertyTokenizer 组合使用，实现了对复杂的属性表达式的解析，并实现了获取指定属性描述信息的功能。
+ * 通过Reflector 和PropertyTokenizer 组合封装使用，实现了对复杂的属性表达式的解析，并实现了获取指定属性描述信息的功能。
+ *
  * @author Clinton Begin
  */
 public class MetaClass {
@@ -35,6 +36,10 @@ public class MetaClass {
   private final ReflectorFactory reflectorFactory;
   private final Reflector reflector;
 
+  /**
+   * @param type             根据type创建对应的Reflector对象
+   * @param reflectorFactory
+   */
   private MetaClass(Class<?> type, ReflectorFactory reflectorFactory) {
     this.reflectorFactory = reflectorFactory;
     this.reflector = reflectorFactory.findForClass(type);
@@ -69,6 +74,12 @@ public class MetaClass {
     return reflector.getSetablePropertyNames();
   }
 
+  /**
+   * 返回字段类型的Class对象，如果有嵌套则返回最有一级字段的属性，比如user.order.name，最终返回name的setter方法的形参类型
+   *
+   * @param name
+   * @return
+   */
   public Class<?> getSetterType(String name) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
     if (prop.hasNext()) {
@@ -79,6 +90,12 @@ public class MetaClass {
     }
   }
 
+  /**
+   * 返回字段类型的Class对象，如果有嵌套则返回最有一级字段的属性，比如user.order.name，最终返回name的getter方法的返回值类型
+   *
+   * @param name
+   * @return
+   */
   public Class<?> getGetterType(String name) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
     if (prop.hasNext()) {
@@ -116,12 +133,12 @@ public class MetaClass {
   private Type getGenericGetterType(String propertyName) {
     try {
       Invoker invoker = reflector.getGetInvoker(propertyName);
-      if (invoker instanceof MethodInvoker) {
+      if (invoker instanceof MethodInvoker) {   // 如果是封装方法的 Invoker
         Field _method = MethodInvoker.class.getDeclaredField("method");
         _method.setAccessible(true);
         Method method = (Method) _method.get(invoker);
         return TypeParameterResolver.resolveReturnType(method, reflector.getType());
-      } else if (invoker instanceof GetFieldInvoker) {
+      } else if (invoker instanceof GetFieldInvoker) {  // 如果是封装getter方法的 Invoker
         Field _field = GetFieldInvoker.class.getDeclaredField("field");
         _field.setAccessible(true);
         Field field = (Field) _field.get(invoker);
@@ -132,6 +149,12 @@ public class MetaClass {
     return null;
   }
 
+  /**
+   * 递归查询是否有setter方法
+   *
+   * @param name
+   * @return
+   */
   public boolean hasSetter(String name) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
     if (prop.hasNext()) {
@@ -146,6 +169,12 @@ public class MetaClass {
     }
   }
 
+  /**
+   * 递归查询是否有getter方法
+   *
+   * @param name
+   * @return
+   */
   public boolean hasGetter(String name) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
     if (prop.hasNext()) {
@@ -170,7 +199,8 @@ public class MetaClass {
 
   /**
    * 解析属性表达式,比如：orders[O].items[O].name
-   * @param name
+   *
+   * @param name    解析属性表达式
    * @param builder
    * @return
    */
@@ -182,9 +212,10 @@ public class MetaClass {
         builder.append(propertyName);
         builder.append(".");
         MetaClass metaProp = metaClassForProperty(propertyName);
+        // 递归解析 PropertyTokenizer.children 字段，并将解析结果添加到 builder 中保存
         metaProp.buildProperty(prop.getChildren(), builder);
       }
-    } else {
+    } else {  // 递归出口
       String propertyName = reflector.findPropertyName(name);
       if (propertyName != null) {
         builder.append(propertyName);
@@ -193,6 +224,11 @@ public class MetaClass {
     return builder;
   }
 
+  /**
+   * 是否有默认的构造函数
+   *
+   * @return
+   */
   public boolean hasDefaultConstructor() {
     return reflector.hasDefaultConstructor();
   }
