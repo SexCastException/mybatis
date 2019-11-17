@@ -111,6 +111,12 @@ public class MetaClass {
     return MetaClass.forClass(propType, reflectorFactory);
   }
 
+  /**
+   *
+   *
+   * @param prop
+   * @return
+   */
   private Class<?> getGetterType(PropertyTokenizer prop) {
     Class<?> type = reflector.getGetterType(prop.getName());
     if (prop.getIndex() != null && Collection.class.isAssignableFrom(type)) {
@@ -133,7 +139,9 @@ public class MetaClass {
   private Type getGenericGetterType(String propertyName) {
     try {
       Invoker invoker = reflector.getGetInvoker(propertyName);
+      // 根据Reflector.getMethods集合中记录的Invoker实现类的类型，决定解析getter方法返回值类型还是解析字段类型
       if (invoker instanceof MethodInvoker) {   // 如果是封装方法的 Invoker
+        // MethodInvoker属性method由于没有提供getter方法，所以通过反射来获取，GetFieldInvoker 属性field同理
         Field _method = MethodInvoker.class.getDeclaredField("method");
         _method.setAccessible(true);
         Method method = (Method) _method.get(invoker);
