@@ -130,8 +130,8 @@ class MetaClassTest {
   void shouldCheckGetterAndSetterNames() {
     ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
     MetaClass meta = MetaClass.forClass(RichType.class, reflectorFactory);
-    assertEquals(5, meta.getGetterNames().length);
-    assertEquals(5, meta.getSetterNames().length);
+    assertEquals(6, meta.getGetterNames().length);
+    assertEquals(6, meta.getSetterNames().length);
   }
 
   @Test

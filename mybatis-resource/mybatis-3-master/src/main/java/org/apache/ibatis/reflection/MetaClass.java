@@ -119,10 +119,13 @@ public class MetaClass {
    */
   private Class<?> getGetterType(PropertyTokenizer prop) {
     Class<?> type = reflector.getGetterType(prop.getName());
+    // 该表达式中是否使用"[]"指定了下标，且是Collection子类
     if (prop.getIndex() != null && Collection.class.isAssignableFrom(type)) {
       Type returnType = getGenericGetterType(prop.getName());
       if (returnType instanceof ParameterizedType) {
+        // 针对ParameterizedType进行处理，即针对泛型集合类型进行处理
         Type[] actualTypeArguments = ((ParameterizedType) returnType).getActualTypeArguments();
+        // 如果泛型指定类型参数，则返回参数的类型，如：List<String> 返回的是 String
         if (actualTypeArguments != null && actualTypeArguments.length == 1) {
           returnType = actualTypeArguments[0];
           if (returnType instanceof Class) {
