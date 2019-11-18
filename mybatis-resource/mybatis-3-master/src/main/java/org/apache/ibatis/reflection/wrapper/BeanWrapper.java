@@ -47,9 +47,11 @@ public class BeanWrapper extends BaseWrapper {
    */
   @Override
   public Object get(PropertyTokenizer prop) {
+    // 索引不为空，需要从集合里获取对象
     if (prop.getIndex() != null) {
-      // 通过 MetaObject.getValue()方法获取 object 对象中的指定集合属性
+      // 通过 MetaObject.getValue()方法获取集合对象
       Object collection = resolveCollection(prop, object);
+      // 根据索引信息从集合中获取对象
       return getCollectionValue(prop, collection);
     } else {
       // 不存在索引信息 ，则 name 部分为普通对象，查找并调用 Invoker 相关方法获取属性
@@ -59,8 +61,11 @@ public class BeanWrapper extends BaseWrapper {
 
   @Override
   public void set(PropertyTokenizer prop, Object value) {
+    // 索引不为空，需要从集合中设置属性
     if (prop.getIndex() != null) {
+      // 通过 MetaObject.getValue()方法获取集合对象
       Object collection = resolveCollection(prop, object);
+      // 根据索引信息给集合对象赋值
       setCollectionValue(prop, collection, value);
     } else {
       setBeanProperty(prop, object, value);
@@ -192,6 +197,7 @@ public class BeanWrapper extends BaseWrapper {
       Invoker method = metaClass.getSetInvoker(prop.getName());
       Object[] params = {value};
       try {
+        // 调用setter 设置属性
         method.invoke(object, params);
       } catch (Throwable t) {
         throw ExceptionUtil.unwrapThrowable(t);

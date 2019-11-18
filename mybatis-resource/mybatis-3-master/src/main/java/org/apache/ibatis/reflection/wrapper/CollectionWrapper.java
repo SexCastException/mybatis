@@ -23,6 +23,7 @@ import org.apache.ibatis.reflection.factory.ObjectFactory;
 import org.apache.ibatis.reflection.property.PropertyTokenizer;
 
 /**
+ * 实现了ObjectWrapper接口,其中封装了Collection<Object>类型的对象，但它大部分实现方法都会抛出UnsupportedOperationException异常。
  * @author Clinton Begin
  */
 public class CollectionWrapper implements ObjectWrapper {

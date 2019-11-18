@@ -52,7 +52,7 @@ public abstract class BaseWrapper implements ObjectWrapper {
   }
 
   /**
-   * 解析属性表达式的索引信息，然后 get 对应项。
+   * 根据索引信息，从集合中获取值
    *
    * @param prop
    * @param collection
@@ -90,7 +90,7 @@ public abstract class BaseWrapper implements ObjectWrapper {
   }
 
   /**
-   * 解析属性表达式的索引信息，然后 set 对应项。
+   * 根据索引信息,从集合中设置属性
    *
    * @param prop
    * @param collection
