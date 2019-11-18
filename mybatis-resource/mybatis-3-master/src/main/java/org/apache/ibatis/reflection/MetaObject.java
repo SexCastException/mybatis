@@ -55,16 +55,30 @@ public class MetaObject {
     if (object instanceof ObjectWrapper) {
       this.objectWrapper = (ObjectWrapper) object;
     } else if (objectWrapperFactory.hasWrapperFor(object)) {
+      // 若ObjectWrapperFactory能够为该原始对象创建对应的ObjectWrapper对象，则由优先使用
+      // DefaultObjectWrapperFactory,始终返回false，用户可以自定义ObjectWrapperFactory实现进行扩展
       this.objectWrapper = objectWrapperFactory.getWrapperFor(this, object);
     } else if (object instanceof Map) {
+      // 若原始类型为Map类型，则创建MapWrapper对象
       this.objectWrapper = new MapWrapper(this, (Map) object);
     } else if (object instanceof Collection) {
+      // 若原始类型为Collection类型，则创建CollectionWrapper对象
       this.objectWrapper = new CollectionWrapper(this, (Collection) object);
     } else {
+      // 若原始类型为JavaBean类型，则创建BeanWrapper对象
       this.objectWrapper = new BeanWrapper(this, object);
     }
   }
 
+  /**
+   * MetaObject的构造方法是private修饰的，只能通过forObject()这个静态方法创建MetaObject对象
+   *
+   * @param object
+   * @param objectFactory
+   * @param objectWrapperFactory
+   * @param reflectorFactory
+   * @return
+   */
   public static MetaObject forObject(Object object, ObjectFactory objectFactory, ObjectWrapperFactory objectWrapperFactory, ReflectorFactory reflectorFactory) {
     if (object == null) {
       return SystemMetaObject.NULL_META_OBJECT;
