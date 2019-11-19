@@ -57,6 +57,12 @@ public class MetaClass {
     return new MetaClass(type, reflectorFactory);
   }
 
+  /**
+   * 主要解析类属性的类型
+   *
+   * @param name
+   * @return
+   */
   public MetaClass metaClassForProperty(String name) {
     Class<?> propType = reflector.getGetterType(name);
     return MetaClass.forClass(propType, reflectorFactory);
@@ -93,7 +99,7 @@ public class MetaClass {
     if (prop.hasNext()) {
       MetaClass metaProp = metaClassForProperty(prop.getName());
       return metaProp.getSetterType(prop.getChildren());
-    } else {
+    } else {  // 递归出口
       return reflector.getSetterType(prop.getName());
     }
   }
@@ -111,6 +117,7 @@ public class MetaClass {
       return metaProp.getGetterType(prop.getChildren());
     }
     // issue #506. Resolve the type inside a Collection Object
+    // 递归出口
     return getGetterType(prop);
   }
 
