@@ -250,10 +250,17 @@ public class Reflector {
   private void addSetMethod(String name, Method method) {
     MethodInvoker invoker = new MethodInvoker(method);
     setMethods.put(name, invoker);
+    // 解析setter方法的形参，setTypes 保存第一个形参类型
     Type[] paramTypes = TypeParameterResolver.resolveParamTypes(method, type);
     setTypes.put(name, typeToClass(paramTypes[0]));
   }
 
+  /**
+   * 判断 src 是否为普通类、泛型、数组，并返回响应的类型的 Class ，找不到则返回Object.class
+   *
+   * @param src
+   * @return
+   */
   private Class<?> typeToClass(Type src) {
     Class<?> result = null;
     if (src instanceof Class) {
@@ -276,12 +283,16 @@ public class Reflector {
   }
 
   /**
+   * 把clazz以及父类中没有声明的getter或setter方法并且非static和非final的封装该字段的GetFieldInvoker或SetFieldInvoker（注意：不是MethodInvoker）加入getMethods集合或setMethods集合
+   * 并把字段类型的加入getTypes集合和setTypes集合中
+   *
    * @param clazz
    */
   private void addFields(Class<?> clazz) {
     // 获取指定类声明的字段
     Field[] fields = clazz.getDeclaredFields();
     for (Field field : fields) {
+      // setter 集合中没有该字段对应的setter方法才把该字段加入 setMethods 和 setTyps
       if (!setMethods.containsKey(field.getName())) {
         // issue #379 - removed the check for final because JDK 1.5 allows
         // modification of final fields through reflection (JSR-133). (JGB)
@@ -293,7 +304,7 @@ public class Reflector {
           addSetField(field);
         }
       }
-      // getMethods 集合中没有该字段对应的getter方法才把该字段加入
+      // getMethods 集合中没有该字段对应的getter方法才把该字段加入 getMethods 和 getTypes
       if (!getMethods.containsKey(field.getName())) {
         addGetField(field);
       }

@@ -21,10 +21,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
+ * 封装字段有getter 方法和 setter 方法的
  * @author Clinton Begin
  */
 public class MethodInvoker implements Invoker {
 
+  /**
+   * getter 方法的返回值类型或者 setter 方法的
+   */
   private final Class<?> type;
   private final Method method;
 

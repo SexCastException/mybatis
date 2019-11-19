@@ -46,6 +46,13 @@ public class MetaClass {
     this.reflector = reflectorFactory.findForClass(type);
   }
 
+  /**
+   * 构造函数私有化，静态方法创建MetaClass对象
+   *
+   * @param type
+   * @param reflectorFactory
+   * @return
+   */
   public static MetaClass forClass(Class<?> type, ReflectorFactory reflectorFactory) {
     return new MetaClass(type, reflectorFactory);
   }
@@ -113,8 +120,6 @@ public class MetaClass {
   }
 
   /**
-   *
-   *
    * @param prop
    * @return
    */
