@@ -1,19 +1,23 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2019 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.type;
+
+import org.apache.ibatis.binding.MapperMethod.ParamMap;
+import org.apache.ibatis.io.ResolverUtil;
+import org.apache.ibatis.io.Resources;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -22,42 +26,42 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.Month;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.Year;
-import java.time.YearMonth;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.chrono.JapaneseDate;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.ibatis.binding.MapperMethod.ParamMap;
-import org.apache.ibatis.io.ResolverUtil;
-import org.apache.ibatis.io.Resources;
-
 /**
+ * 在MyBatis 初始化过程中，会为所有已知的${@link TypeHandler} 创建对象，并实现注册到 TypeHandlerRegistry中，
+ * 由TypeHandlerRegistry负责管理这些TypeHandler对象。
+ *
  * @author Clinton Begin
  * @author Kazuki Shimizu
  */
 public final class TypeHandlerRegistry {
 
-  private final Map<JdbcType, TypeHandler<?>>  jdbcTypeHandlerMap = new EnumMap<>(JdbcType.class);
+  /**
+   * 记录JdbcType与TypeHandler之间的对应关系，其中JdbcType是一个枚举类型，它定义对应的JDBC类型
+   * 该集合主要用于从结果集读取数据时，将数据从Jdbc类型转换成Java类型
+   */
+  private final Map<JdbcType, TypeHandler<?>> jdbcTypeHandlerMap = new EnumMap<>(JdbcType.class);
+
+  /**
+   * 记录了Java类型向指定JdbcType转换时，需要使用的TypeHandler对象。例如: Java类型中的String可能
+   * 转换成数据库的char、varchar等多种类型，所以存在一对多关系
+   */
   private final Map<Type, Map<JdbcType, TypeHandler<?>>> typeHandlerMap = new ConcurrentHashMap<>();
   private final TypeHandler<Object> unknownTypeHandler = new UnknownTypeHandler(this);
+
+  /**
+   * 记录了全部TypeHandler的类型以及该类型相应的TypeHandler对象，键为TypeHandler的Class对象，值为TypeHandler
+   */
   private final Map<Class<?>, TypeHandler<?>> allTypeHandlersMap = new HashMap<>();
 
+  /**
+   * 空TypeHandler集合的标识
+   */
   private static final Map<JdbcType, TypeHandler<?>> NULL_TYPE_HANDLER_MAP = Collections.emptyMap();
 
   private Class<? extends TypeHandler> defaultEnumTypeHandler = EnumTypeHandler.class;
@@ -166,6 +170,7 @@ public final class TypeHandlerRegistry {
   /**
    * Set a default {@link TypeHandler} class for {@link Enum}.
    * A default {@link TypeHandler} is {@link org.apache.ibatis.type.EnumTypeHandler}.
+   *
    * @param typeHandler a type handler class for {@link Enum}
    * @since 3.4.5
    */
@@ -276,7 +281,7 @@ public final class TypeHandlerRegistry {
   }
 
   private Map<JdbcType, TypeHandler<?>> getJdbcHandlerMapForSuperclass(Class<?> clazz) {
-    Class<?> superclass =  clazz.getSuperclass();
+    Class<?> superclass = clazz.getSuperclass();
     if (superclass == null || Object.class.equals(superclass)) {
       return null;
     }
@@ -315,12 +320,21 @@ public final class TypeHandlerRegistry {
 
   // Only handler
 
+  /**
+   * register 重载方法1
+   *
+   * @param typeHandler
+   * @param <T>
+   */
   @SuppressWarnings("unchecked")
   public <T> void register(TypeHandler<T> typeHandler) {
     boolean mappedTypeFound = false;
+    // 获取 @MappedTypes 注解
     MappedTypes mappedTypes = typeHandler.getClass().getAnnotation(MappedTypes.class);
     if (mappedTypes != null) {
+      // 根据@MappedTypes注解中指定的Java类型进行注册
       for (Class<?> handledType : mappedTypes.value()) {
+        // 强制类型转换以及反射创建TypeHandler对象之后，交由 register重载方法3处理
         register(handledType, typeHandler);
         mappedTypeFound = true;
       }
@@ -336,6 +350,7 @@ public final class TypeHandlerRegistry {
       }
     }
     if (!mappedTypeFound) {
+      // 未指定@MappedTypes注解，交由 register重载方法2处理
       register((Class<T>) null, typeHandler);
     }
   }
@@ -370,13 +385,22 @@ public final class TypeHandlerRegistry {
     register((Type) type, jdbcType, handler);
   }
 
+  /**
+   * 向typeHandlerMap注册TypeHandler
+   *
+   * @param javaType
+   * @param jdbcType
+   * @param handler
+   */
   private void register(Type javaType, JdbcType jdbcType, TypeHandler<?> handler) {
     if (javaType != null) {
       Map<JdbcType, TypeHandler<?>> map = typeHandlerMap.get(javaType);
+      // 不存在则创建新的map并加入到typeHandlerMap中
       if (map == null || map == NULL_TYPE_HANDLER_MAP) {
         map = new HashMap<>();
         typeHandlerMap.put(javaType, map);
       }
+      // 新加入或覆盖原有的TypeHandler
       map.put(jdbcType, handler);
     }
     allTypeHandlersMap.put(handler.getClass(), handler);

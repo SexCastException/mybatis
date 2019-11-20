@@ -43,14 +43,29 @@ public interface TypeHandler<T> {
 
   /**
    * 从${@link ResultSet}中获取数据时会调用此方法，会将数据由Java类型转换成JdbcType类型
-   * 提供了多个重载方法
+   * <p>
+   * 通过列名获取结果
    *
    * @param columnName Colunm name, when configuration <code>useColumnLabel</code> is <code>false</code>
    */
   T getResult(ResultSet rs, String columnName) throws SQLException;
 
+  /**
+   *通过下标索引获取结果
+   * @param rs
+   * @param columnIndex
+   * @return
+   * @throws SQLException
+   */
   T getResult(ResultSet rs, int columnIndex) throws SQLException;
 
+  /**
+   * 通过列下标的方式来获取存储过程输出结果中的数据
+   * @param cs
+   * @param columnIndex
+   * @return
+   * @throws SQLException
+   */
   T getResult(CallableStatement cs, int columnIndex) throws SQLException;
 
 }
