@@ -321,6 +321,7 @@ public final class TypeHandlerRegistry {
   // Only handler
 
   /**
+   * 根据注解 @MappedTypes指定的Class进行注册
    * register 重载方法1
    *
    * @param typeHandler
@@ -328,6 +329,7 @@ public final class TypeHandlerRegistry {
    */
   @SuppressWarnings("unchecked")
   public <T> void register(TypeHandler<T> typeHandler) {
+    // 是否映射成功
     boolean mappedTypeFound = false;
     // 获取 @MappedTypes 注解
     MappedTypes mappedTypes = typeHandler.getClass().getAnnotation(MappedTypes.class);

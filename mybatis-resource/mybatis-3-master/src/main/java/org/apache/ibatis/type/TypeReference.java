@@ -17,6 +17,8 @@ package org.apache.ibatis.type;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * References a generic type.
@@ -40,6 +42,12 @@ public abstract class TypeReference<T> {
     rawType = getSuperclassTypeParameter(getClass());
   }
 
+  /**
+   * 获取泛型父类的类型参数
+   *
+   * @param clazz
+   * @return
+   */
   Type getSuperclassTypeParameter(Class<?> clazz) {
     // 获取超类，可能是泛型
     Type genericSuperclass = clazz.getGenericSuperclass();
@@ -72,6 +80,16 @@ public abstract class TypeReference<T> {
   @Override
   public String toString() {
     return rawType.toString();
+  }
+
+  public static void main(String[] args) {
+    IntegerTypeHandler integerTypeHandler = new IntegerTypeHandler();
+    if (integerTypeHandler.getClass().getGenericSuperclass() instanceof ParameterizedType) {
+      ParameterizedType parameterizedType = (ParameterizedType) integerTypeHandler.getClass().getGenericSuperclass();
+      Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+      System.out.println(actualTypeArguments);
+      System.out.println(actualTypeArguments[0]);
+    }
   }
 
 }
