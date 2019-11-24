@@ -24,11 +24,17 @@ import java.sql.ResultSet;
 import java.util.*;
 
 /**
+ * 在编写SQL语句时，使用别名可以方便理解以及维护，例如表名或列名很长时，我们一般会为其设计易懂易维护的别名。
+ * <p>
  * 类型别名注册器
+ *
  * @author Clinton Begin
  */
 public class TypeAliasRegistry {
 
+  /**
+   * 管理别名和java类型之间的映射
+   */
   private final Map<String, Class<?>> typeAliases = new HashMap<>();
 
   public TypeAliasRegistry() {
@@ -90,12 +96,14 @@ public class TypeAliasRegistry {
     registerAlias("collection", Collection.class);
     registerAlias("iterator", Iterator.class);
 
+    // 留意这个，之前resultMap中自己没有使用过的
     registerAlias("ResultSet", ResultSet.class);
   }
 
   /**
    * 解析别名
    * 通过别名获取具体的类型，如果获取不到则加载并初始化返回Class对象
+   *
    * @param string
    * @param <T>
    * @return
@@ -109,6 +117,7 @@ public class TypeAliasRegistry {
         return null;
       }
       // issue #748
+      // 将别名转换为小写
       String key = string.toLowerCase(Locale.ENGLISH);
       Class<T> value;
       if (typeAliases.containsKey(key)) {
@@ -126,12 +135,19 @@ public class TypeAliasRegistry {
 
   /**
    * 扫描包批量注册别名
+   *
    * @param packageName
    */
   public void registerAliases(String packageName) {
     registerAliases(packageName, Object.class);
   }
 
+  /**
+   * 注册别名，忽略内部类、接口和抽象类
+   *
+   * @param packageName
+   * @param superType
+   */
   public void registerAliases(String packageName, Class<?> superType) {
     ResolverUtil<Class<?>> resolverUtil = new ResolverUtil<>();
     resolverUtil.find(new ResolverUtil.IsA(superType), packageName);
@@ -139,13 +155,20 @@ public class TypeAliasRegistry {
     for (Class<?> type : typeSet) {
       // Ignore inner classes and interfaces (including package-info.java)
       // Skip also inner classes. See issue #6
+      //
       if (!type.isAnonymousClass() && !type.isInterface() && !type.isMemberClass()) {
         registerAlias(type);
       }
     }
   }
 
+  /**
+   * 通过注解 @Alias 注册别名，value指定别名名称
+   *
+   * @param type
+   */
   public void registerAlias(Class<?> type) {
+    // 类的简单名字，不包含报名
     String alias = type.getSimpleName();
     Alias aliasAnnotation = type.getAnnotation(Alias.class);
     if (aliasAnnotation != null) {
@@ -160,12 +183,17 @@ public class TypeAliasRegistry {
     }
     // issue #748
     String key = alias.toLowerCase(Locale.ENGLISH);
+    // 对于相同的别名和java类型，如果注册多次则抛出异常
     if (typeAliases.containsKey(key) && typeAliases.get(key) != null && !typeAliases.get(key).equals(value)) {
       throw new TypeException("The alias '" + alias + "' is already mapped to the value '" + typeAliases.get(key).getName() + "'.");
     }
     typeAliases.put(key, value);
   }
 
+  /**
+   * @param alias 别名
+   * @param value java类型权限定名
+   */
   public void registerAlias(String alias, String value) {
     try {
       registerAlias(alias, Resources.classForName(value));
@@ -176,6 +204,7 @@ public class TypeAliasRegistry {
 
   /**
    * 获取类型别名
+   *
    * @since 3.2.2
    */
   public Map<String, Class<?>> getTypeAliases() {

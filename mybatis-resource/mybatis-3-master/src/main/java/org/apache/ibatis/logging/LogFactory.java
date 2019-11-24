@@ -1,23 +1,26 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2019 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.logging;
 
 import java.lang.reflect.Constructor;
 
 /**
+ * 在LogFactory 类加载时会执行其静态代码块，其逻辑是按序加载并实例化对应日志组件的适配器，
+ * 然后使用LogFactory.logConstructor这个静态字段，记录当前使用的第三方日志组件的适配器。
+ *
  * @author Clinton Begin
  * @author Eduardo Macarron
  */
@@ -28,8 +31,16 @@ public final class LogFactory {
    */
   public static final String MARKER = "MYBATIS";
 
+  /**
+   * 日志适配器构造器的引用
+   */
   private static Constructor<? extends Log> logConstructor;
 
+  /** 日志优先级顺序:
+   * Slf4j -> Apache Commons Log -> Log4J2 -> Log4J -> JdkLog -> NoLog
+   *
+   * 由于 tryImplementation做了非空判断,所以加载了第一个之后,如果logConstructor不为null,则不加载之后的日志模块
+   */
   static {
     tryImplementation(LogFactory::useSlf4jLogging);
     tryImplementation(LogFactory::useCommonsLogging);
@@ -55,34 +66,58 @@ public final class LogFactory {
     }
   }
 
+  /**
+   * 自定义日志模块
+   */
   public static synchronized void useCustomLogging(Class<? extends Log> clazz) {
     setImplementation(clazz);
   }
 
+  /**
+   * Slf4j日志模块
+   */
   public static synchronized void useSlf4jLogging() {
     setImplementation(org.apache.ibatis.logging.slf4j.Slf4jImpl.class);
   }
 
+  /**
+   * Apache Commons Log日志模块
+   */
   public static synchronized void useCommonsLogging() {
     setImplementation(org.apache.ibatis.logging.commons.JakartaCommonsLoggingImpl.class);
   }
 
+  /**
+   * Log4J日志模块
+   */
   public static synchronized void useLog4JLogging() {
     setImplementation(org.apache.ibatis.logging.log4j.Log4jImpl.class);
   }
 
+  /**
+   * Log4J2日志模块
+   */
   public static synchronized void useLog4J2Logging() {
     setImplementation(org.apache.ibatis.logging.log4j2.Log4j2Impl.class);
   }
 
+  /**
+   * JdkLog日志模块
+   */
   public static synchronized void useJdkLogging() {
     setImplementation(org.apache.ibatis.logging.jdk14.Jdk14LoggingImpl.class);
   }
 
+  /**
+   * StdOut日志模块
+   */
   public static synchronized void useStdOutLogging() {
     setImplementation(org.apache.ibatis.logging.stdout.StdOutImpl.class);
   }
 
+  /**
+   * NoLog日志模块
+   */
   public static synchronized void useNoLogging() {
     setImplementation(org.apache.ibatis.logging.nologging.NoLoggingImpl.class);
   }
@@ -99,8 +134,11 @@ public final class LogFactory {
 
   private static void setImplementation(Class<? extends Log> implClass) {
     try {
+      // 获取指定适配器的构造方法
       Constructor<? extends Log> candidate = implClass.getConstructor(String.class);
+      // 实例化适配器
       Log log = candidate.newInstance(LogFactory.class.getName());
+      // 如果开启了日志功能则打印日志
       if (log.isDebugEnabled()) {
         log.debug("Logging initialized using '" + implClass + "' adapter.");
       }

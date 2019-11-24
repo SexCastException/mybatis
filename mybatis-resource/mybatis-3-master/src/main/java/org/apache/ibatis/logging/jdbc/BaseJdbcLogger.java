@@ -1,36 +1,29 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2019 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.logging.jdbc;
+
+import org.apache.ibatis.logging.Log;
+import org.apache.ibatis.reflection.ArrayUtil;
 
 import java.lang.reflect.Method;
 import java.sql.Array;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.stream.Collectors;
-
-import org.apache.ibatis.logging.Log;
-import org.apache.ibatis.reflection.ArrayUtil;
 
 /**
  * Base class for proxies to do logging.
@@ -40,15 +33,38 @@ import org.apache.ibatis.reflection.ArrayUtil;
  */
 public abstract class BaseJdbcLogger {
 
+  /**
+   * 记录了PreparedStatement接口中定义的常用的set*()方法
+   */
   protected static final Set<String> SET_METHODS;
+  /**
+   * 记录了 {@link java.sql.Statement} 接口和 {@link java.sql.PreparedStatement} 接口中与执行 SQL 语句相关的方法
+   */
   protected static final Set<String> EXECUTE_METHODS = new HashSet<>();
 
+  /**
+   * 记录了 PreparedStatement.set*() 方法设置的键值对
+   */
   private final Map<Object, Object> columnMap = new HashMap<>();
 
+  /**
+   * 记录了 PreparedStatement.set*() 方法设置key值,即columnMap的keySet
+   */
   private final List<Object> columnNames = new ArrayList<>();
+
+  /**
+   * 记录了 PreparedStatement.set*() 方法设置value值,即columnMap的values
+   */
   private final List<Object> columnValues = new ArrayList<>();
 
+  /**
+   * 用于输出日志的Log对象
+   */
   protected final Log statementLog;
+
+  /**
+   * 记录SQL的层数,用于格式化输出
+   */
   protected final int queryStack;
 
   /*
@@ -65,10 +81,10 @@ public abstract class BaseJdbcLogger {
 
   static {
     SET_METHODS = Arrays.stream(PreparedStatement.class.getDeclaredMethods())
-            .filter(method -> method.getName().startsWith("set"))
-            .filter(method -> method.getParameterCount() > 1)
-            .map(Method::getName)
-            .collect(Collectors.toSet());
+      .filter(method -> method.getName().startsWith("set"))
+      .filter(method -> method.getParameterCount() > 1)
+      .map(Method::getName)
+      .collect(Collectors.toSet());
 
     EXECUTE_METHODS.add("execute");
     EXECUTE_METHODS.add("executeUpdate");
