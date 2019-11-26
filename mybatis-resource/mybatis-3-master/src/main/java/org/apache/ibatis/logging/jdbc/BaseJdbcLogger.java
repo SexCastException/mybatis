@@ -80,15 +80,20 @@ public abstract class BaseJdbcLogger {
   }
 
   static {
+    // 保存PreparedStatement 中以set开头并且形参只有一个的方法
     SET_METHODS = Arrays.stream(PreparedStatement.class.getDeclaredMethods())
       .filter(method -> method.getName().startsWith("set"))
       .filter(method -> method.getParameterCount() > 1)
       .map(Method::getName)
       .collect(Collectors.toSet());
 
+    // 保存PreparedStatement 的execute 方法
     EXECUTE_METHODS.add("execute");
+    // 保存PreparedStatement 的executeUpdate 方法
     EXECUTE_METHODS.add("executeUpdate");
+    // 保存PreparedStatement 的executeQuery 方法
     EXECUTE_METHODS.add("executeQuery");
+    // 保存PreparedStatement 的addBatch 方法
     EXECUTE_METHODS.add("addBatch");
   }
 
@@ -130,12 +135,19 @@ public abstract class BaseJdbcLogger {
     return columnNames.toString();
   }
 
+  // 清空保存键值对的set集合
   protected void clearColumnInfo() {
     columnMap.clear();
     columnNames.clear();
     columnValues.clear();
   }
 
+  /**
+   * 删除多余的空串,保证了SQL语句打印格式化的正常
+   *
+   * @param original
+   * @return
+   */
   protected String removeBreakingWhitespace(String original) {
     StringTokenizer whitespaceStripper = new StringTokenizer(original);
     StringBuilder builder = new StringBuilder();

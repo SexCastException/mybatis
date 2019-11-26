@@ -1,23 +1,24 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2019 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.reflection;
 
 import java.util.Arrays;
 
 /**
+ * 提供处理数组的 hashCode, equals and toString 方法
  * Provides hashCode, equals and toString methods that can handle array.
  */
 public class ArrayUtil {
@@ -30,14 +31,17 @@ public class ArrayUtil {
    * @return A hash code of {@code obj} or 0 if {@code obj} is <code>null</code>
    */
   public static int hashCode(Object obj) {
+    // 对象为null,则hashCode为0
     if (obj == null) {
       // for consistency with Arrays#hashCode() and Objects#hashCode()
       return 0;
     }
     final Class<?> clazz = obj.getClass();
+    // 如果不是数组,则返回原本对象的hashCode
     if (!clazz.isArray()) {
       return obj.hashCode();
     }
+    // 获取数组里组件的类型
     final Class<?> componentType = clazz.getComponentType();
     if (long.class.equals(componentType)) {
       return Arrays.hashCode((long[]) obj);
@@ -120,10 +124,12 @@ public class ArrayUtil {
    * @return String representation of the {@code obj}.
    */
   public static String toString(Object obj) {
+    // 对象为null,返回null
     if (obj == null) {
       return "null";
     }
     final Class<?> clazz = obj.getClass();
+    // 不是数组,返回非数组对象的toString
     if (!clazz.isArray()) {
       return obj.toString();
     }

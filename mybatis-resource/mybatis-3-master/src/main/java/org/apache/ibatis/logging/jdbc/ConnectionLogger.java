@@ -26,6 +26,7 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 
 /**
+ * 动态代理模式
  * ConnectionLogger继承了BaseJdbcLogger 抽象类，其中封装了{@link Connection}对象并同时实现了${@link InvocationHandler} 接口。
  * <p>
  * Connection proxy to add logging.
@@ -69,6 +70,7 @@ public final class ConnectionLogger extends BaseJdbcLogger implements Invocation
       // 如果调用的是prepareStatement 方法
       if ("prepareStatement".equals(method.getName())) {
         if (isDebugEnabled()) {
+          // 动态代理,前置通知打印日志
           debug(" Preparing: " + removeBreakingWhitespace((String) params[0]), true);
         }
         // 调用Connection对象底层封装的的prepareStatement()方法，得到PreparedStatement对象
@@ -78,6 +80,7 @@ public final class ConnectionLogger extends BaseJdbcLogger implements Invocation
         return stmt;
       } else if ("prepareCall".equals(method.getName())) {// 如果调用的是prepareCall方法
         if (isDebugEnabled()) {
+          // 动态代理,前置通知打印日志
           debug(" Preparing: " + removeBreakingWhitespace((String) params[0]), true);
         }
         // 调用Connection对象底层封装的的prepareCall()方法，得到PreparedStatement对象
