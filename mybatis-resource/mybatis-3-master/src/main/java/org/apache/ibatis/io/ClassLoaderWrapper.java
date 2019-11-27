@@ -34,6 +34,9 @@ public class ClassLoaderWrapper {
    * 默认类加载器通过{@link Resources#setDefaultClassLoader(java.lang.ClassLoader)}初始化
    */
   ClassLoader defaultClassLoader;
+  /**
+   * 系统类加载器
+   */
   ClassLoader systemClassLoader;
 
   ClassLoaderWrapper() {
@@ -112,7 +115,7 @@ public class ClassLoaderWrapper {
   /**
    * Try to get a resource from a group of classloaders
    * <p>
-   * 使用类加载数组按照顺序来读取资源，只要一个类加载读取成功即返回
+   * 使用类加载数组按照顺序来读取资源，从中选取第一个可用的类加载器成功读取资源后返回
    *
    * @param resource    - the resource to get
    * @param classLoader - the classloaders to examine
@@ -143,7 +146,7 @@ public class ClassLoaderWrapper {
   /**
    * Get a resource as a URL using the current class path
    * <p>
-   * 使用当前类路径获取资源作为URL，只要一个类加载读取成功即返回
+   * 使用当前类路径获取资源作为URL，从中选取第一个可用的类加载器成功读取资源后返回
    *
    * @param resource    - the resource to locate
    * @param classLoader - the class loaders to examine
@@ -184,7 +187,7 @@ public class ClassLoaderWrapper {
   /**
    * Attempt to load a class from a group of classloaders
    * <p>
-   * 使用类加载器加载并初始化指定类名，只要一个类加载读取成功即返回
+   * 使用类加载器加载并初始化指定类名，从中选取第一个可用的类加载器成功加载资源后返回
    *
    * @param name        - the class to load
    * @param classLoader - the group of classloaders to examine
@@ -220,16 +223,16 @@ public class ClassLoaderWrapper {
   /**
    * 类加载器使用的优先顺序
    *
-   * @param classLoader
+   * @param classLoader 指定的类加载器
    * @return
    */
   ClassLoader[] getClassLoaders(ClassLoader classLoader) {
     return new ClassLoader[]{
-      classLoader,
-      defaultClassLoader,
-      Thread.currentThread().getContextClassLoader(),
-      getClass().getClassLoader(),
-      systemClassLoader};
+      classLoader,  // 指定的类加载器
+      defaultClassLoader, // 应用指定的默认加载器
+      Thread.currentThread().getContextClassLoader(), // 上下文类加载器
+      getClass().getClassLoader(),  // 加载器当前类的类加载器
+      systemClassLoader}; // 系统类加载器
   }
 
 }

@@ -73,6 +73,11 @@ import java.util.Set;
  * resolver.find(new CustomTest(), pkg2);
  * Collection&lt;ActionBean&gt; beans = resolver.getClasses();
  * </pre>
+ * <p>
+ * <p>
+ * ResolverUtil可以根据指定的条件查找指定包下的类，其中使用的条件由Test 接口表示。
+ * ResolverUtil中使用classLoader字段(ClassLoader类型)记录了当前使用的类加载器，
+ * 默认情况下，使用的是当前线程上下文绑定的ClassLoader,我们可以通过setClassLoader()方法修改使用类加载器。
  *
  * @author Tim Fennell
  */
@@ -95,7 +100,7 @@ public class ResolverUtil<T> {
   }
 
   /**
-   * 测试是否是指定类的子类
+   * 用于检测指定类是否继承了parent指定的类
    * <p>
    * A Test that checks to see if each class is assignable to the provided class. Note
    * that this test will match the parent type itself if it is presented for matching.
@@ -125,7 +130,7 @@ public class ResolverUtil<T> {
   }
 
   /**
-   * 测试类上是否有指定的注解
+   * 检测指定类是否添加了annotation注解
    * A Test that checks to see if each class is annotated with a specific annotation. If it
    * is, then the test returns true, otherwise false.
    */
@@ -258,8 +263,10 @@ public class ResolverUtil<T> {
     String path = getPackagePath(packageName);
 
     try {
+      // 通过VFS.getInstance().list()查找 packageName 包下的所有资源
       List<String> children = VFS.getInstance().list(path);
       for (String child : children) {
+        // 筛选class文件,
         if (child.endsWith(".class")) {
           // 添加匹配的类
           addIfMatching(test, child);
@@ -287,8 +294,8 @@ public class ResolverUtil<T> {
    * Add the class designated by the fully qualified class name provided to the set of
    * resolved classes if and only if it is approved by the Test supplied.
    *
-   * @param test the test used to determine if the class matches
-   * @param fqn  the fully qualified name of a class
+   * @param test the test used to determine if the class matches 匹配条件
+   * @param fqn  the fully qualified name of a class 类的完全限定名
    */
   @SuppressWarnings("unchecked")
   protected void addIfMatching(Test test, String fqn) {
