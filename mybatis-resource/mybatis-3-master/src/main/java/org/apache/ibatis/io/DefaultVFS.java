@@ -1,27 +1,24 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2019 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.io;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import org.apache.ibatis.logging.Log;
+import org.apache.ibatis.logging.LogFactory;
+
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -31,9 +28,6 @@ import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
-import org.apache.ibatis.logging.Log;
-import org.apache.ibatis.logging.LogFactory;
-
 /**
  * A default implementation of {@link VFS} that works for most application servers.
  *
@@ -42,14 +36,29 @@ import org.apache.ibatis.logging.LogFactory;
 public class DefaultVFS extends VFS {
   private static final Log log = LogFactory.getLog(DefaultVFS.class);
 
-  /** The magic header that indicates a JAR (ZIP) file. */
-  private static final byte[] JAR_MAGIC = { 'P', 'K', 3, 4 };
+  /**
+   * 指示JAR（ZIP）文件的魔术头。用来判断是否为JAR (ZIP) 文件
+   * JAR文件的魔法值为: 50(P) 4B(K) 03 04 即:
+   * The magic header that indicates a JAR (ZIP) file.
+   */
+  private static final byte[] JAR_MAGIC = {'P', 'K', 3, 4};
 
+  /**
+   * 检测当前 VFS 对象在当前环境下是否有效
+   *
+   * @return
+   */
   @Override
   public boolean isValid() {
     return true;
   }
 
+  /**
+   * @param url  The URL that identifies the resource to list.                                 该资源路径对应的URL对象
+   * @param path
+   * @return
+   * @throws IOException
+   */
   @Override
   public List<String> list(URL url, String path) throws IOException {
     InputStream is = null;
@@ -58,18 +67,20 @@ public class DefaultVFS extends VFS {
 
       // First, try to find the URL of a JAR file containing the requested resource. If a JAR
       // file is found, then we'll list child resources by reading the JAR.
+      // 如果url指向的资源在一个Jar包中，则获取该Jar包对应的URL,否则返回null
       URL jarUrl = findJarForResource(url);
       if (jarUrl != null) {
+        // 获取该jar包的输入流
         is = jarUrl.openStream();
         if (log.isDebugEnabled()) {
           log.debug("Listing " + url);
         }
+        // 遍历Jar中的资源，并返回以path开头的资源列表
         resources = listResources(new JarInputStream(is), path);
-      }
-      else {
+      } else {  //
         List<String> children = new ArrayList<>();
         try {
-          if (isJar(url)) {
+          if (isJar(url)) { // 如果是jar包
             // Some versions of JBoss VFS might give a JAR stream even if the resource
             // referenced by the URL isn't actually a JAR
             is = url.openStream();
@@ -84,8 +95,7 @@ public class DefaultVFS extends VFS {
                 children.add(entry.getName());
               }
             }
-          }
-          else {
+          } else {  // 否则不是jar包
             /*
              * Some servlet containers allow reading from directory resources like a
              * text file, listing the child resources one per line. However, there is no
@@ -97,7 +107,7 @@ public class DefaultVFS extends VFS {
             is = url.openStream();
             List<String> lines = new ArrayList<>();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-              for (String line; (line = reader.readLine()) != null;) {
+              for (String line; (line = reader.readLine()) != null; ) {
                 if (log.isDebugEnabled()) {
                   log.debug("Reader entry: " + line);
                 }
@@ -124,16 +134,15 @@ public class DefaultVFS extends VFS {
           if ("file".equals(url.getProtocol())) {
             File file = new File(url.getFile());
             if (log.isDebugEnabled()) {
-                log.debug("Listing directory " + file.getAbsolutePath());
+              log.debug("Listing directory " + file.getAbsolutePath());
             }
             if (file.isDirectory()) {
               if (log.isDebugEnabled()) {
-                  log.debug("Listing " + url);
+                log.debug("Listing " + url);
               }
               children = Arrays.asList(file.list());
             }
-          }
-          else {
+          } else {
             // No idea where the exception came from so rethrow it
             throw e;
           }
@@ -170,36 +179,44 @@ public class DefaultVFS extends VFS {
    * List the names of the entries in the given {@link JarInputStream} that begin with the
    * specified {@code path}. Entries will match with or without a leading slash.
    *
-   * @param jar The JAR input stream
-   * @param path The leading path to match
-   * @return The names of all the matching entries
-   * @throws IOException If I/O errors occur
+   * @param jar  The JAR input stream. jar输入流
+   * @param path The leading path to match. 匹配的路径
+   * @return The names of all the matching entries.
+   * @throws IOException If I/O errors occur.
    */
   protected List<String> listResources(JarInputStream jar, String path) throws IOException {
     // Include the leading and trailing slash when matching names
+    // 没有以"/" 开头,则添加 "/"
     if (!path.startsWith("/")) {
       path = "/" + path;
     }
+    // 没有以"/" 结尾,则添加 "/"
     if (!path.endsWith("/")) {
       path = path + "/";
     }
 
     // Iterate over the entries and collect those that begin with the requested path
+    // resources 保存以请求路径开头的资源列表
     List<String> resources = new ArrayList<>();
-    for (JarEntry entry; (entry = jar.getNextJarEntry()) != null;) {
+    for (JarEntry entry; (entry = jar.getNextJarEntry()) != null; ) {
+      // 不是目录(文件)  ZipEntry是以末尾是否有无"/"来判断是文件还是目录
       if (!entry.isDirectory()) {
         // Add leading slash if it's missing
+        // 获取资源文件名称
         StringBuilder name = new StringBuilder(entry.getName());
+        // 如果资源文件名称不是以"/"开头则添加"/"
         if (name.charAt(0) != '/') {
           name.insert(0, '/');
         }
 
         // Check file name
+        // 检测该资源文件名称是否在path目录下
         if (name.indexOf(path) == 0) {
           if (log.isDebugEnabled()) {
             log.debug("Found resource: " + name);
           }
           // Trim leading slash
+          // 保存资源名称
           resources.add(name.substring(1));
         }
       }
@@ -208,6 +225,8 @@ public class DefaultVFS extends VFS {
   }
 
   /**
+   * 如果url指向的资源在一个Jar包中，则获取该Jar包对应的URL,否则返回null
+   * <p>
    * Attempts to deconstruct the given URL to find a JAR file containing the resource referenced
    * by the URL. That is, assuming the URL references a JAR entry, this method will return a URL
    * that references the JAR file containing the entry. If the JAR cannot be located, then this
@@ -244,8 +263,7 @@ public class DefaultVFS extends VFS {
       if (log.isDebugEnabled()) {
         log.debug("Extracted JAR URL: " + jarUrl);
       }
-    }
-    else {
+    } else {
       if (log.isDebugEnabled()) {
         log.debug("Not a JAR: " + jarUrl);
       }
@@ -257,8 +275,7 @@ public class DefaultVFS extends VFS {
       URL testUrl = new URL(jarUrl.toString());
       if (isJar(testUrl)) {
         return testUrl;
-      }
-      else {
+      } else {
         // WebLogic fix: check if the URL's file exists in the filesystem.
         if (log.isDebugEnabled()) {
           log.debug("Not a JAR: " + jarUrl);
@@ -317,15 +334,17 @@ public class DefaultVFS extends VFS {
   /**
    * Returns true if the resource located at the given URL is a JAR file.
    *
-   * @param url The URL of the resource to test.
+   * @param url    The URL of the resource to test.
    * @param buffer A buffer into which the first few bytes of the resource are read. The buffer
-   *            must be at least the size of {@link #JAR_MAGIC}. (The same buffer may be reused
-   *            for multiple calls as an optimization.)
+   *               must be at least the size of {@link #JAR_MAGIC}. (The same buffer may be reused
+   *               for multiple calls as an optimization.)
    */
   protected boolean isJar(URL url, byte[] buffer) {
     InputStream is = null;
     try {
+      // 获取url指向的资源的输入流
       is = url.openStream();
+      // 读取该资源的魔法值
       is.read(buffer, 0, JAR_MAGIC.length);
       if (Arrays.equals(buffer, JAR_MAGIC)) {
         if (log.isDebugEnabled()) {
