@@ -78,6 +78,7 @@ public class DefaultVFS extends VFS {
         // 遍历Jar中的资源，并返回以path开头的资源列表
         resources = listResources(new JarInputStream(is), path);
       } else {  //
+        // 保存url指定的jar包下所有资源的名称
         List<String> children = new ArrayList<>();
         try {
           if (isJar(url)) { // 如果是jar包
@@ -105,6 +106,7 @@ public class DefaultVFS extends VFS {
              * then we assume the current resource is not a directory.
              */
             is = url.openStream();
+            // 保存读取url指定资源的字符
             List<String> lines = new ArrayList<>();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
               for (String line; (line = reader.readLine()) != null; ) {
@@ -131,6 +133,7 @@ public class DefaultVFS extends VFS {
            * container, because directories can't be opened for reading. If that happens,
            * then list the directory directly instead.
            */
+          // 判断url指定的资源是否数文件资源
           if ("file".equals(url.getProtocol())) {
             File file = new File(url.getFile());
             if (log.isDebugEnabled()) {
@@ -142,13 +145,14 @@ public class DefaultVFS extends VFS {
               }
               children = Arrays.asList(file.list());
             }
-          } else {
+          } else {  // 不是文件资源则抛出 FileNotFoundException 异常
             // No idea where the exception came from so rethrow it
             throw e;
           }
         }
 
         // The URL prefix to use when recursively listing child resources
+        // 递归列出子资源时使用的URL前缀,末尾不是以"/"结尾,则添加 "/"
         String prefix = url.toExternalForm();
         if (!prefix.endsWith("/")) {
           prefix = prefix + "/";
