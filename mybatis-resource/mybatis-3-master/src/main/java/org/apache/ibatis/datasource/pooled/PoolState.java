@@ -1,17 +1,17 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2018 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.datasource.pooled;
 
@@ -19,21 +19,56 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * 用于管理 {@link PooledConnection} 对象状态的组件，
+ * 它通过两个ArrayList<PooledConnection>集合分别管理空闲状态的连接和活跃状态的连接
+ *
  * @author Clinton Begin
  */
 public class PoolState {
 
   protected PooledDataSource dataSource;
 
+  /**
+   * 空闲的{@link PooledConnection} 集合
+   */
   protected final List<PooledConnection> idleConnections = new ArrayList<>();
+  /**
+   * 活跃的{@link PooledConnection} 集合
+   */
   protected final List<PooledConnection> activeConnections = new ArrayList<>();
+  /**
+   * 请求数据连接的次数
+   */
   protected long requestCount = 0;
+  /**
+   * 请求连接的累计时间
+   */
   protected long accumulatedRequestTime = 0;
+  /**
+   * checkoutTime 表示应用从连接池中取出连接，到归还连接这段时长，
+   * accumulatedCheckoutTime记录了所有连接累积的checkoutTime时长
+   */
   protected long accumulatedCheckoutTime = 0;
+  /**
+   * 当连接长时间未归还给连接池时，会被认为该连接超时,
+   * claimedOverdueConnectionCount 记录了超时的连接个数
+   */
   protected long claimedOverdueConnectionCount = 0;
+  /**
+   * 累计超时时间
+   */
   protected long accumulatedCheckoutTimeOfOverdueConnections = 0;
+  /**
+   * 累计等待时间
+   */
   protected long accumulatedWaitTime = 0;
+  /**
+   * 等待次数
+   */
   protected long hadToWaitCount = 0;
+  /**
+   * 无效连接数
+   */
   protected long badConnectionCount = 0;
 
   public PoolState(PooledDataSource dataSource) {
@@ -44,10 +79,20 @@ public class PoolState {
     return requestCount;
   }
 
+  /**
+   * 平均请求时间 = 累计请求时间 / 请求次数
+   *
+   * @return
+   */
   public synchronized long getAverageRequestTime() {
     return requestCount == 0 ? 0 : accumulatedRequestTime / requestCount;
   }
 
+  /**
+   * 平均等待时间 = 累计等待时间 / 等待次数
+   *
+   * @return
+   */
   public synchronized long getAverageWaitTime() {
     return hadToWaitCount == 0 ? 0 : accumulatedWaitTime / hadToWaitCount;
 
@@ -69,15 +114,28 @@ public class PoolState {
     return claimedOverdueConnectionCount == 0 ? 0 : accumulatedCheckoutTimeOfOverdueConnections / claimedOverdueConnectionCount;
   }
 
+  /**
+   *
+   * @return
+   */
   public synchronized long getAverageCheckoutTime() {
     return requestCount == 0 ? 0 : accumulatedCheckoutTime / requestCount;
   }
 
-
+  /**
+   * 获取空闲连接的个数
+   *
+   * @return
+   */
   public synchronized int getIdleConnectionCount() {
     return idleConnections.size();
   }
 
+  /**
+   * 获取活跃连接的个数
+   *
+   * @return
+   */
   public synchronized int getActiveConnectionCount() {
     return activeConnections.size();
   }

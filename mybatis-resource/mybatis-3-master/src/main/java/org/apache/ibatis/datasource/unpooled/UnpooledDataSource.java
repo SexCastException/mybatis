@@ -81,6 +81,7 @@ public class UnpooledDataSource implements DataSource {
     Enumeration<Driver> drivers = DriverManager.getDrivers();
     while (drivers.hasMoreElements()) {
       Driver driver = drivers.nextElement();
+      // 键为驱动名称
       registeredDrivers.put(driver.getClass().getName(), driver);
     }
   }
@@ -240,6 +241,14 @@ public class UnpooledDataSource implements DataSource {
     this.defaultNetworkTimeout = defaultNetworkTimeout;
   }
 
+  /**
+   * 与数据库建立连接
+   *
+   * @param username
+   * @param password
+   * @return
+   * @throws SQLException
+   */
   private Connection doGetConnection(String username, String password) throws SQLException {
     Properties props = new Properties();
     if (driverProperties != null) {
@@ -255,8 +264,10 @@ public class UnpooledDataSource implements DataSource {
   }
 
   private Connection doGetConnection(Properties properties) throws SQLException {
+    // 初始化驱动
     initializeDriver();
     Connection connection = DriverManager.getConnection(url, properties);
+    // 配置数据库连接的属性,比如事务,是否自动提交,连接超时时间
     configureConnection(connection);
     return connection;
   }
@@ -265,15 +276,17 @@ public class UnpooledDataSource implements DataSource {
     if (!registeredDrivers.containsKey(driver)) {
       Class<?> driverType;
       try {
+        //使用指定的类加载器加载驱动
         if (driverClassLoader != null) {
           driverType = Class.forName(driver, true, driverClassLoader);
-        } else {
+        } else {  // 否则使用 ClassLoaderWrapper 顺序指定的类加载器加载驱动
           driverType = Resources.classForName(driver);
         }
         // DriverManager requires the driver to be loaded via the system ClassLoader.
         // http://www.kfu.com/~nsayer/Java/dyn-jdbc.html
         Driver driverInstance = (Driver) driverType.getDeclaredConstructor().newInstance();
         DriverManager.registerDriver(new DriverProxy(driverInstance));
+        //
         registeredDrivers.put(driver, driverInstance);
       } catch (Exception e) {
         throw new SQLException("Error setting driver on UnpooledDataSource. Cause: " + e);
@@ -283,12 +296,15 @@ public class UnpooledDataSource implements DataSource {
 
   private void configureConnection(Connection conn) throws SQLException {
     if (defaultNetworkTimeout != null) {
+      // 设置数据库连接的默认连接超时时间
       conn.setNetworkTimeout(Executors.newSingleThreadExecutor(), defaultNetworkTimeout);
     }
     if (autoCommit != null && autoCommit != conn.getAutoCommit()) {
+      // 设置数据库连接是否自动提交事务
       conn.setAutoCommit(autoCommit);
     }
     if (defaultTransactionIsolationLevel != null) {
+      // 设置数据库连接默认事务级别
       conn.setTransactionIsolation(defaultTransactionIsolationLevel);
     }
   }
