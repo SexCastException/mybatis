@@ -64,7 +64,7 @@ class PooledConnection implements InvocationHandler {
    */
   private long lastUsedTimestamp;
   /**
-   * 由数据库URL,用户名和密码计算出来的hash值,可用于标识该连接所在的连接池
+   * 由数据库URL、username和password计算出来的hash值,唯一标识该连接所在的连接池
    */
   private int connectionTypeCode;
   /**
