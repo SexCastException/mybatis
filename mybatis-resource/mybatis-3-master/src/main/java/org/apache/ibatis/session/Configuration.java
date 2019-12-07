@@ -114,6 +114,9 @@ public class Configuration {
   // 默认开启一级缓存
   protected boolean cacheEnabled = true;
   protected boolean callSettersOnNulls;
+  /**
+   * 3.4.2版本之前settings属性中useActualParamName参数的默认值为false
+   */
   protected boolean useActualParamName = true;
   protected boolean returnInstanceForEmptyRow;
 

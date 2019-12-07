@@ -113,7 +113,9 @@ public class MapperRegistry {
   }
 
   /**
-   * @since 3.2.2
+   * 包扫描添加添加Mapper
+   * @param packageName
+   * @param superType
    */
   public void addMappers(String packageName, Class<?> superType) {
     ResolverUtil<Class<?>> resolverUtil = new ResolverUtil<>();
