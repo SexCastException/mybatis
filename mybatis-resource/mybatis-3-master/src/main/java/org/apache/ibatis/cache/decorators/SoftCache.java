@@ -119,7 +119,7 @@ public class SoftCache implements Cache {
       } else {  // 否则未被GC回收
         // See #586 (and #335) modifications need more than a read lock
         synchronized (hardLinksToAvoidGarbageCollection) {
-          // 缓存项的value添加到hardLinksToAvoidGarbageCollection集合中保存
+          // 将没有被GC回收的缓存项的value添加到hardLinksToAvoidGarbageCollection集合中保存
           hardLinksToAvoidGarbageCollection.addFirst(result);
           // 检测 hardLinksToAvoidGarbageCollection 的大小是否超过配置的数量，如果超过则从集合中移除最早的缓存
           if (hardLinksToAvoidGarbageCollection.size() > numberOfHardLinks) {
