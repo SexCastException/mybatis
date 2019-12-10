@@ -132,19 +132,20 @@ public class Reflector {
         Class<?> winnerType = winner.getReturnType();
         Class<?> candidateType = candidate.getReturnType();
         if (candidateType.equals(winnerType)) {
+          // 再次检验是否有相同的方法（即参数列表相同和返回值相同相同的字符串），一般情况下不会进入此分支，因为 addUniqueMethods()已经去掉了重复的方法（即参数列表相同和返回值相同的字符串）
           if (!boolean.class.equals(candidateType)) {
             isAmbiguous = true;
             break;
           } else if (candidate.getName().startsWith("is")) {
             winner = candidate;
           }
-          // 当前最适合的方法是当前方法返回值的子类，即但前最适合的是winnerType，什么都不做
+          // 当前最适合的方法是当前方法返回值的子类，即最适合的是winnerType，什么都不做
           // 例如：Object getA() 和 String getA() ,最适合的是方法是 String getA()。
         } else if (candidateType.isAssignableFrom(winnerType)) {
           // OK getter type is descendant
           // getter 类型是后代
         } else if (winnerType.isAssignableFrom(candidateType)) {
-          // 当前最适合的是 candidateType，更新临时变量
+          // 当前最适合的是 candidateType，更新winnerType变量
           winner = candidate;
         } else {
           // 产生歧义，记录歧义标识，以便在addGetMethod方法中通过AmbiguousMethodInvoker报保存异常错误信息
@@ -157,6 +158,11 @@ public class Reflector {
     }
   }
 
+  /**
+   * @param name        getSignature()方法返回的字符串
+   * @param method      待添加的方法
+   * @param isAmbiguous 待添加的方法是否发生了冲突
+   */
   private void addGetMethod(String name, Method method, boolean isAmbiguous) {
     // 如果isAmbiguous为true，产生歧义，保存Invoker的同时保存错误信息，直到调用invoke方法时抛出
     MethodInvoker invoker = isAmbiguous
@@ -204,7 +210,7 @@ public class Reflector {
           match = setter;
           break;
         }
-        // 没有找到setter形参类型和getter方法返回值一致的类型，则需要找到更加的setter返回形参类型
+        // 没有找到setter形参类型和getter方法返回值一致的类型，则需要找到更佳的setter返回形参类型
         if (!isSetterAmbiguous) {
           match = pickBetterSetter(match, setter, propName);
           isSetterAmbiguous = match == null;
@@ -217,7 +223,7 @@ public class Reflector {
   }
 
   /**
-   * 挑选更好的 setter 方法
+   * 挑选更佳的 setter 方法
    *
    * @param setter1
    * @param setter2
@@ -256,7 +262,7 @@ public class Reflector {
   }
 
   /**
-   * 判断 src 是否为普通类、泛型、数组，并返回响应的类型的 Class ，找不到则返回Object.class
+   * 判断 src 是否为普通类、泛型、数组，并返回相应的类型的 Class ，找不到则返回Object.class
    *
    * @param src
    * @return

@@ -18,6 +18,7 @@ package org.apache.ibatis.domain.blog;
 import org.apache.ibatis.domain.AbstractEntity;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class Author extends AbstractEntity implements Serializable {
 
@@ -27,6 +28,7 @@ public class Author extends AbstractEntity implements Serializable {
   protected String email;
   protected String bio;
   protected Section favouriteSection;
+  protected List<String> list;
 
   // 该字段不设置setter和getter方法
   private String desciption;

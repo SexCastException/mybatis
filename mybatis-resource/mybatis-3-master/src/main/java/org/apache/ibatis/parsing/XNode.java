@@ -47,7 +47,7 @@ public class XNode {
    */
   private final Properties attributes;
   /**
-   * mybatis-config.xml 配置文件中 <properties>节点下定义的键值对
+   * mybatis-config.xml中<properties></properties>标签定义的键位对集合
    */
   private final Properties variables;
   /**
@@ -61,7 +61,9 @@ public class XNode {
     this.variables = variables;
     // 获取node的信息初始化name、attributes和body成员变量
     this.name = node.getNodeName();
+    // 使用xpathParser 解析 node属性
     this.attributes = parseAttributes(node);
+    // 使用xpathParser 解析 node 节点内容
     this.body = parseBody(node);
   }
 
@@ -108,6 +110,7 @@ public class XNode {
     //
     XNode current = this;
     while (current != null) {
+      // 第一次不走
       if (current != this) {
         builder.insert(0, "_");
       }
@@ -131,6 +134,7 @@ public class XNode {
 
   /**
    * 通过xpath表达式获取当前节点上下文信息，{@link XNode#node}为当前节点上下文，下同
+   *
    * @param expression
    * @return
    */
@@ -258,7 +262,7 @@ public class XNode {
   }
 
   /**
-   * 通过属性名获取属性值，获取不到返回默认值
+   * 通过属性名获取属性值，获取不到返回默认值def
    *
    * @param name
    * @param def
@@ -425,7 +429,6 @@ public class XNode {
   }
 
   /**
-   *
    * @return
    */
   public Properties getChildrenAsProperties() {
@@ -488,6 +491,12 @@ public class XNode {
     }
   }
 
+  /**
+   * 解析 {@link Node} 属性
+   *
+   * @param n
+   * @return
+   */
   private Properties parseAttributes(Node n) {
     Properties attributes = new Properties();
     // 获取节点的属性集合

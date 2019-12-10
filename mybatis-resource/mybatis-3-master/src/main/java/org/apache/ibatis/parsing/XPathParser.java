@@ -37,7 +37,7 @@ import java.util.Properties;
 
 /**
  * xpath解析器
- *
+ * <p>
  * 默认情况下，对XML文档进行验证时，会根据XML文档开始位置指定的网址加载对应的DTD文件或XSD文件。
  * 如果解析mybatis-config.xml配置文件，默认联网加载htp://mybatis.org/dtd/mybatis-3-config.dtd这个DTD文档，当网络比较慢时会导致验证过程缓慢。
  * 在实践中往往会提前设置EntityResolver 接口对象加载本地的DTD文件，从而避免联网加载DTD文件。
@@ -57,7 +57,7 @@ public class XPathParser {
    */
   private boolean validation;
   /**
-   * 用于加载本地DTD文件
+   * 用于加载本地DTD文件，当网络不好时，提前设置entityResolver接口加载本地的DTD文档，从而避免联网加载DTD文档
    */
   private EntityResolver entityResolver;
   /**
@@ -139,6 +139,12 @@ public class XPathParser {
     this.document = createDocument(new InputSource(reader));
   }
 
+  /**
+   * @param inputStream    封装XML文档的输入流
+   * @param validation
+   * @param variables
+   * @param entityResolver
+   */
   public XPathParser(InputStream inputStream, boolean validation, Properties variables, EntityResolver entityResolver) {
     commonConstructor(validation, variables, entityResolver);
     // 初始化XML文档对象
@@ -218,6 +224,13 @@ public class XPathParser {
     return evalNodes(document, expression);
   }
 
+  /**
+   * 将多个{@link Node} 封装成 {@link List<XNode>} 集合
+   *
+   * @param root
+   * @param expression
+   * @return
+   */
   public List<XNode> evalNodes(Object root, String expression) {
     List<XNode> xnodes = new ArrayList<>();
     NodeList nodes = (NodeList) evaluate(expression, root, XPathConstants.NODESET);
@@ -231,6 +244,13 @@ public class XPathParser {
     return evalNode(document, expression);
   }
 
+  /**
+   * 将单个{@link Node} 封装成 {@link XNode} 对象
+   *
+   * @param root
+   * @param expression
+   * @return
+   */
   public XNode evalNode(Object root, String expression) {
     Node node = (Node) evaluate(expression, root, XPathConstants.NODE);
     if (node == null) {
@@ -239,6 +259,14 @@ public class XPathParser {
     return new XNode(this, node, variables);
   }
 
+  /**
+   * 解析xpath表达式
+   *
+   * @param expression xpath表达式
+   * @param root       document对象
+   * @param returnType 结果类型
+   * @return
+   */
   private Object evaluate(String expression, Object root, QName returnType) {
     try {
       return xpath.evaluate(expression, root, returnType);
@@ -250,7 +278,7 @@ public class XPathParser {
   /**
    * 创建XML文档对象
    *
-   * @param inputSource
+   * @param inputSource 封装了XML文档的输入源对象
    * @return
    */
   private Document createDocument(InputSource inputSource) {
@@ -298,6 +326,7 @@ public class XPathParser {
 
   /**
    * 做一些共同初始化操作
+   *
    * @param validation
    * @param variables
    * @param entityResolver
