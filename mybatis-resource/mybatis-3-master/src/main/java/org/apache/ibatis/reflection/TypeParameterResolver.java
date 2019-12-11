@@ -57,7 +57,7 @@ public class TypeParameterResolver {
   }
 
   /**
-   * 解析方法参数类型
+   * 解析方法参数列表
    *
    * @return The parameter types of the method as an array of {@link Type}s. If they have type parameters in the declaration,<br>
    * they will be resolved to the actual runtime {@link Type}s.
@@ -105,10 +105,10 @@ public class TypeParameterResolver {
   }
 
   private static Type resolveGenericArrayType(GenericArrayType genericArrayType, Type srcType, Class<?> declaringClass) {
-    // 获取数组元素类型
+    // 获取数组组成元素类型
     Type componentType = genericArrayType.getGenericComponentType();
     Type resolvedComponentType = null;
-    // 根据数组元素类型选择合适的方法进行解析
+    // 根据数组组成元素类型选择合适的方法进行解析
     if (componentType instanceof TypeVariable) {
       resolvedComponentType = resolveTypeVar((TypeVariable<?>) componentType, srcType, declaringClass);
     } else if (componentType instanceof GenericArrayType) {

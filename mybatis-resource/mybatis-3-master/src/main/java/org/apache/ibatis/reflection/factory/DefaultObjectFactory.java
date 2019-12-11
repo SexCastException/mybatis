@@ -1,17 +1,17 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2019 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.reflection.factory;
 
@@ -36,7 +36,6 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
   }
 
   /**
-   *
    * @param type                Object type
    * @param constructorArgTypes Constructor argument types 构造函数参数类型
    * @param constructorArgs     Constructor argument values 构造函数参数
@@ -52,10 +51,11 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
   }
 
   /**
+   * 根据传入的参数列表选择合适的构造函数实例化对象
    *
-   * @param type 指定实例化的类
+   * @param type                指定实例化的类
    * @param constructorArgTypes 参数列表
-   * @param constructorArgs 参数值
+   * @param constructorArgs     参数值
    * @param <T>
    * @return
    */
@@ -98,6 +98,7 @@ public class DefaultObjectFactory implements ObjectFactory, Serializable {
 
   /**
    * 解析接口类型，确定实例化的类，主要针对集合
+   *
    * @param type
    * @return
    */
