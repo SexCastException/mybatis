@@ -19,6 +19,7 @@ import java.util.Iterator;
 
 /**
  * “orders[O].items[O].name”，类似这种由”.”和“[]”组成的表达式是由 PropertyTokenizer进行解析的。
+ *
  * @author Clinton Begin
  */
 public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
@@ -26,13 +27,14 @@ public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
   private String name;
   // 当前表达式的索引名，比如orders[O]
   private final String indexedName;
-  // 索引下标
+  // 索引下标，并非一定是数字，索引不为空，则表示带有集合或数组的属性
   private String index;
   // 子表达式
   private final String children;
 
   /**
    * 例如传入 orders[0].items[0].name
+   *
    * @param fullname
    */
   public PropertyTokenizer(String fullname) {
@@ -50,6 +52,7 @@ public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
     indexedName = name;
     delim = name.indexOf('[');
     if (delim > -1) {
+      // 获取“[”和“]”中间的索引，并非一定是数字
       index = name.substring(delim + 1, name.length() - 1);
       name = name.substring(0, delim);
     }

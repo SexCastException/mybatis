@@ -12,11 +12,12 @@ public class MyTest {
   @Test
   public void testStringTokenizer() {
     String original = "  pang                    ying  hua                     ";
-    StringTokenizer whitespaceStripper = new StringTokenizer(original,"a",true);
+    StringTokenizer whitespaceStripper = new StringTokenizer(original,"g",false);
     StringBuilder builder = new StringBuilder();
     while (whitespaceStripper.hasMoreTokens()) {
       builder.append(whitespaceStripper.nextToken());
       builder.append(" ");
     }
+    System.out.println(builder.toString());
   }
 }

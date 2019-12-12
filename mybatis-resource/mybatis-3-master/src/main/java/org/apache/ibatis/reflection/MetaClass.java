@@ -38,6 +38,8 @@ public class MetaClass {
   private final Reflector reflector;
 
   /**
+   * 构造器私有化，通过forClass()静态方法实例化MetaClass对象
+   *
    * @param type             根据type创建对应的Reflector对象
    * @param reflectorFactory
    */
@@ -58,7 +60,7 @@ public class MetaClass {
   }
 
   /**
-   * 主要解析类属性的类型
+   * 解析类属性的类型，主要是复杂属性
    *
    * @param name
    * @return
@@ -73,6 +75,13 @@ public class MetaClass {
     return prop.length() > 0 ? prop.toString() : null;
   }
 
+  /**
+   * 是否使用驼峰命名法，true，则忽略“_”
+   *
+   * @param name
+   * @param useCamelCaseMapping
+   * @return
+   */
   public String findProperty(String name, boolean useCamelCaseMapping) {
     if (useCamelCaseMapping) {
       name = name.replace("_", "");
@@ -89,7 +98,8 @@ public class MetaClass {
   }
 
   /**
-   * 返回字段类型的Class对象，如果有嵌套则返回最有一级字段的属性，比如user.order.name，最终返回name的setter方法的形参类型
+   * 返回setter方法的Class对象，如果有嵌套则返回最有一级字段的属性，比如user.order.name，最终返回name的setter方法的形参类型
+   * 从Reflector的{@link Reflector#setTypes}集合中获取
    *
    * @param name
    * @return
@@ -105,7 +115,8 @@ public class MetaClass {
   }
 
   /**
-   * 返回字段类型的Class对象，如果有嵌套则返回最有一级字段的属性，比如user.order.name，最终返回name的getter方法的返回值类型
+   * 返回getter方法返回值Class对象，如果有嵌套则返回最有一级字段的属性，比如user.order.name，最终返回name的getter方法的返回值类型
+   * 与getSetterType()方法不同的是，getSetterType从setTypes集合中获取，getGetterType()方法从Reflector封装字段的{@link MethodInvoker}或{@link GetFieldInvoker}中获取
    *
    * @param name
    * @return
@@ -127,6 +138,8 @@ public class MetaClass {
   }
 
   /**
+   * 获取getter方法的返回值类型，从Reflector封装字段的{@link MethodInvoker}或{@link GetFieldInvoker}中获取
+   *
    * @param prop
    * @return
    */
@@ -157,12 +170,13 @@ public class MetaClass {
       Invoker invoker = reflector.getGetInvoker(propertyName);
       // 根据Reflector.getMethods集合中记录的Invoker实现类的类型，决定解析getter方法返回值类型还是解析字段类型
       if (invoker instanceof MethodInvoker) {   // 如果是封装方法的 Invoker
-        // MethodInvoker属性method由于没有提供getter方法，所以通过反射来获取，GetFieldInvoker 属性field同理
+        // 通过反射获取MethodInvoker的method调用getter方法
         Field _method = MethodInvoker.class.getDeclaredField("method");
         _method.setAccessible(true);
         Method method = (Method) _method.get(invoker);
         return TypeParameterResolver.resolveReturnType(method, reflector.getType());
       } else if (invoker instanceof GetFieldInvoker) {  // 如果是封装getter方法的 Invoker
+        // MethodInvoker属性method由于没有提供getter方法，所以通过反射来获取，GetFieldInvoker 属性field同理
         Field _field = GetFieldInvoker.class.getDeclaredField("field");
         _field.setAccessible(true);
         Field field = (Field) _field.get(invoker);
@@ -174,7 +188,7 @@ public class MetaClass {
   }
 
   /**
-   * 递归查询是否有setter方法
+   * 递归查询是否有setter方法，只要有一个属性的setter方法不存在，则返回false
    *
    * @param name
    * @return
@@ -194,7 +208,7 @@ public class MetaClass {
   }
 
   /**
-   * 递归查询是否有getter方法
+   * 递归查询是否有getter方法，只要有一个属性没有getter方法，则返回false
    *
    * @param name
    * @return
@@ -231,6 +245,7 @@ public class MetaClass {
   private StringBuilder buildProperty(String name, StringBuilder builder) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
     if (prop.hasNext()) {
+      // caseInsensitivePropertyMap中获取属性名称，忽略大小写
       String propertyName = reflector.findPropertyName(prop.getName());
       if (propertyName != null) {
         builder.append(propertyName);
