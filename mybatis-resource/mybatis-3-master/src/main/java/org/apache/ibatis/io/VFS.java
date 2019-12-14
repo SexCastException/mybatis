@@ -15,6 +15,7 @@
  */
 package org.apache.ibatis.io;
 
+import org.apache.ibatis.builder.xml.XMLConfigBuilder;
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 
@@ -44,6 +45,11 @@ public abstract class VFS {
 
   /**
    * 记录了用户自定义的VFS实现类。VFS.addImplClass()方法会将指定的VFS实现对应的Class对象添加到 USER_IMPLEMENTATIONS 集合中
+   * <p>
+   * mybatis该项自定义VFS的配置方式是在mybatis-config.xml配置文件中的<settings>的子标签<setting>的设置属性name为vfsImpl，
+   * value为VFS的实现类的全限定名（多个值用“,”隔开），并用{@link Resources}加载值生成的Class对象通过addImplClass()方法添加到
+   * USER_IMPLEMENTATIONS集合中，此实现具体在{@link XMLConfigBuilder}中实现
+   * <p>
    * The list to which implementations are added by {@link #addImplClass(Class)}.
    */
   public static final List<Class<? extends VFS>> USER_IMPLEMENTATIONS = new ArrayList<>();
@@ -129,6 +135,8 @@ public abstract class VFS {
   }
 
   /**
+   * 返回指定类的方法的{@link Method}对象，找不到则返回null，不会抛出异常
+   * <p>
    * Get a method by name and parameter types. If the method is not found then return null.
    *
    * @param clazz          The class to which the method belongs.

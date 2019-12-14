@@ -36,6 +36,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * 在MyBatis 初始化过程中，会为所有已知的${@link TypeHandler} 创建对象，并实现注册到 TypeHandlerRegistry中，
  * 由TypeHandlerRegistry负责管理这些TypeHandler对象。
  *
+ * javaType和jdbcType，一对多，比如{@link java.lang.String} 对应数据库的JdbcType的CHAR和VARCHAR等，CHAR只对应这javaType的{@link java.lang.String}
+ *
  * @author Clinton Begin
  * @author Kazuki Shimizu
  */

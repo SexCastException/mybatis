@@ -21,6 +21,7 @@ import java.util.Map;
 
 /**
  * JdbcType这个枚举类型代表JDBC中的数据类型，该枚举类型中定义了TYPE_ CODE字段，记录了JDBC类型在java.sql.Types中相应的常量
+ *
  * @author Clinton Begin
  */
 public enum JdbcType {
@@ -71,6 +72,9 @@ public enum JdbcType {
   TIMESTAMP_WITH_TIMEZONE(Types.TIMESTAMP_WITH_TIMEZONE); // JDBC 4.2 JDK8
 
   public final int TYPE_CODE;
+  /**
+   * 保存TYPE_CODE和JdbcType之间的映射
+   */
   private static Map<Integer, JdbcType> codeLookup = new HashMap<>();
 
   static {

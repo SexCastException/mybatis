@@ -51,7 +51,8 @@ public interface TypeHandler<T> {
   T getResult(ResultSet rs, String columnName) throws SQLException;
 
   /**
-   *通过下标索引获取结果
+   * 通过下标索引获取结果
+   *
    * @param rs
    * @param columnIndex
    * @return
@@ -61,6 +62,7 @@ public interface TypeHandler<T> {
 
   /**
    * 通过列下标的方式来获取存储过程输出结果中的数据
+   *
    * @param cs
    * @param columnIndex
    * @return

@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * {@link Node}对象的封装和解析，提供了对节点元素，属性，文本的访问等
+ * {@link Node}对象的封装和解析，提供了对节点元素，属性，文本的导航和访问等
  *
  * @author Clinton Begin
  */
@@ -429,6 +429,8 @@ public class XNode {
   }
 
   /**
+   * 解析指定标签的子标签的name和value属性
+   *
    * @return
    */
   public Properties getChildrenAsProperties() {

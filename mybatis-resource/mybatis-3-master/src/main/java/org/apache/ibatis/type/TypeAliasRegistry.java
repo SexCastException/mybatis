@@ -27,6 +27,11 @@ import java.util.*;
  * 在编写SQL语句时，使用别名可以方便理解以及维护，例如表名或列名很长时，我们一般会为其设计易懂易维护的别名。
  * <p>
  * 类型别名注册器
+ * <p>
+ * 注册别名的方式：
+ * 1、指定包名下某个类型的全部子类的Class对象，通过Class对象转到 2
+ * 2、通过Class对象指定，alias为Class对象指定的{@link Alias}注解的value值，如果没有指定该注解，则alias为Class对象的简易名称，如：java.lang.String的String，之后跳转3
+ * 3、用户指定alias和type类型注册别名
  *
  * @author Clinton Begin
  */
@@ -102,7 +107,7 @@ public class TypeAliasRegistry {
 
   /**
    * 解析别名
-   * 通过别名获取具体的类型，如果获取不到则加载并初始化返回Class对象
+   * 通过别名获取具体的类型，如果获取不到则加载并初始化返回Class对象，加载失败则抛出{@link ClassNotFoundException}异常
    *
    * @param string
    * @param <T>
@@ -110,7 +115,7 @@ public class TypeAliasRegistry {
    */
   @SuppressWarnings("unchecked")
   // throws class cast exception as well if types cannot be assigned
-  // 如果无法分配类型，则也会引发类强制转换异常
+  // 翻译：如果无法分配类型，则会引发类强制转换异常
   public <T> Class<T> resolveAlias(String string) {
     try {
       if (string == null) {
@@ -145,8 +150,8 @@ public class TypeAliasRegistry {
   /**
    * 注册别名，忽略内部类、接口和抽象类
    *
-   * @param packageName
-   * @param superType
+   * @param packageName 包名
+   * @param superType   指定package下的需要加入typeAliases对象的父Class对象
    */
   public void registerAliases(String packageName, Class<?> superType) {
     ResolverUtil<Class<?>> resolverUtil = new ResolverUtil<>();
@@ -163,12 +168,12 @@ public class TypeAliasRegistry {
   }
 
   /**
-   * 通过注解 @Alias 注册别名，value指定别名名称
+   * 使用type注册别名，如果指定{@link Alias}注解，则别名名称使用注解的value值，没有指定则默认使用type的简易名称
    *
    * @param type
    */
   public void registerAlias(Class<?> type) {
-    // 类的简单名字，不包含报名
+    // 类的简单名字，不包含包名，如：java.lang.String的String
     String alias = type.getSimpleName();
     Alias aliasAnnotation = type.getAnnotation(Alias.class);
     if (aliasAnnotation != null) {
@@ -177,6 +182,12 @@ public class TypeAliasRegistry {
     registerAlias(alias, type);
   }
 
+  /**
+   * 指定alias和value注册到typeAliases中去
+   *
+   * @param alias
+   * @param value
+   */
   public void registerAlias(String alias, Class<?> value) {
     if (alias == null) {
       throw new TypeException("The parameter alias cannot be null");
@@ -192,7 +203,7 @@ public class TypeAliasRegistry {
 
   /**
    * @param alias 别名
-   * @param value java类型权限定名
+   * @param value java类型全限定名
    */
   public void registerAlias(String alias, String value) {
     try {

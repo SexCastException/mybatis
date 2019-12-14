@@ -58,7 +58,7 @@ public class RichType {
     this.richProperty = richProperty;
   }
 
-  public List<String> getRichList() {
+  public List getRichList() {
     return richList;
   }
 

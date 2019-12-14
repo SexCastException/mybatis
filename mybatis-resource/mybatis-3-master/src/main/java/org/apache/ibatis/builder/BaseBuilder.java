@@ -1,24 +1,19 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2019 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.builder;
-
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.regex.Pattern;
 
 import org.apache.ibatis.mapping.ParameterMode;
 import org.apache.ibatis.mapping.ResultSetType;
@@ -28,23 +23,39 @@ import org.apache.ibatis.type.TypeAliasRegistry;
 import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Pattern;
+
 /**
  * @author Clinton Begin
  */
 public abstract class BaseBuilder {
   /**
-   * 配置文件对象
+   * {@link Configuration}是MyBatis初始化过程的核心对象，MyBatis 中几乎全部的配置信息会保存到Configuration对象中。
+   * {@link Configuration} 对象是在MyBatis初始化过程中创建且是全局唯一的，
+   * 也有人称它是一个“All-In-One” 配置对象
    */
   protected final Configuration configuration;
   /**
+   * 在 mybatis-config.xml 配置文件中可以使用＜typeAliases＞标签定义别名，这些定义的别名都会记录在{@link TypeAliasRegistry}中
+   * <p>
    * 类型别名注册器
    */
   protected final TypeAliasRegistry typeAliasRegistry;
   /**
+   * 在mybatis-config.xml配置文件中可以使用<typeHandlers>标签添加自定义TypeHandler器，完成指定数据库类型与Java类型的转换。
+   * <p>
    * JDBC和java类型映射注册器
    */
   protected final TypeHandlerRegistry typeHandlerRegistry;
 
+  /**
+   * BaseBuilder中记录的Configuration、TypeAliasRegistry和TypeHandlerRegistry是全局唯一的，它们都是在{@link Configuration}对象初始化时创建的。
+   *
+   * @param configuration
+   */
   public BaseBuilder(Configuration configuration) {
     this.configuration = configuration;
     this.typeAliasRegistry = this.configuration.getTypeAliasRegistry();
@@ -117,6 +128,13 @@ public abstract class BaseBuilder {
     }
   }
 
+  /**
+   * 通过别名获取指定的Class对象
+   *
+   * @param alias
+   * @param <T>
+   * @return
+   */
   protected <T> Class<? extends T> resolveClass(String alias) {
     if (alias == null) {
       return null;
@@ -137,7 +155,7 @@ public abstract class BaseBuilder {
       throw new BuilderException("Type " + type.getName() + " is not a valid TypeHandler because it does not implement TypeHandler interface");
     }
     @SuppressWarnings("unchecked") // already verified it is a TypeHandler
-    Class<? extends TypeHandler<?>> typeHandlerType = (Class<? extends TypeHandler<?>>) type;
+      Class<? extends TypeHandler<?>> typeHandlerType = (Class<? extends TypeHandler<?>>) type;
     return resolveTypeHandler(javaType, typeHandlerType);
   }
 
@@ -154,6 +172,13 @@ public abstract class BaseBuilder {
     return handler;
   }
 
+  /**
+   * 解析别名
+   *
+   * @param alias
+   * @param <T>
+   * @return
+   */
   protected <T> Class<? extends T> resolveAlias(String alias) {
     return typeAliasRegistry.resolveAlias(alias);
   }

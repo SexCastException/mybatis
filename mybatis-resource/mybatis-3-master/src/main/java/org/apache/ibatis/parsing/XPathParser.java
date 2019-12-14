@@ -16,6 +16,7 @@
 package org.apache.ibatis.parsing;
 
 import org.apache.ibatis.builder.BuilderException;
+import org.apache.ibatis.builder.xml.XMLMapperEntityResolver;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -36,12 +37,14 @@ import java.util.List;
 import java.util.Properties;
 
 /**
+ * 封装{@link Document}对象和{@link XPath}对象完成对xml配置文件的解析并将解析后的结果封装成基本类型和{@link XNode} 对象
+ * <p>
  * xpath解析器
  * <p>
  * 默认情况下，对XML文档进行验证时，会根据XML文档开始位置指定的网址加载对应的DTD文件或XSD文件。
- * 如果解析mybatis-config.xml配置文件，默认联网加载htp://mybatis.org/dtd/mybatis-3-config.dtd这个DTD文档，当网络比较慢时会导致验证过程缓慢。
- * 在实践中往往会提前设置EntityResolver 接口对象加载本地的DTD文件，从而避免联网加载DTD文件。
- * XMLMapperEntityResolver是MyBatis提供的EntityResolver接口的实现类。
+ * 如果解析mybatis-config.xml配置文件，默认联网加载http://mybatis.org/dtd/mybatis-3-config.dtd这个DTD文档，当网络比较慢时会导致验证过程缓慢。
+ * 在实践中往往会提前设置{@link EntityResolver} 接口对象加载本地的DTD文件，从而避免联网加载DTD文件。
+ * {@link XMLMapperEntityResolver}是{@link EntityResolver}接口的实现类。
  *
  * @author Clinton Begin
  * @author Kazuki Shimizu
@@ -167,7 +170,7 @@ public class XPathParser {
   public String evalString(Object root, String expression) {
     // 1.先用xpath解析xml数据
     String result = (String) evaluate(expression, root, XPathConstants.STRING);
-    // 2.再调用PropertyParser去解析,例如替换 ${} 格式的字符串
+    // 2.再调用PropertyParser去解析,使用variables的配置信息替换 ${} 格式的字符串
     result = PropertyParser.parse(result, variables);
     return result;
   }

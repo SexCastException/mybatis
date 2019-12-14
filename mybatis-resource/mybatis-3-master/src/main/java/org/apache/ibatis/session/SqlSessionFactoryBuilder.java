@@ -27,7 +27,11 @@ import java.util.Properties;
 
 /**
  * Builds {@link SqlSession} instances.
- *
+ * <p>
+ * MyBatis 初始化的要工作是加载井解析 mybatis-config.xml 配置文件、mapper映射配置文件以及相关的注解信息。
+ * <p>
+ * MyBatis 的初始化入口是 SqlSessionFactoryBuilder.build() 方法
+ * <p>
  * 构建SqlSessionFactory的构建者
  *
  * @author Clinton Begin
@@ -48,6 +52,7 @@ public class SqlSessionFactoryBuilder {
 
   /**
    * 主要通过字符流对象构建SqlSessionFactory对象，但和字节流方式都是调用同一个build方法
+   *
    * @param reader
    * @param environment
    * @param properties
@@ -55,13 +60,16 @@ public class SqlSessionFactoryBuilder {
    */
   public SqlSessionFactory build(Reader reader, String environment, Properties properties) {
     try {
+      // 读取配置文件
       XMLConfigBuilder parser = new XMLConfigBuilder(reader, environment, properties);
+      // 解析配置文件，得到 Configuration 对象，创建 DefaultSqlSessionFactory 对象
       return build(parser.parse());
     } catch (Exception e) {
       throw ExceptionFactory.wrapException("Error building SqlSession.", e);
     } finally {
       ErrorContext.instance().reset();
       try {
+        // 关闭配合文件输入流对象
         reader.close();
       } catch (IOException e) {
         // Intentionally ignore. Prefer previous error.
@@ -83,6 +91,7 @@ public class SqlSessionFactoryBuilder {
 
   /**
    * 主要通过字节流对象构建SqlSessionFactory对象，但和字符流方式都是调用同一个build方法
+   *
    * @param inputStream
    * @param environment
    * @param properties

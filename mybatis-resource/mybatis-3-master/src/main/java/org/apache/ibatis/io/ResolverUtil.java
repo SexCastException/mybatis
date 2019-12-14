@@ -180,6 +180,8 @@ public class ResolverUtil<T> {
   }
 
   /**
+   * 如果没有指定相应的类加载器，则使用上下文类加载器
+   * <p>
    * Returns the classloader that will be used for scanning for classes. If no explicit
    * ClassLoader has been set by the calling, the context class loader will be used.
    *
@@ -190,6 +192,8 @@ public class ResolverUtil<T> {
   }
 
   /**
+   * 设置加载资源的类加载器
+   * <p>
    * Sets an explicit ClassLoader that should be used when scanning for classes. If none
    * is set then the context classloader will be used.
    *
@@ -307,6 +311,7 @@ public class ResolverUtil<T> {
         log.debug("Checking to see if class " + externalName + " matches criteria [" + test + "]");
       }
 
+      // 加载指定的类，并将符合条件的Class对象添加到 matches 集合中
       Class<?> type = loader.loadClass(externalName);
       if (test.matches(type)) {
         matches.add((Class<T>) type);

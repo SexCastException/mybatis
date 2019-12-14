@@ -24,10 +24,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * 为方便用户自定义${@link TypeHandler}实现，MyBatis 提供了 ${@link BaseTypeHandler} 这个抽象类，它实现了 ${@link TypeHandler} 接口，
- * 并继承了 ${@link TypeReference}抽象类。
+ * 为方便用户自定义{@link TypeHandler}实现，MyBatis 提供了 {@link BaseTypeHandler} 这个抽象类，它实现了 {@link TypeHandler} 接口，
+ * 并继承了 {@link TypeReference}抽象类。
  * <p>
- * 在${@link TypeHandler}中实现了TypeHandler.setParameter()和TypeHandler.getResult()，这两个方法对于非空数据的处理都交给了子类实现。
+ * 在{@link TypeHandler}中实现了TypeHandler.setParameter()和TypeHandler.getResult()，这两个方法对于非空数据的处理都交给了子类实现。
  * <p>
  * The base {@link TypeHandler} for references a generic type.
  * <p>
@@ -72,7 +72,7 @@ public abstract class BaseTypeHandler<T> extends TypeReference<T> implements Typ
       }
     } else {
       try {
-        // 绑定为空参数，抽下方法，由子类实现
+        // 绑定非空参数，抽象方法，由子类实现
         setNonNullParameter(ps, i, parameter, jdbcType);
       } catch (Exception e) {
         throw new TypeException("Error setting non null for parameter #" + i + " with JdbcType " + jdbcType + " . "

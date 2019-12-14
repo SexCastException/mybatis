@@ -160,6 +160,7 @@ public class MetaClass {
             type = (Class<?>) ((ParameterizedType) returnType).getRawType();
           }
         }
+        // 没有指定类型参数，则返回泛型类型Class对象
       }
     }
     return type;
