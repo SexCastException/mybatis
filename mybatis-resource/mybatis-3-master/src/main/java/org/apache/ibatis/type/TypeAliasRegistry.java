@@ -107,7 +107,7 @@ public class TypeAliasRegistry {
 
   /**
    * 解析别名
-   * 通过别名获取具体的类型，如果获取不到则加载并初始化返回Class对象，加载失败则抛出{@link ClassNotFoundException}异常
+   * 通过别名获取具体的类型，如果TypeAliasRegistry获取不到则尝试加载并初始化返回Class对象，加载失败则抛出{@link ClassNotFoundException}异常
    *
    * @param string
    * @param <T>
@@ -125,6 +125,7 @@ public class TypeAliasRegistry {
       // 将别名转换为小写
       String key = string.toLowerCase(Locale.ENGLISH);
       Class<T> value;
+      // 获取不到则使用类加载器加载并返回对象的Class对象
       if (typeAliases.containsKey(key)) {
         // 通过别名获取类型
         value = (Class<T>) typeAliases.get(key);

@@ -22,6 +22,29 @@
 
 <mapper namespace="org.apache.ibatis.submitted.mapper_extend.ParentMapper">
 
+  <resultMap id="" type=""></resultMap>
+
+  <parameterMap id="" type=""></parameterMap>
+
+  <resultMap id="" type="" autoMapping="true" extends="">
+    <constructor>
+      <arg resultMap="" column="" jdbcType="" typeHandler="" javaType="" columnPrefix="" name="" select=""></arg>
+    </constructor>
+    <association property=""></association>
+    <collection property=""></collection>
+    <discriminator column="" jdbcType="" javaType="" typeHandler="">
+      <case value="" resultMap="" resultType=""></case>
+    </discriminator>
+    <id column="" jdbcType="" javaType="" typeHandler="" property=""></id>
+    <result column="" jdbcType="" javaType="" typeHandler="" property=""></result>
+  </resultMap>
+
+  <cache type="" eviction="" blocking="" flushInterval="" readOnly="" size="">
+    <property name="" value=""/>
+  </cache>
+
+  <cache-ref namespace=""/>
+
   <select id="getUserByName" resultType="org.apache.ibatis.submitted.mapper_extend.User">
     select * from users where name = #{name}
   </select>

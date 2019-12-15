@@ -251,7 +251,7 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   /**
-   * 注册插件，interceptor属性需指定别名，难道配置interceptor前需要指定该值的别名!!!!!!!!!!!>>!>>!>>!>>!>!>>!>#>!>!>$>!$>>>$>
+   * 注册插件，interceptor属性可以指定别名
    *
    * @param parent
    * @throws Exception
@@ -264,7 +264,7 @@ public class XMLConfigBuilder extends BaseBuilder {
         String interceptor = child.getStringAttribute("interceptor");
         // 获取封装<plugin>子标签<property>的属性name 和value的Properties对象
         Properties properties = child.getChildrenAsProperties();
-        // 通过interceptor属性配置的值获（别名）取对象的Interceptor对象
+        // 通过interceptor属性配置的值获取（优先从TypeAliasRegistry获取）Interceptor对象
         Interceptor interceptorInstance = (Interceptor) resolveClass(interceptor).getDeclaredConstructor().newInstance();
         // 将子标签<property>的信息赋值到Interceptor对象的配置中去
         interceptorInstance.setProperties(properties);
@@ -280,7 +280,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       String type = context.getStringAttribute("type");
       // 获取封装<objectFactory>标签的子标签<property>name和value的Properties对象
       Properties properties = context.getChildrenAsProperties();
-      // 通过type配置的属性值（别名）获取ObjectFactory对象
+      // 通过type配置的属性值获取（优先从TypeAliasRegistry获取） ObjectFactory对象
       ObjectFactory factory = (ObjectFactory) resolveClass(type).getDeclaredConstructor().newInstance();
       // 将<property>的封装的配置信设置到ObjectFactory对象中
       factory.setProperties(properties);
@@ -293,7 +293,7 @@ public class XMLConfigBuilder extends BaseBuilder {
     if (context != null) {
       // 解析<objectWrapperFactory>标签的type属性值
       String type = context.getStringAttribute("type");
-      // 通过type配置的属性值（别名）获取 ObjectWrapperFactory 对象
+      // 通过type配置的属性值获取（优先从TypeAliasRegistry获取） ObjectWrapperFactory 对象
       ObjectWrapperFactory factory = (ObjectWrapperFactory) resolveClass(type).getDeclaredConstructor().newInstance();
       // 更新Configuration中的 objectWrapperFactory 字段
       configuration.setObjectWrapperFactory(factory);
@@ -304,7 +304,7 @@ public class XMLConfigBuilder extends BaseBuilder {
     if (context != null) {
       // 解析<reflectorFactory>标签的type属性值
       String type = context.getStringAttribute("type");
-      // 通过type配置的属性值（别名）获取 ReflectorFactory 对象
+      // 通过type配置的属性值获取（优先从TypeAliasRegistry获取） ReflectorFactory 对象
       ReflectorFactory factory = (ReflectorFactory) resolveClass(type).getDeclaredConstructor().newInstance();
       // 更新Configuration中的 reflectorFactory 字段
       configuration.setReflectorFactory(factory);
@@ -476,7 +476,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       String type = context.getStringAttribute("type");
       // 获取封装<transactionManager>标签的子标签<property>的name和value的Properties对象
       Properties props = context.getChildrenAsProperties();
-      // 通过type配置的属性值（别名）获取 TransactionFactory 对象
+      // 通过type配置的属性值获取（优先从TypeAliasRegistry获取） TransactionFactory 对象
       TransactionFactory factory = (TransactionFactory) resolveClass(type).getDeclaredConstructor().newInstance();
       // 将<property>的配置信息赋值到 TransactionFactory 对象中
       factory.setProperties(props);

@@ -34,7 +34,7 @@ import java.util.Map;
 public class PerpetualCache implements Cache {
 
   /**
-   * Cache对象的唯一标识
+   * Cache对象的唯一标识，一般情况下对应映射文件中的配置namespace
    */
   private final String id;
 
