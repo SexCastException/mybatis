@@ -159,6 +159,14 @@ public abstract class BaseBuilder {
     return resolveTypeHandler(javaType, typeHandlerType);
   }
 
+  /**
+   * 根据{@link TypeHandler}对应的Class对象获取一个{@link TypeHandler}对象，如果获取不到，
+   * 则根据{@link TypeHandler}对应的Class对象，创建一个{@link TypeHandler}对象，javaType作为其创建对象的形参，如果允许
+   *
+   * @param javaType        创建{@link TypeHandler}对象的构造函数形参
+   * @param typeHandlerType 创建{@link TypeHandler}对象对应的Class对象
+   * @return
+   */
   protected TypeHandler<?> resolveTypeHandler(Class<?> javaType, Class<? extends TypeHandler<?>> typeHandlerType) {
     if (typeHandlerType == null) {
       return null;

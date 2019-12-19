@@ -11,13 +11,11 @@ import java.util.StringTokenizer;
 public class MyTest {
   @Test
   public void testStringTokenizer() {
-    String original = "  pang                    ying  hua                     ";
-    StringTokenizer whitespaceStripper = new StringTokenizer(original,"g",false);
-    StringBuilder builder = new StringBuilder();
-    while (whitespaceStripper.hasMoreTokens()) {
-      builder.append(whitespaceStripper.nextToken());
-      builder.append(" ");
+    String columnName = "{prop1=col1, prop2=co12}";
+    StringTokenizer parser = new StringTokenizer(columnName, "{}=, ", false);
+    while (parser.hasMoreTokens()) {
+      String token = parser.nextToken();
+      System.out.println(token);
     }
-    System.out.println(builder.toString());
   }
 }

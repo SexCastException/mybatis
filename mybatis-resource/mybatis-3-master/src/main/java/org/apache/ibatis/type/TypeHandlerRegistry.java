@@ -34,8 +34,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 在MyBatis 初始化过程中，会为所有已知的${@link TypeHandler} 创建对象，并实现注册到 TypeHandlerRegistry中，
- * 由TypeHandlerRegistry负责管理这些TypeHandler对象。
- *
+ * 由TypeHandlerRegistry负责管理这些TypeHandler对象。TypeHandlerRegistry是维护javaType和jdbcType关系映射的注册中心。
+ * <p>
  * javaType和jdbcType，一对多，比如{@link java.lang.String} 对应数据库的JdbcType的CHAR和VARCHAR等，CHAR只对应这javaType的{@link java.lang.String}
  *
  * @author Clinton Begin
@@ -56,6 +56,9 @@ public final class TypeHandlerRegistry {
    * 键为java类型
    */
   private final Map<Type, Map<JdbcType, TypeHandler<?>>> typeHandlerMap = new ConcurrentHashMap<>();
+  /**
+   * 未知类型处理器
+   */
   private final TypeHandler<Object> unknownTypeHandler = new UnknownTypeHandler(this);
 
   /**
@@ -293,6 +296,7 @@ public final class TypeHandlerRegistry {
 
   /**
    * 根据clazz的父接口获取 jdbcHandlerMap，并使用enumClazz作为构造函数参数新建一个TypeHandler
+   *
    * @param clazz
    * @param enumClazz
    * @return
@@ -532,10 +536,10 @@ public final class TypeHandlerRegistry {
   // Construct a handler (used also from Builders)
 
   /**
-   * 通过反射创建一个TypeHandler对象，javaTypeClass作为构造函数的形参，枚举类型一般提供一个有参构造函数
+   * 通过typeHandler类型创建一个对应的TypeHandler对象，如果允许javaTypeClass 作为构造函数的形参
    *
-   * @param javaTypeClass
-   * @param typeHandlerClass
+   * @param javaTypeClass    映射文件javaType属性值对应的Class对象
+   * @param typeHandlerClass 映射文件typeHandler属性值对应的Class对象
    * @param <T>
    * @return
    */

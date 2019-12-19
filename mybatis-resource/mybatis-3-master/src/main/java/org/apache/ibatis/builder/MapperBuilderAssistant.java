@@ -68,10 +68,18 @@ public class MapperBuilderAssistant extends BaseBuilder {
     this.currentNamespace = currentNamespace;
   }
 
+  /**
+   * 拼接完整的属性值，格式：namespace+"."+base
+   *
+   * @param base        <resultMap>属性值
+   * @param isReference
+   * @return
+   */
   public String applyCurrentNamespace(String base, boolean isReference) {
     if (base == null) {
       return null;
     }
+    // 校验<resultMap>节点是否是完整的resultMap的属性名
     if (isReference) {
       // is it qualified with any namespace yet?
       if (base.contains(".")) {
@@ -82,10 +90,12 @@ public class MapperBuilderAssistant extends BaseBuilder {
       if (base.startsWith(currentNamespace + ".")) {
         return base;
       }
+      // 如果<resultMap>节点id属性值报刊了“.”且又不是完整的id属性值，则抛出异常
       if (base.contains(".")) {
         throw new BuilderException("Dots are not allowed in element names, please remove it from " + base);
       }
     }
+    // 拼接<resultMap>节点的完整id属性值
     return currentNamespace + "." + base;
   }
 
@@ -180,10 +190,13 @@ public class MapperBuilderAssistant extends BaseBuilder {
     Discriminator discriminator,
     List<ResultMapping> resultMappings,
     Boolean autoMapping) {
+    // resultMap完整的id属性值是：“namespace.id”的格式
     id = applyCurrentNamespace(id, false);
+    // resultMap完整的extend属性值是：“namespace.extend”的格式
     extend = applyCurrentNamespace(extend, true);
 
     if (extend != null) {
+      // 如果继承的resultMap不存在，则抛出异常
       if (!configuration.hasResultMap(extend)) {
         throw new IncompleteElementException("Could not find a parent resultmap with id '" + extend + "'");
       }
@@ -354,7 +367,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
   }
 
   public ResultMapping buildResultMapping(
-    Class<?> resultType,
+    Class<?> resultType,  // <resultMap>节点type属性指定的Class对象
     String property,
     String column,
     Class<?> javaType,
@@ -368,14 +381,22 @@ public class MapperBuilderAssistant extends BaseBuilder {
     String resultSet,
     String foreignColumn,
     boolean lazy) {
+
+    // 解析property属性的setter方法的形参Class对象（获取resultType类字段的setter方法形参类型）
     Class<?> javaTypeClass = resolveResultJavaType(resultType, property, javaType);
+    // 根据javaTypeClass（字段setter方法的形参类型）获取对应的 TypeHandler对象
     TypeHandler<?> typeHandlerInstance = resolveTypeHandler(javaTypeClass, typeHandler);
+    /*
+      解析 column 属性值，当column是" {prop1=col1, prop2=col2}"形式时，会解析成 ResultMapping对象集合，
+      column的这种形式主要用于嵌套查询的参数传递。
+     */
     List<ResultMapping> composites;
     if ((nestedSelect == null || nestedSelect.isEmpty()) && (foreignColumn == null || foreignColumn.isEmpty())) {
       composites = Collections.emptyList();
     } else {
       composites = parseCompositeColumnName(column);
     }
+    // 创建 ResultMapping 对象，并设置其字段
     return new ResultMapping.Builder(configuration, property, column, javaTypeClass)
       .jdbcType(jdbcType)
       .nestedQueryId(applyCurrentNamespace(nestedSelect, true))
@@ -407,12 +428,21 @@ public class MapperBuilderAssistant extends BaseBuilder {
     return columns;
   }
 
+  /**
+   * 解析复合列名
+   *
+   * @param columnName column属性值指定的值
+   * @return
+   */
   private List<ResultMapping> parseCompositeColumnName(String columnName) {
     List<ResultMapping> composites = new ArrayList<>();
+    // 是否匹配column是"{prop1=col1, prop2=co12}"形式
     if (columnName != null && (columnName.indexOf('=') > -1 || columnName.indexOf(',') > -1)) {
       StringTokenizer parser = new StringTokenizer(columnName, "{}=, ", false);
       while (parser.hasMoreTokens()) {
+        // 获取“=”左边的键，即类字段名
         String property = parser.nextToken();
+        // 获取“=”右边的值，即数据库列名或别名
         String column = parser.nextToken();
         ResultMapping complexResultMapping = new ResultMapping.Builder(
           configuration, property, column, configuration.getTypeHandlerRegistry().getUnknownTypeHandler()).build();
@@ -422,12 +452,23 @@ public class MapperBuilderAssistant extends BaseBuilder {
     return composites;
   }
 
+  /**
+   * 如果指定了javaType属性值，则返回该属性值对应的Class对象，否则返回property属性值指定的字段的setter方法形参的Class对象
+   * <p>
+   * 如果property和javaType都没有指定，或指定的不存在则返回Object的Class对象
+   *
+   * @param resultType
+   * @param property
+   * @param javaType
+   * @return
+   */
   private Class<?> resolveResultJavaType(Class<?> resultType, String property, Class<?> javaType) {
     if (javaType == null && property != null) {
       try {
         MetaClass metaResultType = MetaClass.forClass(resultType, configuration.getReflectorFactory());
         javaType = metaResultType.getSetterType(property);
       } catch (Exception e) {
+        // 不处理异常，即：<id>和<result>等节点的property属性值指定了不存在的javabean字段，也不会报错
         //ignore, following null check statement will deal with the situation
       }
     }

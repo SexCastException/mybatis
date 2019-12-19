@@ -26,7 +26,9 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 映射文件<resultMap>的java抽象类
+ * 封装解析映射文件中除<discriminator>节点的数据
+ *
+ * 该类的对象主要由该类的静态内部类{@link Builder}对外提供创建
  *
  * @author Clinton Begin
  */
@@ -47,21 +49,62 @@ public class ResultMapping {
    * 对应节点的javaType属性，表示的是一个JavaBean的完全限定名，或一个类型别名
    */
   private Class<?> javaType;
+  /**
+   * 对应节点的jdbcType属性，表示的是进行映射的列的JDBC类型
+   */
   private JdbcType jdbcType;
+  /**
+   * 对应节点的typeHandler属性，表示的是类型处理器，它会覆盖默认的类型处理器
+   */
   private TypeHandler<?> typeHandler;
+  /**
+   * 对应节点的resultMap属性，该属性通过id引用了另一个<resultMap>节点定义，它负责将结果集中的一部
+   * 分列映射成其他关联的结果对象。这样我们就可以通过join方式进行关联查询,然后直接映射成多个对象，
+   * 并同时设置这些对象之间的组合关系
+   */
   private String nestedResultMapId;
+  /**
+   * 对应节点的select属性，该属性通过id引用了另一个<select>节点定义，它会把指定的列的值传入
+   * select属性指定的select语句中作为参数进行查询。
+   * <p>
+   * 使用select属性可能会导致N+1问题。
+   */
   private String nestedQueryId;
+  /**
+   * 对应节点的 notNullColumn 属性拆分后的结果
+   */
   private Set<String> notNullColumns;
+  /**
+   * 对应节点的 columnPrefix 属性
+   */
   private String columnPrefix;
+  /**
+   * 处理后的标志，标志共两个: id和 constructor
+   */
   private List<ResultFlag> flags;
+  /**
+   * 对应节点的column属性拆分后生成的结果，composites.size()>0 会使column为null
+   */
   private List<ResultMapping> composites;
+  /**
+   * 对应节点的 resultSet 属性
+   */
   private String resultSet;
+  /**
+   * 对应节点的 foreignColumn 属性
+   */
   private String foreignColumn;
+  /**
+   * 是否延迟加载，对应节点的fetchType 属性，true时：fetchType="lazy"，为false时：fetchType="eager"
+   */
   private boolean lazy;
 
   ResultMapping() {
   }
 
+  /**
+   * 用于数据整理和数据校验，建造者模式
+   */
   public static class Builder {
     private ResultMapping resultMapping = new ResultMapping();
 
@@ -82,6 +125,7 @@ public class ResultMapping {
       resultMapping.property = property;
       resultMapping.flags = new ArrayList<>();
       resultMapping.composites = new ArrayList<>();
+      // 根据配置文件决定是否懒加载
       resultMapping.lazy = configuration.isLazyLoadingEnabled();
     }
 
@@ -149,24 +193,34 @@ public class ResultMapping {
       // lock down collections
       resultMapping.flags = Collections.unmodifiableList(resultMapping.flags);
       resultMapping.composites = Collections.unmodifiableList(resultMapping.composites);
+      // 根据javaType和jdbcType解析获取TypeHandler对象
       resolveTypeHandler();
       validate();
       return resultMapping;
     }
 
+    /**
+     * 节点属性校验
+     */
     private void validate() {
       // Issue #697: cannot define both nestedQueryId and nestedResultMapId
+      // 无法同时定义nestedQueryId和nestedResultMapId
+      // 不能同时设置 resultMap 和 select属性的值
       if (resultMapping.nestedQueryId != null && resultMapping.nestedResultMapId != null) {
         throw new IllegalStateException("Cannot define both nestedQueryId and nestedResultMapId in property " + resultMapping.property);
       }
-      // Issue #5: there should be no mappings without typehandler
+      // Issue #5: there should be no mappings without typeHandler
+      // 没有typeHandler的情况下不应有任何映射
+      // 如果 selectMap 和 select 属性的值为null，则此时 typeHandler 属性必须设置，或者通过javaType解析的 typeHandler 不能为null
       if (resultMapping.nestedQueryId == null && resultMapping.nestedResultMapId == null && resultMapping.typeHandler == null) {
-        throw new IllegalStateException("No typehandler found for property " + resultMapping.property);
+        throw new IllegalStateException("No typeHandler found for property " + resultMapping.property);
       }
       // Issue #4 and GH #39: column is optional only in nested resultmaps but not in the rest
+      // column仅在嵌套的结果映射（如嵌套resultMap结果集）中是可选的，而在其余的结果中则不是可选的
       if (resultMapping.nestedResultMapId == null && resultMapping.column == null && resultMapping.composites.isEmpty()) {
         throw new IllegalStateException("Mapping is missing column attribute for property " + resultMapping.property);
       }
+      // 如果resultSet不为null，则校验 column 和 foreignColumn 属性的长度必须一致
       if (resultMapping.getResultSet() != null) {
         int numColumns = 0;
         if (resultMapping.column != null) {
@@ -182,6 +236,9 @@ public class ResultMapping {
       }
     }
 
+    /**
+     * 如果typeHandler属性没有定义，则通过 javaType 和 jdbcType属性解析并确定一个typeHandler对象
+     */
     private void resolveTypeHandler() {
       if (resultMapping.typeHandler == null && resultMapping.javaType != null) {
         Configuration configuration = resultMapping.configuration;
@@ -264,6 +321,12 @@ public class ResultMapping {
     this.lazy = lazy;
   }
 
+  /**
+   * property标识是否为同一ResultMapping对象
+   *
+   * @param o
+   * @return
+   */
   @Override
   public boolean equals(Object o) {
     if (this == o) {

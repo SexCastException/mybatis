@@ -28,11 +28,12 @@
 
   <resultMap id="" type="" autoMapping="true" extends="">
     <constructor>
-      <arg resultMap="" column="" jdbcType="" typeHandler="" javaType="" columnPrefix="" name="" select=""></arg>
+      <idArg name="" select="" resultMap="" columnPrefix="" javaType="" typeHandler="" jdbcType="" column=""></idArg>
+      <arg resultMap="" column="" jdbcType="" typeHandler=""  javaType="" columnPrefix="" name="" select=""></arg>
     </constructor>
-    <association property=""></association>
-    <collection property=""></collection>
-    <discriminator column="" jdbcType="" javaType="" typeHandler="">
+    <association property="" resultMap="" select="" notNullColumn="" resultSet="" foreignColumn="" fetchType="eager" autoMapping="true"></association>
+    <collection property="" resultMap="" javaType="" jdbcType="" columnPrefix="" typeHandler="" select="" notNullColumn="" resultSet="" foreignColumn="" fetchType="lazy" autoMapping="true"></collection>
+    <discriminator column=""  jdbcType="" javaType="" typeHandler="">
       <case value="" resultMap="" resultType=""></case>
     </discriminator>
     <id column="" jdbcType="" javaType="" typeHandler="" property=""></id>
