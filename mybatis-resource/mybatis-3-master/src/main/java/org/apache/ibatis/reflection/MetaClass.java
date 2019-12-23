@@ -149,10 +149,11 @@ public class MetaClass {
     if (prop.getIndex() != null && Collection.class.isAssignableFrom(type)) {
       Type returnType = getGenericGetterType(prop.getName());
       if (returnType instanceof ParameterizedType) {
-        // 针对ParameterizedType进行处理，即针对泛型集合类型进行处理
+        // 获取实际的类型参数
         Type[] actualTypeArguments = ((ParameterizedType) returnType).getActualTypeArguments();
-        // 如果泛型指定类型参数，则返回参数的类型，如：List<String> 返回的是 String
+        // 如果有且只有一个类型参数时
         if (actualTypeArguments != null && actualTypeArguments.length == 1) {
+          // 更新返回值为泛型的第一个类型参数，如：List<Order> 返回的是 Order
           returnType = actualTypeArguments[0];
           if (returnType instanceof Class) {
             type = (Class<?>) returnType;
