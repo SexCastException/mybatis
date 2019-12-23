@@ -4,12 +4,7 @@
   "http://mybatis.org/dtd/mybatis-3-config.dtd">
 
 <configuration>
-  <settings>
-    <setting name="db.url" value="jdbc:mysql://localhost:3306/mybatis-advanced?characterEncoding=utf8"/>
-    <setting name="db.driver" value="com.mysql.jdbc.Driver"/>
-    <setting name="db.username" value="root"/>
-    <setting name="db.password" value="123456"/>
-  </settings>
+  <properties resource="db.properties"></properties>
 
   <environments default="development">
     <environment id="development">

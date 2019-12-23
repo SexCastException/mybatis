@@ -248,7 +248,7 @@ public final class TypeHandlerRegistry {
       }
       if (handler == null) {
         // #591
-        // 如果 jdbcHandlerMap 只注册了一个TypeHandler，则使用此TypeHandler对象，否则返回null
+        // 获取唯一的TypeHandler对象
         handler = pickSoleHandler(jdbcHandlerMap);
       }
     }
@@ -343,7 +343,7 @@ public final class TypeHandlerRegistry {
   }
 
   /**
-   * 选择唯一的handler，jdbcHandlerMap只存在一个元素，则返回这个元素，否则jdbcHandlerMap存在多个TypeHandler，则返回null
+   * 选择唯一的handler，如果jdbcHandlerMap有一个（或多个相同类型）元素，则返回此对象，否则返回null
    *
    * @param jdbcHandlerMap
    * @return

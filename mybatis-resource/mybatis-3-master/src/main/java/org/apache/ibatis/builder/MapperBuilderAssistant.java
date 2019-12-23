@@ -99,6 +99,12 @@ public class MapperBuilderAssistant extends BaseBuilder {
     return currentNamespace + "." + base;
   }
 
+  /**
+   * 根据namespace（Cache的id）从{@link Configuration} 对象中缓存获取对应的缓存对象
+   *
+   * @param namespace
+   * @return
+   */
   public Cache useCacheRef(String namespace) {
     // namespace为null则抛出异常
     if (namespace == null) {
@@ -200,10 +206,13 @@ public class MapperBuilderAssistant extends BaseBuilder {
       if (!configuration.hasResultMap(extend)) {
         throw new IncompleteElementException("Could not find a parent resultmap with id '" + extend + "'");
       }
+      // 获取继承的ResultMap的ResultMapping集合，通过以下代码可知继承的<resultMap>节点的子节点<discriminator>不会被继承
       ResultMap resultMap = configuration.getResultMap(extend);
       List<ResultMapping> extendedResultMappings = new ArrayList<>(resultMap.getResultMappings());
+      // 移除该ResultMap覆盖的ResultMapping集合
       extendedResultMappings.removeAll(resultMappings);
       // Remove parent constructor if this resultMap declares a constructor.
+      // 如果此resultMap声明了构造函数，则删除父构造函数
       boolean declaresConstructor = false;
       for (ResultMapping resultMapping : resultMappings) {
         if (resultMapping.getFlags().contains(ResultFlag.CONSTRUCTOR)) {
@@ -214,6 +223,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
       if (declaresConstructor) {
         extendedResultMappings.removeIf(resultMapping -> resultMapping.getFlags().contains(ResultFlag.CONSTRUCTOR));
       }
+      // 添加需要继承的ResultMapping集合
       resultMappings.addAll(extendedResultMappings);
     }
     ResultMap resultMap = new ResultMap.Builder(configuration, id, type, resultMappings, autoMapping)
@@ -429,9 +439,9 @@ public class MapperBuilderAssistant extends BaseBuilder {
   }
 
   /**
-   * 解析复合列名
+   * 解析复合列名，默认使用 未知类型处理器
    *
-   * @param columnName column属性值指定的值
+   * @param columnName column属性值指定的符合列名
    * @return
    */
   private List<ResultMapping> parseCompositeColumnName(String columnName) {
@@ -455,7 +465,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
   /**
    * 如果指定了javaType属性值，则返回该属性值对应的Class对象，否则返回property属性值指定的字段的setter方法形参的Class对象
    * <p>
-   * 如果property和javaType都没有指定，或指定的不存在则返回Object的Class对象
+   * 如果property和javaType都没有指定，或指定的不存在则返回Object.Class对象
    *
    * @param resultType
    * @param property

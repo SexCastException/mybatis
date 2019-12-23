@@ -1,23 +1,27 @@
-package com.huazai;
+package com.huazai.utils;
 
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
  * @author pyh
- * @email pyh@efala.com
- * @date 2019/12/23 19:01:18
+ * @date 2019/12/23 21:48
  */
-public class BootStrap {
+public class SqlSessionUtils {
   private static String resource = "mybatis-config.xml";
 
-  public static void main(String[] args) throws Exception {
+  public static SqlSession getSqlSession() throws IOException {
     InputStream inputStream = Resources.getResourceAsStream(resource);
     SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
-    SqlSession sqlSession = sqlSessionFactory.openSession();
+    return sqlSessionFactory.openSession();
+  }
+
+  public static void close(SqlSession sqlSession) {
+    sqlSession.close();
   }
 }

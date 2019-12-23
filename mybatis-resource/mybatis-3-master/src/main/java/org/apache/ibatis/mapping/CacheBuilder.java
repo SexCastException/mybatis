@@ -197,7 +197,7 @@ public class CacheBuilder {
         String name = (String) entry.getKey();
         // <cache>子标签<property>的value属性值
         String value = (String) entry.getValue();
-        if (metaCache.hasSetter(name)) {  // 检测Cache中是否有对应的setter方法，没有则不配置（等价于无用配置，不会抛出异常）
+        if (metaCache.hasSetter(name)) {  // 检测Cache中是否有对应的setter方法，没有则不配置（无用配置，不会抛出异常）
           // 获取该属性的类型
           Class<?> type = metaCache.getSetterType(name);
           // 根据setter形参的类型进行类型转换

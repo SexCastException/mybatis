@@ -26,8 +26,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 封装解析映射文件中除<discriminator>节点的数据
- *
+ * 映射文件<resultMap>的子节点中除<discriminator>外其他节点被解析成ResultMapping对象
  * 该类的对象主要由该类的静态内部类{@link Builder}对外提供创建
  *
  * @author Clinton Begin

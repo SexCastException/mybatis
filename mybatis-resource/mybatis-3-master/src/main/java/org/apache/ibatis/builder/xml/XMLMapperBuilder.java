@@ -44,6 +44,9 @@ public class XMLMapperBuilder extends BaseBuilder {
    *
    */
   private final MapperBuilderAssistant builderAssistant;
+  /**
+   * 记录了<sql>节点的id和封装该节点的{@link XNode}对象的映射关系
+   */
   private final Map<String, XNode> sqlFragments;
   private final String resource;
 
@@ -136,7 +139,14 @@ public class XMLMapperBuilder extends BaseBuilder {
     buildStatementFromContext(list, null);
   }
 
+  /**
+   * 对于SQL节点（<select>、<update>、<delete>和<insert>）的解析，主要交由{@link XMLStatementBuilder}完成
+   *
+   * @param list
+   * @param requiredDatabaseId
+   */
   private void buildStatementFromContext(List<XNode> list, String requiredDatabaseId) {
+    // 遍历SQL节点
     for (XNode context : list) {
       final XMLStatementBuilder statementParser = new XMLStatementBuilder(configuration, builderAssistant, context, requiredDatabaseId);
       try {
@@ -309,6 +319,7 @@ public class XMLMapperBuilder extends BaseBuilder {
 
     // 获取<resultMap>节点的type属性，表示结果集将被映射成type指定类型的对象
     // type为null取ofType属性值，ofType为null取resultType属性值，resultType为null取javaType属性值
+    // 主要做法是用于嵌套解析
     String type = resultMapNode.getStringAttribute("type",
       resultMapNode.getStringAttribute("ofType",
         resultMapNode.getStringAttribute("resultType",
@@ -344,7 +355,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     }
     /*
       获取<resultMap>的id属性，如果id为null，则获取value属性值，获取不到则获取property属性值，并在次基础上拼接所有父节点名称
-      如：resultMap[idName||valueName||propertyName]
+      如："mapper_resultMap[detailedBlogResultMap]_association[author]"
      */
     String id = resultMapNode.getStringAttribute("id",
       resultMapNode.getValueBasedIdentifier());
@@ -445,6 +456,11 @@ public class XMLMapperBuilder extends BaseBuilder {
     return builderAssistant.buildDiscriminator(resultType, column, javaTypeClass, jdbcTypeEnum, typeHandlerClass, discriminatorMap);
   }
 
+  /**
+   * 在映射配置文件中，可以使用<sql>节点定义可重用的SQL语句片段。点中定义的SQL语句片段时，只需要使用<include>节点引入相应的片段即可，这样，在编写
+   *
+   * @param list
+   */
   private void sqlElement(List<XNode> list) {
     if (configuration.getDatabaseId() != null) {
       sqlElement(list, configuration.getDatabaseId());
@@ -453,16 +469,28 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   private void sqlElement(List<XNode> list, String requiredDatabaseId) {
+    // 遍历所有的<sql>节点
     for (XNode context : list) {
+      // 获取<sql>节点的 databaseId 属性值
       String databaseId = context.getStringAttribute("databaseId");
       String id = context.getStringAttribute("id");
+      // 为id添加命名空间
       id = builderAssistant.applyCurrentNamespace(id, false);
+      // 检测<sq1>的databaseId与当前Configuration中记录的databaseId是否一致
       if (databaseIdMatchesCurrent(id, databaseId, requiredDatabaseId)) {
         sqlFragments.put(id, context);
       }
     }
   }
 
+  /**
+   * 检测<sq1>的databaseId与当前Configuration中记录的databaseId是否一致
+   *
+   * @param id
+   * @param databaseId
+   * @param requiredDatabaseId
+   * @return
+   */
   private boolean databaseIdMatchesCurrent(String id, String databaseId, String requiredDatabaseId) {
     if (requiredDatabaseId != null) {
       return requiredDatabaseId.equals(databaseId);
@@ -470,6 +498,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     if (databaseId != null) {
       return false;
     }
+    // 否则requiredDatabaseId 和 databaseId都为null
     if (!this.sqlFragments.containsKey(id)) {
       return true;
     }
@@ -528,9 +557,11 @@ public class XMLMapperBuilder extends BaseBuilder {
    * @throws Exception
    */
   private String processNestedResultMappings(XNode context, List<ResultMapping> resultMappings, Class<?> enclosingType) throws Exception {
+    // 只会处理<association>、 <collection>和<case>三种节点
     if ("association".equals(context.getName())
       || "collection".equals(context.getName())
       || "case".equals(context.getName())) {
+      // 指定了select属性之后，不会生成嵌套的ResultMap对象
       if (context.getStringAttribute("select") == null) {
         // 校验<collection>节点的property属性是否在对应的javaBean中有该字段
         validateCollection(context, enclosingType);

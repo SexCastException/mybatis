@@ -27,9 +27,10 @@ import java.lang.reflect.Constructor;
 import java.util.*;
 
 /**
- * 映射文件每个<resultMap>都会被解析成每个 ResultMap 对象
- *
+ * 映射文件每个<resultMap>都会被解析成每个 ResultMap 对象，与{@link ResultMapping}为一对多关系
+ * <p>
  * 该类的对象主要由该类的静态内部类{@link Builder}对外提供创建
+ *
  * @author Clinton Begin
  */
 public class ResultMap {

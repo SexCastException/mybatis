@@ -5,5 +5,9 @@
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.huazai.mapper.AuthorMapper">
-
+  <insert id="insert">
+      INSERT INTO
+      `author` (`username`, `password`, `email`)
+      VALUES (#{username}, #{password}, #{email})
+   </insert>
 </mapper>

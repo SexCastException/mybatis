@@ -22,11 +22,7 @@
 
 <mapper namespace="org.apache.ibatis.submitted.mapper_extend.ParentMapper">
 
-  <resultMap id="" type=""></resultMap>
-
-  <parameterMap id="" type=""></parameterMap>
-
-  <resultMap id="" type="" autoMapping="true" extends="">
+  <!--<resultMap id="" type="" autoMapping="true" extends="">
     <constructor>
       <idArg name="" select="" resultMap="" columnPrefix="" javaType="" typeHandler="" jdbcType="" column=""></idArg>
       <arg resultMap="" column="" jdbcType="" typeHandler=""  javaType="" columnPrefix="" name="" select=""></arg>
@@ -38,7 +34,10 @@
     </discriminator>
     <id column="" jdbcType="" javaType="" typeHandler="" property=""></id>
     <result column="" jdbcType="" javaType="" typeHandler="" property=""></result>
-  </resultMap>
+  </resultMap>-->
+
+  <sql id="" databaseId="" lang="">
+  </sql>
 
   <cache type="" eviction="" blocking="" flushInterval="" readOnly="" size="">
     <property name="" value=""/>
@@ -46,11 +45,17 @@
 
   <cache-ref namespace=""/>
 
-  <select id="getUserByName" resultType="org.apache.ibatis.submitted.mapper_extend.User">
+  <select id="">
+    <include refid="">
+      <property name="" value=""/>
+    </include>
+  </select>
+
+  <select id="getUserByName" resultType="org.apache.ibatis.submitted.mapper_extend.User" >
     select * from users where name = #{name}
   </select>
 
-	<select id="getUserXML" resultType="org.apache.ibatis.submitted.mapper_extend.User">
+	<select id="getUserXML"  resultType="org.apache.ibatis.submitted.mapper_extend.User">
 		select * from users where id = 1
 	</select>
 
