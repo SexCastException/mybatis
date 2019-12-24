@@ -4,7 +4,7 @@
   "http://mybatis.org/dtd/mybatis-3-config.dtd">
 
 <configuration>
-  <properties resource="db.properties"></properties>
+  <properties resource="com/huazai/db.properties"></properties>
 
   <environments default="development">
     <environment id="development">

@@ -1,26 +1,79 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+       Copyright 2009-2019 the original author or authors.
+
+       Licensed under the Apache License, Version 2.0 (the "License");
+       you may not use this file except in compliance with the License.
+       You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+       Unless required by applicable law or agreed to in writing, software
+       distributed under the License is distributed on an "AS IS" BASIS,
+       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+       See the License for the specific language governing permissions and
+       limitations under the License.
+
+-->
 
 <!DOCTYPE mapper
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.huazai.mapper.BlogMapper">
-  <select id="selectBlogDetail" resultType="com.huazai.bean.Blog">
+
+  <resultMap id="authorResult" type="com.huazai.bean.Author">
+    <id property="id" column="author_id"></id>
+    <result property="username" column="author_username"></result>
+    <result property="password" column="author_password"></result>
+    <result property="email" column="author_email"></result>
+  </resultMap>
+
+  <resultMap id="blogDetailedResultMap" type="com.huazai.bean.Blog">
+    <constructor>
+      <idArg column="blog_id" javaType="int"></idArg>
+    </constructor>
+    <result property="title" column="blog_title"></result>
+
+    <association property="author" resultMap="authorResult"></association>
+
+    <collection property="posts" ofType="com.huazai.bean.Post">
+      <id property="id" column="post_id"></id>
+      <result property="content" column="post_content"></result>
+      <result property="draft" column="draft"></result>
+      <association property="author" resultMap="authorResult"></association>
+      <collection property="comments" column="post_id" javaType="ArrayList" ofType="com.huazai.bean.Comment"
+                  select="selectComment"></collection>
+      <discriminator javaType="Integer" column="draft">
+        <case value="1" resultType="int"></case>
+      </discriminator>
+    </collection>
+  </resultMap>
+
+  <select id="selectBlogDetail" resultMap="blogDetailedResultMap">
     SELECT
       B.id AS blog_id,
       B.title AS blog_title,
       B.author_id AS blog_author_id,
       A.id AS author_id,
       A.username AS author_username,
-      A.`password` AS author_PASSWORD,
+      A.`password` AS author_password,
       A.email AS author_email,
       P.id AS post_id,
       P.blog_id AS post_blog_id,
-      P.content AS post_content
+      P.content AS post_content,
+      P.draft AS draft
     FROM
       blog B
     LEFT OUTER JOIN author A ON B.author_id = A.id
     LEFT OUTER JOIN post P ON B.id = P.blog_id
     WHERE B.id = #{id}
+  </select>
+
+  <select id="selectComment" resultType="com.huazai.bean.Comment">
+    SELECT *
+    FROM comment
+    WHERE post_id = #{post_id}
   </select>
 </mapper>
