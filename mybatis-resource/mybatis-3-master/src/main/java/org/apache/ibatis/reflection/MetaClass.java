@@ -172,16 +172,18 @@ public class MetaClass {
       Invoker invoker = reflector.getGetInvoker(propertyName);
       // 根据Reflector.getMethods集合中记录的Invoker实现类的类型，决定解析getter方法返回值类型还是解析字段类型
       if (invoker instanceof MethodInvoker) {   // 如果是封装方法的 Invoker
-        // 通过反射获取MethodInvoker的method调用getter方法
+        // 因为MethodInvoker的method没有提供getter方法，所以通过反射获取MethodInvoker的method的成员变量
         Field _method = MethodInvoker.class.getDeclaredField("method");
         _method.setAccessible(true);
         Method method = (Method) _method.get(invoker);
+        // 解析propertyName指定的对应方法的Method对象的返回值类型
         return TypeParameterResolver.resolveReturnType(method, reflector.getType());
       } else if (invoker instanceof GetFieldInvoker) {  // 如果是封装getter方法的 Invoker
         // MethodInvoker属性method由于没有提供getter方法，所以通过反射来获取，GetFieldInvoker 属性field同理
         Field _field = GetFieldInvoker.class.getDeclaredField("field");
         _field.setAccessible(true);
         Field field = (Field) _field.get(invoker);
+        // 解析propertyName指定成员变量的类型
         return TypeParameterResolver.resolveFieldType(field, reflector.getType());
       }
     } catch (NoSuchFieldException | IllegalAccessException ignored) {

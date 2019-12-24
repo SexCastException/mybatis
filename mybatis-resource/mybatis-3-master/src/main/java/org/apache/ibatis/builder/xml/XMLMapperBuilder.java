@@ -48,6 +48,9 @@ public class XMLMapperBuilder extends BaseBuilder {
    * 记录了<sql>节点的id和封装该节点的{@link XNode}对象的映射关系
    */
   private final Map<String, XNode> sqlFragments;
+  /**
+   * 映射文件的资源路径
+   */
   private final String resource;
 
   @Deprecated
@@ -517,7 +520,7 @@ public class XMLMapperBuilder extends BaseBuilder {
   private ResultMapping buildResultMappingFromContext(XNode context, Class<?> resultType, List<ResultFlag> flags) throws Exception {
     //
     String property;
-    // 如果包含ResultFlag.CONSTRUCTOR，先获取该节点的name属性值，否则再获取该节点的property属性值
+    // 如果是<constructor>节点则获取那么属性值，否则获取property属性值，如<id>、<result>等
     if (flags.contains(ResultFlag.CONSTRUCTOR)) {
       property = context.getStringAttribute("name");
     } else {

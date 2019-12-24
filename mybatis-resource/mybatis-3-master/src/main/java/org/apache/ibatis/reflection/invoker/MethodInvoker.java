@@ -30,6 +30,9 @@ public class MethodInvoker implements Invoker {
    * getter 方法的返回值类型或者 setter 方法的
    */
   private final Class<?> type;
+  /**
+   * getter方法或setter方法，
+   */
   private final Method method;
 
   public MethodInvoker(Method method) {
