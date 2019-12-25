@@ -34,6 +34,10 @@
     </collection>
   </resultMap>
 
+  <sql id="fromTable">
+    FROM ${tableName}
+  </sql>
+
   <select id="selectBlogDetail" resultMap="blogDetailedResultMap">
     SELECT
       B.id AS blog_id,
@@ -47,8 +51,10 @@
       P.blog_id AS post_blog_id,
       P.content AS post_content,
       P.draft AS draft
-    FROM
-      blog B
+    <include refid="fromTable">
+      <property name="tableName" value="blog"/>
+    </include>
+     B
     LEFT OUTER JOIN author A ON B.author_id = A.id
     LEFT OUTER JOIN post P ON B.id = P.blog_id
     WHERE B.id = #{id}

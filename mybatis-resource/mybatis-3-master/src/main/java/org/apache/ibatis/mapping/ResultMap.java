@@ -126,6 +126,7 @@ public class ResultMap {
       if (resultMap.id == null) {
         throw new IllegalArgumentException("ResultMaps must have an id");
       }
+      // 初始化resultMap成员变量
       resultMap.mappedColumns = new HashSet<>();
       resultMap.mappedProperties = new HashSet<>();
       resultMap.idResultMappings = new ArrayList<>();
@@ -137,8 +138,10 @@ public class ResultMap {
         resultMap.hasNestedResultMaps = resultMap.hasNestedResultMaps || (resultMapping.getNestedResultMapId() != null && resultMapping.getResultSet() == null);
         final String column = resultMapping.getColumn();
         if (column != null) {
+          // 保存映射文件的所有column属性值
           resultMap.mappedColumns.add(column.toUpperCase(Locale.ENGLISH));
         } else if (resultMapping.isCompositeResult()) {
+          // 保存映射文件复合列key值
           for (ResultMapping compositeResultMapping : resultMapping.getComposites()) {
             final String compositeColumn = compositeResultMapping.getColumn();
             if (compositeColumn != null) {

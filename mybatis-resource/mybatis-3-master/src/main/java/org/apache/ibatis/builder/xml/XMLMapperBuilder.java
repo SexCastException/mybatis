@@ -501,11 +501,12 @@ public class XMLMapperBuilder extends BaseBuilder {
     if (databaseId != null) {
       return false;
     }
-    // 否则requiredDatabaseId 和 databaseId都为null
+    // 否则requiredDatabaseId 和 databaseId都为null，且此<sql>节点并没有加入sqlFragments集合中
     if (!this.sqlFragments.containsKey(id)) {
       return true;
     }
     // skip this fragment if there is a previous one with a not null databaseId
+    // sqlFragments中已存在该<sql>节点，并且此时databaseId为null，如果此时databaseId对应的<sql>节点的databaseId为null，则与requiredDatabaseId相等
     XNode context = this.sqlFragments.get(id);
     return context.getStringAttribute("databaseId") == null;
   }
