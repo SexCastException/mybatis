@@ -39,6 +39,9 @@ public class MapperBuilderAssistant extends BaseBuilder {
    */
   private String currentNamespace;
   private final String resource;
+  /**
+   * 当前映射文件的缓存对象
+   */
   private Cache currentCache;
   /**
    * 是否未成功解析{@link Cache}引用，false表示成功解析{@link Cache}引用
@@ -113,7 +116,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
     try {
       // 标识未成功解析Cache引用
       unresolvedCacheRef = true;
-      // 通过namespace（Configuration中caches集合的key）获取对应的缓存对象
+      // 通过namespace（Configuration中caches集合的key）获取被引用的缓存对象
       Cache cache = configuration.getCache(namespace);
       if (cache == null) {
         throw new IncompleteElementException("No cache for namespace '" + namespace + "' could be found.");

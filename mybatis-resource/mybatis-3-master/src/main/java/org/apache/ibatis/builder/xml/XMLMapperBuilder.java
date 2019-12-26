@@ -91,9 +91,9 @@ public class XMLMapperBuilder extends BaseBuilder {
     if (!configuration.isResourceLoaded(resource)) {
       // 解析映射文件的根节点 <mapper>
       configurationElement(parser.evalNode("/mapper"));
-      // 将 resource 添加到 Configuration 的loadedResources集合
+      // 将已经解析过的Mapper映射文件资源路径 resource 保存到全局映射文件的loadedResources集合中
       configuration.addLoadedResource(resource);
-      // 注册Mapper接口
+      // 注册resource指定的Mapper映射文件对应的Mapper接口
       bindMapperForNamespace();
     }
 
@@ -230,6 +230,8 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   /**
+   * 使用配置文件方式创建缓存
+   * <p>
    * 为映射文件每个命名空间创建一个对应的{@link Cache}对象
    * <p>
    * MyBatis默认情况下没有开启二级缓存，如果要为某命名空间开启二级缓存功能，则需要在相应映射配置文件中添加<cache>节点，
@@ -604,7 +606,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     if (namespace != null) {
       Class<?> boundType = null;
       try {
-        // 获取namespace指定的mapper接口
+        // 加载namespace指定的mapper接口
         boundType = Resources.classForName(namespace);
       } catch (ClassNotFoundException e) {
         //ignore, bound type is not required

@@ -153,6 +153,12 @@ public class Configuration {
   protected final Map<String, ParameterMap> parameterMaps = new StrictMap<>("Parameter Maps collection");
   protected final Map<String, KeyGenerator> keyGenerators = new StrictMap<>("Key Generators collection");
 
+  /**
+   * 保存已加载的资源
+   * //   * 保存Mapper接口和Mapper映射文件相关信息，格式如下：
+   * //   * Mapper 接口：interface Mapper接口全限定名
+   * //   * Mapper 映射文件：例如：com/huazai/mapper/AuthorMapper.xml
+   */
   protected final Set<String> loadedResources = new HashSet<>();
   protected final Map<String, XNode> sqlFragments = new StrictMap<>("XML fragments parsed from previous mappers");
 
@@ -170,6 +176,8 @@ public class Configuration {
    * A map holds cache-ref relationship. The key is the namespace that
    * references a cache bound to another namespace and the value is the
    * namespace which the actual cache is bound to.
+   * <p>
+   * 保存一个命名空间的缓存引用另外一个命名空间缓存的映射关系，key为当前引用缓存映射文件的命名空间，value为被引用缓存所在映射文件的命名空间（也为<cache-ref>节点namespace属性值）
    */
   protected final Map<String, String> cacheRefMap = new HashMap<>();
 

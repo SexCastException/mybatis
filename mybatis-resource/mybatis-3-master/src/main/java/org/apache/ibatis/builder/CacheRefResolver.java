@@ -26,6 +26,9 @@ import org.apache.ibatis.cache.Cache;
  */
 public class CacheRefResolver {
   private final MapperBuilderAssistant assistant;
+  /**
+   * 被引用缓存所在的Mapper映射文件所在的命名空间
+   */
   private final String cacheRefNamespace;
 
   public CacheRefResolver(MapperBuilderAssistant assistant, String cacheRefNamespace) {
