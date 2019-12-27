@@ -19,16 +19,12 @@
             `author`
   </select>
 
-  <insert id="insert" parameterType="com.huazai.bean.Author" useGeneratedKeys="">
+  <insert id="insert" parameterType="com.huazai.bean.Author">
         <selectKey resultType="int" statementType="PREPARED" keyProperty="id" order="AFTER" databaseId="" keyColumn="">
           SELECT
           <if test="true">
             LAST_INSERT_ID()
           </if>
-          <bind name="" value=""/>
-          <choose>
-
-          </choose>
         </selectKey>
       INSERT INTO
       `author` (`username`, `password`, `email`)
