@@ -170,6 +170,12 @@ public class XNode {
     return getStringBody(null);
   }
 
+  /**
+   * 获取 {@link Node}节点内容，如果为null，def作为返回的默认值
+   *
+   * @param def
+   * @return
+   */
   public String getStringBody(String def) {
     if (body == null) {
       return def;

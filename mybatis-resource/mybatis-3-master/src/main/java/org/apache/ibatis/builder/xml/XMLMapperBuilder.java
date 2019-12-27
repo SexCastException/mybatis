@@ -16,6 +16,7 @@
 package org.apache.ibatis.builder.xml;
 
 import org.apache.ibatis.builder.*;
+import org.apache.ibatis.builder.annotation.MapperAnnotationBuilder;
 import org.apache.ibatis.cache.Cache;
 import org.apache.ibatis.executor.ErrorContext;
 import org.apache.ibatis.io.Resources;
@@ -32,7 +33,7 @@ import java.io.Reader;
 import java.util.*;
 
 /**
- * Mapper.xml 映射文件构造器
+ * XML配置方式的Mapper构造器，注解方式 See {@link MapperAnnotationBuilder}
  *
  * @author Clinton Begin
  * @author Kazuki Shimizu

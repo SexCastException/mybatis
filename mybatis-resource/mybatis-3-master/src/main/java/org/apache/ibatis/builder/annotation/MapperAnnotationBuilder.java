@@ -49,7 +49,7 @@ import java.lang.reflect.*;
 import java.util.*;
 
 /**
- * 使用注解方式创建Mapper构建器
+ * 注解配置方式Mapper的构建器，XML配置方式 See {@link XMLMapperBuilder}
  *
  * @author Clinton Begin
  * @author Kazuki Shimizu

@@ -31,6 +31,8 @@ import java.util.Optional;
 import java.util.Properties;
 
 /**
+ * XML映射文件<include>节点装换器
+ * <p>
  * 在解析SQL节点之前，首先通过 XMLIncludeTransformer 解析SQL语句中的<include>节点，
  * 该过程会将<include>节点替换成<sql>节点中定义的SQL片段，并将其中的“${xx}”占位符替换成真实的参数。
  *

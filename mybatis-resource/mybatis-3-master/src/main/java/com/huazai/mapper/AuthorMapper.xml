@@ -19,7 +19,10 @@
             `author`
   </select>
 
-  <insert id="insert">
+  <insert id="insert" parameterType="com.huazai.bean.Author">
+        <selectKey resultType="int" statementType="PREPARED" keyProperty="id" order="AFTER">
+          SELECT LAST_INSERT_ID()
+        </selectKey>
       INSERT INTO
       `author` (`username`, `password`, `email`)
       VALUES (#{username}, #{password}, #{email})
