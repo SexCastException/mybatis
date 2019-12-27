@@ -144,13 +144,13 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   /**
-   * 对于SQL节点（<select>、<update>、<delete>和<insert>）的解析，主要交由{@link XMLStatementBuilder}完成
+   * 对于Statement节点（<select>、<update>、<delete>和<insert>）的解析，主要交由{@link XMLStatementBuilder}完成
    *
    * @param list
    * @param requiredDatabaseId
    */
   private void buildStatementFromContext(List<XNode> list, String requiredDatabaseId) {
-    // 遍历SQL节点
+    // 遍历Statement节点
     for (XNode context : list) {
       final XMLStatementBuilder statementParser = new XMLStatementBuilder(configuration, builderAssistant, context, requiredDatabaseId);
       try {

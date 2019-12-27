@@ -36,7 +36,7 @@ public class XMLStatementBuilder extends BaseBuilder {
 
   private final MapperBuilderAssistant builderAssistant;
   /**
-   * 封装SQL节点（<select>、<update>、<delete>和<insert>）的{@link XNode}对象
+   * 封装Statement节点（<select>、<update>、<delete>和<insert>）的{@link XNode}对象
    */
   private final XNode context;
   private final String requiredDatabaseId;
@@ -53,9 +53,9 @@ public class XMLStatementBuilder extends BaseBuilder {
   }
 
   public void parseStatementNode() {
-    // 获取SQL节点的id属性
+    // 获取Statement节点的id属性
     String id = context.getStringAttribute("id");
-    // 获取SQL节点的databaseId属性
+    // 获取Statement节点的databaseId属性
     String databaseId = context.getStringAttribute("databaseId");
 
     if (!databaseIdMatchesCurrent(id, databaseId, this.requiredDatabaseId)) {
@@ -68,7 +68,7 @@ public class XMLStatementBuilder extends BaseBuilder {
     // 是否为<select>节点
     boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
 
-    // 以下是SQL节点属性值为boolean类型的配置，其他属性值则在 XMLIncludeTransformer解析
+    // 以下是Statement节点属性值为boolean类型的配置，其他属性值则在 XMLIncludeTransformer解析
     // 查询语句默认不刷新缓存
     boolean flushCache = context.getBooleanAttribute("flushCache", !isSelect);
     // 如不配置useCache属性值，则默认为查询语句使用缓存
@@ -90,22 +90,25 @@ public class XMLStatementBuilder extends BaseBuilder {
     LanguageDriver langDriver = getLanguageDriver(lang);
 
     // Parse selectKey after includes and remove them.
-    // 处理<selectKey>节点
+    // 处理<selectKey>节点，并将处理后KeyGenerator对象保存到Configuration对象的keyGenerators集合中
     processSelectKeyNodes(id, parameterTypeClass, langDriver);
 
     // Parse the SQL (pre: <selectKey> and <include> were parsed and removed)
     KeyGenerator keyGenerator;
     String keyStatementId = id + SelectKeyGenerator.SELECT_KEY_SUFFIX;
     keyStatementId = builderAssistant.applyCurrentNamespace(keyStatementId, true);
+    // 获取以上processSelectKeyNodes() 方法解析的KeyGenerator对象，配置了<selectKey>节点会使useGeneratedKeys属性值无效
     if (configuration.hasKeyGenerator(keyStatementId)) {
       keyGenerator = configuration.getKeyGenerator(keyStatementId);
     } else {
+      // 获取useGeneratedKeys配置的keyGenerator对象，如果配置了useGeneratedKeys属性为true，并且SQL类型为insert，则默认使用Jdbc3KeyGenerator
       keyGenerator = context.getBooleanAttribute("useGeneratedKeys",
         configuration.isUseGeneratedKeys() && SqlCommandType.INSERT.equals(sqlCommandType))
         ? Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE;
     }
 
     SqlSource sqlSource = langDriver.createSqlSource(configuration, context, parameterTypeClass);
+    // 默认：PREPARED
     StatementType statementType = StatementType.valueOf(context.getStringAttribute("statementType", StatementType.PREPARED.toString()));
     Integer fetchSize = context.getIntAttribute("fetchSize");
     Integer timeout = context.getIntAttribute("timeout");
@@ -131,7 +134,7 @@ public class XMLStatementBuilder extends BaseBuilder {
   /**
    * 处理<selectKey>节点
    *
-   * @param id                 SQL节点的id属性值
+   * @param id                 Statement节点的id属性值
    * @param parameterTypeClass parameterType属性值指定的java对象类型
    * @param langDriver         lang属性值指定的{@link LanguageDriver}
    */
@@ -151,7 +154,7 @@ public class XMLStatementBuilder extends BaseBuilder {
    * 为<selectKey>节点生成id，检测 databaseId 是否匹配以及是否已经加载过相同id且 databaseId 不为空的<selectKey>节点，
    * 并调用 parseSelectKeyNode()方法处理每个<selectKey>节点。
    *
-   * @param parentId             SQL节点的id属性值
+   * @param parentId             Statement节点的id属性值
    * @param list                 <selectKey>节点集合
    * @param parameterTypeClass   parameterType属性值指定的java对象类型
    * @param langDriver           lang属性值指定的{@link LanguageDriver}
@@ -160,7 +163,7 @@ public class XMLStatementBuilder extends BaseBuilder {
   private void parseSelectKeyNodes(String parentId, List<XNode> list, Class<?> parameterTypeClass, LanguageDriver langDriver, String skRequiredDatabaseId) {
     // 遍历<selectKey>节点
     for (XNode nodeToHandle : list) {
-      // SQL节点id属性值+!selectKey，如：insert!selectKey
+      // Statement节点id属性值+!selectKey，如：insert!selectKey
       String id = parentId + SelectKeyGenerator.SELECT_KEY_SUFFIX;
       // 获取<selectKey>节点databaseId属性值
       String databaseId = nodeToHandle.getStringAttribute("databaseId");
@@ -228,8 +231,8 @@ public class XMLStatementBuilder extends BaseBuilder {
   /**
    * 当前配置的dataBaseId是否与数据库环境的dataBaseId是否相同
    *
-   * @param id                 SQL节点的id
-   * @param databaseId         SQL节点配置databaseId属性值
+   * @param id                 Statement节点的id
+   * @param databaseId         Statement节点配置databaseId属性值
    * @param requiredDatabaseId 当前数据库环境的dataBaseId
    * @return
    */
