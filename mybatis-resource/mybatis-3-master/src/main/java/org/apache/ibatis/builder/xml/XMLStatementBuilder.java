@@ -62,7 +62,7 @@ public class XMLStatementBuilder extends BaseBuilder {
       return;
     }
 
-    // 节点的名称（select、update、delete和insert）
+    // Statement节点的名称（select、update、delete和insert）
     String nodeName = context.getNode().getNodeName();
     SqlCommandType sqlCommandType = SqlCommandType.valueOf(nodeName.toUpperCase(Locale.ENGLISH));
     // 是否为<select>节点
@@ -146,7 +146,7 @@ public class XMLStatementBuilder extends BaseBuilder {
       parseSelectKeyNodes(id, selectKeyNodes, parameterTypeClass, langDriver, configuration.getDatabaseId());
     }
     parseSelectKeyNodes(id, selectKeyNodes, parameterTypeClass, langDriver, null);
-    // 移除<selectKey>节点
+    // 解析成功后移除<selectKey>节点
     removeSelectKeyNodes(selectKeyNodes);
   }
 
@@ -205,6 +205,7 @@ public class XMLStatementBuilder extends BaseBuilder {
      /*
       通过MapperBuilderAssistant创建 MappedStatement 对象，并添加到 Configuration.mappedStatements集合中保存，
       该集合为StrictMap<MappedStatement>类型
+      <selectKey>节点的内容也视为MapperStatement
      */
     builderAssistant.addMappedStatement(id, sqlSource, statementType, sqlCommandType,
       fetchSize, timeout, parameterMap, parameterTypeClass, resultMap, resultTypeClass,
@@ -222,8 +223,14 @@ public class XMLStatementBuilder extends BaseBuilder {
     configuration.addKeyGenerator(id, new SelectKeyGenerator(keyStatement, executeBefore));
   }
 
+  /**
+   * 移除<selectKey>节点
+   *
+   * @param selectKeyNodes
+   */
   private void removeSelectKeyNodes(List<XNode> selectKeyNodes) {
     for (XNode nodeToHandle : selectKeyNodes) {
+      // 从父节点中移除<selectKey>节点
       nodeToHandle.getParent().getNode().removeChild(nodeToHandle.getNode());
     }
   }

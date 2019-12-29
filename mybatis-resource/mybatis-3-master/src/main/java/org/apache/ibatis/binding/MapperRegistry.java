@@ -81,7 +81,7 @@ public class MapperRegistry {
    * @param <T>
    */
   public <T> void addMapper(Class<T> type) {
-    // type 是否为接口
+    // type 是否为接口，要求 Mapper 一定为接口
     if (type.isInterface()) {
       // 检测knownMappers集合是否已经加入过该接口
       if (hasMapper(type)) {
@@ -94,6 +94,7 @@ public class MapperRegistry {
         // It's important that the type is added before the parser is run
         // otherwise the binding may automatically be attempted by the
         // mapper parser. If the type is already known, it won't try.
+        // 创建使用注解方式创建Mapper接口对象
         MapperAnnotationBuilder parser = new MapperAnnotationBuilder(config, type);
         parser.parse();
         loadCompleted = true;

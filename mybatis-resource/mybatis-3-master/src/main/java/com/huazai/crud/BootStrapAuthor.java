@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -41,6 +42,15 @@ public class BootStrapAuthor {
   @Test
   public void select() {
     AuthorMapper mapper = sqlSession.getMapper(AuthorMapper.class);
-    System.out.println(mapper.select(null));
+    Author author = new Author(1);
+    author.setUsername("zhangsan");
+    System.out.println(mapper.select(author, "123456", "739967221@qq.com"));
+  }
+
+  @Test
+  public void selectByProperty() {
+    AuthorMapper mapper = sqlSession.getMapper(AuthorMapper.class);
+    List<Author> authors = mapper.selectByProperty("1", "test");
+    System.out.println(authors);
   }
 }

@@ -45,6 +45,13 @@ public class Author implements Serializable {
     this.email = email;
   }
 
+  public Author() {
+  }
+
+  public Author(Integer id) {
+    this.id = id;
+  }
+
   @Override
   public String toString() {
     return "Author{" +

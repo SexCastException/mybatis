@@ -5,6 +5,7 @@
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.huazai.mapper.AuthorMapper">
+
   <resultMap id="authorResult" type="com.huazai.bean.Author">
     <id property="id" column="id"></id>
     <result property="username" column="username"></result>
@@ -17,6 +18,7 @@
             *
         FROM
             `author`
+        WHERE id = #{arg0.id} OR username = #{param1.username} OR password = #{arg1} OR email = #{param3}
   </select>
 
   <insert id="insert" parameterType="com.huazai.bean.Author">

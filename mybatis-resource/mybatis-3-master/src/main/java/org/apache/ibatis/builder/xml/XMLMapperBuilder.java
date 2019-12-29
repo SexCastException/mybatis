@@ -599,7 +599,7 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   /**
-   * 绑定映射文件的namespace属性
+   * 绑定Mapper接口
    */
   private void bindMapperForNamespace() {
     // 获取当前映射文件的 namespace
@@ -613,6 +613,7 @@ public class XMLMapperBuilder extends BaseBuilder {
         //ignore, bound type is not required
       }
       if (boundType != null) {
+        // 是否已加载了Mapper接口
         if (!configuration.hasMapper(boundType)) {
           // Spring may not know the real resource name so we set a flag
           // to prevent loading again this resource from the mapper interface
