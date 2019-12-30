@@ -34,7 +34,7 @@ public class ExpressionEvaluator {
     if (value instanceof Boolean) { // 解析结果是Boolean类型，直接返回
       return (Boolean) value;
     }
-    if (value instanceof Number) {  // 解析结果是数字型，如果不为0则返回true，否则为false
+    if (value instanceof Number) {  // 解析结果是数字型，非0返回true，否则为false
       return new BigDecimal(String.valueOf(value)).compareTo(BigDecimal.ZERO) != 0;
     }
     return value != null;

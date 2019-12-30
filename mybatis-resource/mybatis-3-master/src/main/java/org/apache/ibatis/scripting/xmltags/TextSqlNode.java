@@ -56,7 +56,7 @@ public class TextSqlNode implements SqlNode {
   }
 
   /**
-   * 使用ognl解析占位符的内容
+   * 如果文本节点中含有“${}”占位符，则使用ognl解析占位符的内容
    *
    * @param context
    * @return
