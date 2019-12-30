@@ -167,10 +167,16 @@ public class Configuration {
 
   protected final Collection<XMLStatementBuilder> incompleteStatements = new LinkedList<>();
   /**
-   * 保存解析出现异常的{@link CacheRefResolver}对象
+   * 当解析<cache-ref>节点出现异常时，创建 {@link CacheRefResolver}并加入集合
    */
   protected final Collection<CacheRefResolver> incompleteCacheRefs = new LinkedList<>();
+  /**
+   * 当解析<resultMap>节点出现异常时，创建 {@link ResultMapResolver}并加入集合
+   */
   protected final Collection<ResultMapResolver> incompleteResultMaps = new LinkedList<>();
+  /**
+   * 当Mapper接口方法出现异常时，创建{@link MethodResolver}并保存在集合中
+   */
   protected final Collection<MethodResolver> incompleteMethods = new LinkedList<>();
 
   /**

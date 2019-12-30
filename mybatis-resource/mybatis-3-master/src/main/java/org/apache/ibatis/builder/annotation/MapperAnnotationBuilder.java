@@ -119,6 +119,9 @@ public class MapperAnnotationBuilder {
     parsePendingMethods();
   }
 
+  /**
+   * 解析待定方法
+   */
   private void parsePendingMethods() {
     Collection<MethodResolver> incompleteMethods = configuration.getIncompleteMethods();
     synchronized (incompleteMethods) {
@@ -222,14 +225,26 @@ public class MapperAnnotationBuilder {
 
   private String parseResultMap(Method method) {
     Class<?> returnType = getReturnType(method);
+
+    // 获取Mapper接口方法其他注解
     ConstructorArgs args = method.getAnnotation(ConstructorArgs.class);
     Results results = method.getAnnotation(Results.class);
     TypeDiscriminator typeDiscriminator = method.getAnnotation(TypeDiscriminator.class);
+
+    //
     String resultMapId = generateResultMapName(method);
     applyResultMap(resultMapId, returnType, argsIf(args), resultsIf(results), typeDiscriminator);
     return resultMapId;
   }
 
+  /**
+   * 生成ResultMap的名字。
+   * <p>
+   * 如果添加了注解 {@link Results},则名字由Mapper类型全限定名和注解value决定，否则由Mapper类型全限定名和参数列表决定
+   *
+   * @param method
+   * @return
+   */
   private String generateResultMapName(Method method) {
     Results results = method.getAnnotation(Results.class);
     if (results != null && !results.id().isEmpty()) {
@@ -482,10 +497,14 @@ public class MapperAnnotationBuilder {
             returnType = Array.newInstance(componentType, 0).getClass();
           }
         }
+
+        // 如果Mapper接口方法有注解MapKey并且返回值类型是Map
       } else if (method.isAnnotationPresent(MapKey.class) && Map.class.isAssignableFrom(rawType)) {
         // (gcode issue 504) Do not look into Maps if there is not MapKey annotation
+        // 获取Map的实际类型参数
         Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
         if (actualTypeArguments != null && actualTypeArguments.length == 2) {
+          // 获取Map的value值类型
           Type returnTypeParameter = actualTypeArguments[1];
           if (returnTypeParameter instanceof Class<?>) {
             returnType = (Class<?>) returnTypeParameter;
