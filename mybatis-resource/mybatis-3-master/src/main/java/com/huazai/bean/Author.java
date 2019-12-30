@@ -52,6 +52,13 @@ public class Author implements Serializable {
     this.id = id;
   }
 
+  public Author(Integer id, String username, String password, String email) {
+    this.id = id;
+    this.username = username;
+    this.password = password;
+    this.email = email;
+  }
+
   @Override
   public String toString() {
     return "Author{" +

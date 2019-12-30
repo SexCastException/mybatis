@@ -32,4 +32,8 @@
       `author` (`username`, `password`, `email`)
       VALUES (#{username}, #{password}, #{email})
    </insert>
+
+  <select id="test">
+    <trim prefixOverrides=""></trim>
+  </select>
 </mapper>

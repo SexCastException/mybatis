@@ -15,12 +15,21 @@
  */
 package org.apache.ibatis.mapping;
 
+import org.apache.ibatis.scripting.xmltags.SqlNode;
+
 /**
  * Represents the content of a mapped statement read from an XML file or an annotation.
  * It creates the SQL that will be passed to the database out of the input parameter received from the user.
  * <p>
  * MyBatis使用SqlSource接口表示映射文件或注解中定义的SQL语句，但它表示的SQL语句是不能直接被数据库执行的，
  * 因为其中可能含有动态SQL语句相关的节点或是占位符等需要解析的元素。
+ * <p>
+ * SQL语句中定义的动态SQL节点、文本节点等，则由 {@link SqlNode}接口相应实现
+ * <p>
+ * DynamicSqlSource负责处理动态SQL语句，RawSqlSource负责处理静态语句，两者最终都会将处理后的SQL语句封装成StaticSqlSource返回。
+ * DynamicSqlSource 与StaticSqlSource的主要区别是: StaticSqlSource 中记录的SQL语句中可能含有“?”占位符，
+ * 但是可以直接提交给数据库执行;
+ * DynamicSqlSource 中封装的SQL语句还需要进行一系列解析，才会最终形成数据库可执行的SQL语句。
  *
  * @author Clinton Begin
  */
