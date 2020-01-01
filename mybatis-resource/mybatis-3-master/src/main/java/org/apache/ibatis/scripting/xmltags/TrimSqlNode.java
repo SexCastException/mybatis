@@ -123,6 +123,7 @@ public class TrimSqlNode implements SqlNode {
         applyPrefix(sqlBuffer, trimmedUppercaseSql);  // 处理前缀
         applySuffix(sqlBuffer, trimmedUppercaseSql);  // 处理后缀
       }
+      // 将处理后的后的子节点追加到代理对象的sqlBuilder当中
       delegate.appendSql(sqlBuffer.toString());
     }
 
@@ -141,6 +142,12 @@ public class TrimSqlNode implements SqlNode {
       return delegate.getUniqueNumber();
     }
 
+    /**
+     * 注意此处调用的不是代理对象的append()方法，解析<trim>子节点生成的sql语句暂存在sqlBuffer，待处理后再追加到
+     * 代理对象delegate的sqlBuilder中去
+     *
+     * @param sql
+     */
     @Override
     public void appendSql(String sql) {
       sqlBuffer.append(sql);

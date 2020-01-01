@@ -1,38 +1,69 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2019 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.scripting.xmltags;
-
-import java.util.Map;
 
 import org.apache.ibatis.parsing.GenericTokenParser;
 import org.apache.ibatis.session.Configuration;
 
+import java.util.Map;
+
 /**
+ * 在动态SQL语句中构建IN条件语句的时候，通常需要对一一个集合进行迭代，MyBatis 提供了<foreach>标签实现该功能。
+ * 在使用<foreach>标签迭代集合时，不仅可以使用集合的元素和索引值，还可以在循环开始之前或结束之后添加指定的字符串，
+ * 也允许在迭代过程中添加指定的分隔符。
+ *
  * @author Clinton Begin
  */
 public class ForEachSqlNode implements SqlNode {
+  /**
+   *
+   */
   public static final String ITEM_PREFIX = "__frch_";
 
+  /**
+   * 用于判断循环的终止条件，构造方法中会创建该对象
+   */
   private final ExpressionEvaluator evaluator;
+  /**
+   * 迭代集合表达式
+   */
   private final String collectionExpression;
+  /**
+   * <foreach>节点的子节点
+   */
   private final SqlNode contents;
+  /**
+   * 循环开始前需要添加的字符串
+   */
   private final String open;
+  /**
+   * 循环结束后需要添加的字符串
+   */
   private final String close;
+  /**
+   * 循环过程中，每项的分隔符
+   */
   private final String separator;
+  /**
+   * 本次迭代的元素，如果迭代 {@link Map}，则item是value值
+   */
   private final String item;
+  /**
+   * 当前迭代的次数，如果迭代 {@link Map}，则index是key值
+   */
   private final String index;
   private final Configuration configuration;
 
@@ -51,38 +82,49 @@ public class ForEachSqlNode implements SqlNode {
   @Override
   public boolean apply(DynamicContext context) {
     Map<String, Object> bindings = context.getBindings();
+    // 解析集合表达式对应的实际参数
     final Iterable<?> iterable = evaluator.evaluateIterable(collectionExpression, bindings);
     if (!iterable.iterator().hasNext()) {
       return true;
     }
     boolean first = true;
+    // 循环开始前，追加open属性指定的表达式
     applyOpen(context);
     int i = 0;
     for (Object o : iterable) {
+      // 记录当前 DynamicContext 对象
       DynamicContext oldContext = context;
+      // 没有指定分割符，并且第一次循环，则不添加任何前缀
       if (first || separator == null) {
         context = new PrefixedContext(context, "");
-      } else {
+      } else {  // 否则每次遍历添加 separator 属性值指定的分隔符
         context = new PrefixedContext(context, separator);
       }
+      // uniqueNumber从0开始，每次递增1,用于转换生成新的“#{}”占位符名称，以防和foreach外的占位符里的字符串重名
       int uniqueNumber = context.getUniqueNumber();
       // Issue #709
+      // 如果集合是Map
       if (o instanceof Map.Entry) {
         @SuppressWarnings("unchecked")
         Map.Entry<Object, Object> mapEntry = (Map.Entry<Object, Object>) o;
+        // Map，则绑定key和处理过的key和value以及处理过的value
         applyIndex(context, mapEntry.getKey(), uniqueNumber);
         applyItem(context, mapEntry.getValue(), uniqueNumber);
       } else {
+        // 否则绑定当前索引的下标和当前索引值
         applyIndex(context, i, uniqueNumber);
         applyItem(context, o, uniqueNumber);
       }
+      // 处理<foreach>子节点
       contents.apply(new FilteredDynamicContext(configuration, context, index, item, uniqueNumber));
       if (first) {
         first = !((PrefixedContext) context).isPrefixApplied();
       }
+      // 还原原来的context
       context = oldContext;
       i++;
     }
+    // 结束循环，添加close指定的字符串
     applyClose(context);
     context.getBindings().remove(item);
     context.getBindings().remove(index);
@@ -103,12 +145,22 @@ public class ForEachSqlNode implements SqlNode {
     }
   }
 
+  /**
+   * 添加前缀，即<foreach>open属性值
+   *
+   * @param context
+   */
   private void applyOpen(DynamicContext context) {
     if (open != null) {
       context.appendSql(open);
     }
   }
 
+  /**
+   * 添加前缀，即<foreach>close属性值
+   *
+   * @param context
+   */
   private void applyClose(DynamicContext context) {
     if (close != null) {
       context.appendSql(close);
@@ -119,13 +171,28 @@ public class ForEachSqlNode implements SqlNode {
     return ITEM_PREFIX + item + "_" + i;
   }
 
+  /**
+   * 负责处理“#{}”占位符，但它并未完全解析“#{}” 占位符
+   */
   private static class FilteredDynamicContext extends DynamicContext {
+    /**
+     * 底层被代理的对象
+     */
     private final DynamicContext delegate;
+    /**
+     * 集合的索引位置
+     */
     private final int index;
+    /**
+     * 索引值
+     */
     private final String itemIndex;
+    /**
+     * 索引项
+     */
     private final String item;
 
-    public FilteredDynamicContext(Configuration configuration,DynamicContext delegate, String itemIndex, String item, int i) {
+    public FilteredDynamicContext(Configuration configuration, DynamicContext delegate, String itemIndex, String item, int i) {
       super(configuration, null);
       this.delegate = delegate;
       this.index = i;
@@ -150,6 +217,7 @@ public class ForEachSqlNode implements SqlNode {
 
     @Override
     public void appendSql(String sql) {
+      // 处理<foreache>子节点中带有“#{}”占位符的字符串
       GenericTokenParser parser = new GenericTokenParser("#{", "}", content -> {
         String newContent = content.replaceFirst("^\\s*" + item + "(?![^.,:\\s])", itemizeItem(item, index));
         if (itemIndex != null && newContent.equals(content)) {
@@ -170,8 +238,17 @@ public class ForEachSqlNode implements SqlNode {
 
 
   private class PrefixedContext extends DynamicContext {
+    /**
+     * 底层被代理的对象，实际保存解析后的动态SQL对象
+     */
     private final DynamicContext delegate;
+    /**
+     * 指定的前缀
+     */
     private final String prefix;
+    /**
+     * 是否已经处理过前缀
+     */
     private boolean prefixApplied;
 
     public PrefixedContext(DynamicContext delegate, String prefix) {
@@ -195,12 +272,19 @@ public class ForEachSqlNode implements SqlNode {
       delegate.bind(name, value);
     }
 
+    /**
+     * 追加的SQL语句，添加前缀 prefix 才加入被代理对象中
+     *
+     * @param sql
+     */
     @Override
     public void appendSql(String sql) {
       if (!prefixApplied && sql != null && sql.trim().length() > 0) {
+        // 添加前缀
         delegate.appendSql(prefix);
         prefixApplied = true;
       }
+      // 将SQL片段保存到底层被代理对象
       delegate.appendSql(sql);
     }
 
