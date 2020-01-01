@@ -21,13 +21,18 @@ import org.apache.ibatis.mapping.SqlSource;
 import org.apache.ibatis.session.Configuration;
 
 /**
- * 处理动态SQL语句
+ * 执行时机：实际执行SQL语句
+ * <p>
+ * 处理动态SQL语句，也是常用的 {@link SqlSource}之一
  *
  * @author Clinton Begin
  */
 public class DynamicSqlSource implements SqlSource {
 
   private final Configuration configuration;
+  /**
+   * 待解析的 {@link SqlNode}树的根节点
+   */
   private final SqlNode rootSqlNode;
 
   public DynamicSqlSource(Configuration configuration, SqlNode rootSqlNode) {
@@ -35,14 +40,26 @@ public class DynamicSqlSource implements SqlSource {
     this.rootSqlNode = rootSqlNode;
   }
 
+  /**
+   * @param parameterObject 用户传入的实参
+   * @return
+   */
   @Override
   public BoundSql getBoundSql(Object parameterObject) {
     DynamicContext context = new DynamicContext(configuration, parameterObject);
+    /*
+      调用整个树形结构中全部SqlNode.apply()方法。每个SqlNode的apply()方法都将解析得到的SQL语句片段追加到context中，
+      最终通过context.getSql()得到完整的SQL语句
+     */
     rootSqlNode.apply(context);
+    // 创建SqlSourceBuilder,解析参数属性，并将SQL语句中的“#{}”占位符替换成“?”占位符
     SqlSourceBuilder sqlSourceParser = new SqlSourceBuilder(configuration);
+    // 如果没有指定parameterType属性值，则默认为Object类型
     Class<?> parameterType = parameterObject == null ? Object.class : parameterObject.getClass();
     SqlSource sqlSource = sqlSourceParser.parse(context.getSql(), parameterType, context.getBindings());
+
     BoundSql boundSql = sqlSource.getBoundSql(parameterObject);
+    // 将DynamicContext.bindings 中的每一项参数信息复制到其metaParameters中保存
     context.getBindings().forEach(boundSql::setAdditionalParameter);
     return boundSql;
   }

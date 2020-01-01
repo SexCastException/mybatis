@@ -1,42 +1,71 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2019 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.mapping;
-
-import java.sql.ResultSet;
 
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 
+import java.sql.ResultSet;
+
 /**
+ * 记录了“#{}”占位符中的参数属性，如：#{_ frc. item_ 0, javaType=int, jdbcType=NUMERIC,typeHandler=MyTypeHandler}
+ *
  * @author Clinton Begin
  */
 public class ParameterMapping {
 
   private Configuration configuration;
 
+  /**
+   * 传入进来的参数name
+   */
   private String property;
+  /**
+   * 输入参数还是输出参数，枚举类型，默认为 {@link ParameterMode#IN}
+   */
   private ParameterMode mode;
+  /**
+   * 参数的java类型
+   */
   private Class<?> javaType = Object.class;
+  /**
+   * 参数的jdbc类型
+   */
   private JdbcType jdbcType;
+  /**
+   * 浮点参数的精度
+   */
   private Integer numericScale;
+  /**
+   * 参数对应的类型处理器
+   */
   private TypeHandler<?> typeHandler;
+  /**
+   * 参数对应的 {@link ResultMap}对象的id
+   */
   private String resultMapId;
+  /**
+   * 参数的 jdbcTypeName属性值
+   */
   private String jdbcTypeName;
+  /**
+   * 目前未支持该属性值
+   */
   private String expression;
 
   private ParameterMapping() {
@@ -100,17 +129,22 @@ public class ParameterMapping {
     }
 
     public ParameterMapping build() {
+      // 解析typeHandler对象
       resolveTypeHandler();
+      // 校验数据
       validate();
       return parameterMapping;
     }
 
+    /**
+     * 校验数据
+     */
     private void validate() {
       if (ResultSet.class.equals(parameterMapping.javaType)) {
         if (parameterMapping.resultMapId == null) {
           throw new IllegalStateException("Missing resultmap in property '"
-              + parameterMapping.property + "'.  "
-              + "Parameters of type java.sql.ResultSet require a resultmap.");
+            + parameterMapping.property + "'.  "
+            + "Parameters of type java.sql.ResultSet require a resultmap.");
         }
       } else {
         if (parameterMapping.typeHandler == null) {
@@ -121,6 +155,9 @@ public class ParameterMapping {
       }
     }
 
+    /**
+     * 如果typeHandler为指定，则根据javaType获取对应的typeHandler对象
+     */
     private void resolveTypeHandler() {
       if (parameterMapping.typeHandler == null && parameterMapping.javaType != null) {
         Configuration configuration = parameterMapping.configuration;
@@ -137,6 +174,7 @@ public class ParameterMapping {
 
   /**
    * Used for handling output of callable statements.
+   *
    * @return
    */
   public ParameterMode getMode() {
@@ -145,6 +183,7 @@ public class ParameterMapping {
 
   /**
    * Used for handling output of callable statements.
+   *
    * @return
    */
   public Class<?> getJavaType() {
@@ -153,6 +192,7 @@ public class ParameterMapping {
 
   /**
    * Used in the UnknownTypeHandler in case there is no handler for the property type.
+   *
    * @return
    */
   public JdbcType getJdbcType() {
@@ -161,6 +201,7 @@ public class ParameterMapping {
 
   /**
    * Used for handling output of callable statements.
+   *
    * @return
    */
   public Integer getNumericScale() {
@@ -169,6 +210,7 @@ public class ParameterMapping {
 
   /**
    * Used when setting parameters to the PreparedStatement.
+   *
    * @return
    */
   public TypeHandler<?> getTypeHandler() {
@@ -177,6 +219,7 @@ public class ParameterMapping {
 
   /**
    * Used for handling output of callable statements.
+   *
    * @return
    */
   public String getResultMapId() {
@@ -185,6 +228,7 @@ public class ParameterMapping {
 
   /**
    * Used for handling output of callable statements.
+   *
    * @return
    */
   public String getJdbcTypeName() {
@@ -193,6 +237,7 @@ public class ParameterMapping {
 
   /**
    * Not used
+   *
    * @return
    */
   public String getExpression() {

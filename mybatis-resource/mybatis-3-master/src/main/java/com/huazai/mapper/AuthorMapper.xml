@@ -18,7 +18,8 @@
             *
         FROM
             `author`
-        WHERE id = #{arg0.id} OR username = #{param1.username} OR password = #{arg1} OR email = #{param3}
+        WHERE id = #{arg0.id,javaType=INT} OR username = #{param1.username,jdbcType=VARCHAR}
+         OR password = #{arg1,javaType=STRING,jdbcType=VARCHAR} OR email = #{param3}
   </select>
 
   <insert id="insert" parameterType="com.huazai.bean.Author">
@@ -32,8 +33,4 @@
       `author` (`username`, `password`, `email`)
       VALUES (#{username}, #{password}, #{email})
    </insert>
-
-  <select id="test">
-    <trim prefixOverrides=""></trim>
-  </select>
 </mapper>

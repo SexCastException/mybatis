@@ -1,23 +1,19 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2019 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.builder;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.ibatis.mapping.ParameterMapping;
 import org.apache.ibatis.mapping.SqlSource;
@@ -25,10 +21,20 @@ import org.apache.ibatis.parsing.GenericTokenParser;
 import org.apache.ibatis.parsing.TokenHandler;
 import org.apache.ibatis.reflection.MetaClass;
 import org.apache.ibatis.reflection.MetaObject;
+import org.apache.ibatis.scripting.xmltags.SqlNode;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.type.JdbcType;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 /**
+ * 在经过SqINode.apply()方法的解析之后，SQL语句会被传递到SqlSourceBuilder 中进行进一步的解析。
+ * SqlSourceBuilder 主要完成了两方面的操作：
+ * 一、解析SQL语句中的“#{}”占位符中定义的属性，格式类似于#{_ frc. item_ 0, javaType=int, jdbcType=NUMERIC,typeHandler=MyTypeHandler}。
+ * 二、将SQL语句中的“#{}”占位符替换成“?”占位符。
+ *
  * @author Clinton Begin
  */
 public class SqlSourceBuilder extends BaseBuilder {
@@ -39,17 +45,38 @@ public class SqlSourceBuilder extends BaseBuilder {
     super(configuration);
   }
 
+  /**
+   * SQL占位符的替换和 {@link ParameterMapping}集合的创建，并返回StaticSqlSource 对象。
+   *
+   * @param originalSql          {@link SqlNode} 处理之后的SQL语句
+   * @param parameterType        用户传入的实参类型
+   * @param additionalParameters 记录了形参和实参的对应关系，其实就是经过SqlNode.apply()方法处理后的DynamicContext.bindings集合
+   * @return
+   */
   public SqlSource parse(String originalSql, Class<?> parameterType, Map<String, Object> additionalParameters) {
+    // 创建ParameterMappingTokenHandler对象，它是解析“#{}”占位符中的参数属性以及替换占位符的核心
     ParameterMappingTokenHandler handler = new ParameterMappingTokenHandler(configuration, parameterType, additionalParameters);
+    // 带有“#{}”标识为占位符
     GenericTokenParser parser = new GenericTokenParser("#{", "}", handler);
+    //
     String sql = parser.parse(originalSql);
+    // 创建StaticSqlSource,其中封装了占位符被替换成"?"的SQL语句以及参数对应的ParameterMapping集合
     return new StaticSqlSource(configuration, sql, handler.getParameterMappings());
   }
 
   private static class ParameterMappingTokenHandler extends BaseBuilder implements TokenHandler {
 
+    /**
+     * 记录解析得到的 {@link ParameterMapping}集合
+     */
     private List<ParameterMapping> parameterMappings = new ArrayList<>();
+    /**
+     * 参数类型
+     */
     private Class<?> parameterType;
+    /**
+     * DynamicContext.bindings 集合对应的Metaobject对象
+     */
     private MetaObject metaParameters;
 
     public ParameterMappingTokenHandler(Configuration configuration, Class<?> parameterType, Map<String, Object> additionalParameters) {
@@ -62,16 +89,31 @@ public class SqlSourceBuilder extends BaseBuilder {
       return parameterMappings;
     }
 
+    /**
+     * 根据占位符创建对应的 {@link ParameterMapping}，并将占位符替换为“?”
+     *
+     * @param content
+     * @return
+     */
     @Override
     public String handleToken(String content) {
+      // 创建ParameterMapping对象并添加到parameterMappings集合中保存
       parameterMappings.add(buildParameterMapping(content));
       return "?";
     }
 
+    /**
+     * 根据占位符（如：#{_ frc. item_ 0, javaType=int, jdbcType=NUMERIC,typeHandler=MyTypeHandler}）的内容构建 {@link ParameterMapping}对象
+     *
+     * @param content
+     * @return
+     */
     private ParameterMapping buildParameterMapping(String content) {
       Map<String, String> propertiesMap = parseParameterMapping(content);
+      // 获取 property参数值
       String property = propertiesMap.get("property");
       Class<?> propertyType;
+      // 根据确定参数的javaType类型
       if (metaParameters.hasGetter(property)) { // issue #448 get type from additional params
         propertyType = metaParameters.getGetterType(property);
       } else if (typeHandlerRegistry.hasTypeHandler(parameterType)) {
@@ -88,11 +130,14 @@ public class SqlSourceBuilder extends BaseBuilder {
           propertyType = Object.class;
         }
       }
+      // 创建ParameterMapping的构造器
       ParameterMapping.Builder builder = new ParameterMapping.Builder(configuration, property, propertyType);
       Class<?> javaType = propertyType;
       String typeHandlerAlias = null;
       for (Map.Entry<String, String> entry : propertiesMap.entrySet()) {
+        // 获取参数名称
         String name = entry.getKey();
+        // 获取参数值
         String value = entry.getValue();
         if ("javaType".equals(name)) {
           javaType = resolveClass(value);
