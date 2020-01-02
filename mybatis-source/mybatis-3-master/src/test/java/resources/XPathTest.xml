@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<inventory>
+  <book year="2001">
+    <title>时间简史</title>
+    <author>华仔</author>
+    <publisher>2001/01/01</publisher>
+    <isbn>031664</isbn>
+    <price>99.9</price>
+  </book>
+
+  <book year="2002">
+    <title>人性的弱点</title>
+    <author>老外</author>
+    <publisher>2002/02/02</publisher>
+    <isbn>065465</isbn>
+    <price>89.9</price>
+  </book>
+
+  <book year="2003">
+    <title>红楼梦</title>
+    <author>罗贯中</author>
+    <publisher>2003/03/03</publisher>
+    <isbn>016821</isbn>
+    <price>109.9</price>
+  </book>
+</inventory>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.huazai.mapper.AuthorMapper">
+
+  <resultMap id="authorResult" type="com.huazai.bean.Author">
+    <id property="id" column="id"></id>
+    <result property="username" column="username"></result>
+    <result property="password" column="password"></result>
+    <result property="email" column="email"></result>
+  </resultMap>
+
+  <select id="select" resultMap="authorResult">
+        SELECT
+            *
+        FROM
+            `author`
+        WHERE id = #{arg0.id,javaType=INT} OR username = #{param1.username,jdbcType=VARCHAR}
+         OR password = #{arg1,javaType=STRING,jdbcType=VARCHAR} OR email = #{param3}
+  </select>
+
+  <insert id="insert" parameterType="com.huazai.bean.Author">
+        <selectKey resultType="int" statementType="PREPARED" keyProperty="id" order="AFTER" databaseId="" keyColumn="">
+          SELECT
+          <if test="true">
+            LAST_INSERT_ID()
+          </if>
+        </selectKey>
+      INSERT INTO
+      `author` (`username`, `password`, `email`)
+      VALUES (#{username}, #{password}, #{email})
+   </insert>
+</mapper>
