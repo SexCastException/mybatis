@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- namespace:命名空间，用于隔离sql语句 -->
+<!-- id:将sql语句映射preparedStatement对象中,所以将id称为statement的id
+	 parameterType:参数类型
+	 resultType:sql输出结果所映射的Java类型,强调resultType将select单条记录映射成的Java对象
+	 #{}:一个占位符
+	 #{id}:id为接受参数名,如果输入类型是简单类型,#{}中的参数名可以为任意,可以为value或者其他名称
+	 ${}:表示拼接字符串,将接收到的参数不加任何修饰拼接在sql中,可能会引发sql注入
+	 ${value}:如果接受的参数为简单类型，则${}中只能为value
+ -->
+ 
+<mapper namespace="cn.test.mapper.UserMapper">
+    
+    <select id="findUserByIDs" parameterType="cn.test.bean.UserQueryPo" resultType="cn.test.bean.User">
+        SELECT * FROM `user`
+        
+        <!-- foreach:遍历传入的ids
+        	 collection:parameterType指定的集合属性
+        	 item:每个遍历集合的对象
+        	 open:开始遍历时拼接的串
+        	 separator:遍历的两个对象中需要拼接的串
+        	 close:结束遍历时拼接的串
+         -->
+        <!-- WHERE ( id=? OR id=? OR id=? ) -->
+        <!-- <if test="ids!=null and ids.size() > 0">
+            <where>
+				<foreach collection="ids" item="id" open="AND (" separator="OR" close=")">
+				    id=#{id}
+				</foreach>
+			</where>
+        </if>  -->
+        
+        <!-- id in( ? , ? , ? ) -->
+        <if test="ids!=null and ids.size() > 0">
+            <where>
+				<foreach collection="ids" item="id" open="id in(" separator="," close=")">
+				    #{id}
+				</foreach>
+			</where>
+        </if>
+    </select>
+    
+    <!-- 定义SQL片段
+    	 id:SQL片段的唯一标识
+    	   作用:将SQL判断代码抽取出来，提高代码的可重用性
+     -->
+    <sql id="custom_sql">
+        <if test="userCustom!=null">
+			<if test="userCustom.username!=null and userCustom.username!=''">
+					AND username LIKE '%${userCustom.username}%'
+			</if>
+			<if test="userCustom.sex!=null and userCustom.sex!=''">
+					AND sex = #{userCustom.sex}
+			</if>
+		</if>
+    </sql>
+    
+    <select id="findUserListByDynamicSQL" parameterType="cn.test.bean.UserQueryPo" resultType="cn.test.bean.User">
+		SELECT * FROM `user`
+	
+		<!-- where标签可以自动判断是否去掉if条件的第一个and -->
+		<where>
+			<!-- <if test="userCustom!=null">
+				<if test="userCustom.username!=null and userCustom.username!=''">
+					AND username LIKE '%${userCustom.username}%'
+				</if>
+				<if test="userCustom.sex!=null and userCustom.sex!=''">
+					AND sex = #{userCustom.sex}
+				</if>
+			</if> -->
+			
+			<!-- 引用SQL片段，如果SQL片段在其他mapper文件中，refid前需加上namespace -->
+			<include refid="custom_sql"/>
+		</where>
+	
+    </select>
+    
+    <!-- 定义resultMap:
+    	 1.type:resultMap最终映射的Java类型，可以使用别名
+    	 2.id:resultMap的唯一标识
+     -->
+    <resultMap type="user" id="userMap">
+        <!-- id:对查询结果集中唯一标识
+        	 column:查询数据库列的别名
+        	 property:别名要映射的type指定的pojo类型的属性名
+         -->
+       <id column="id_" property="id"/>
+       
+       <!-- result:对pojo普通属性的映射 -->
+       <result column="username_" property="username"/>
+       
+    </resultMap>
+    
+    <!-- 
+    	resultMap:指定自定义的resultMap的ID，如果定义在其他的mapper文件中，则id前加上namespace
+     -->
+    <select id="findUserListByResultMap" resultMap="userMap" parameterType="int">
+        SELECT id id_,username username_,sex FROM `user` WHERE id=#{id};
+    </select>
+    
+    
+    <!-- 输入参数为map -->
+    <select id="findUserListByMap" parameterType="map" resultType="cn.test.bean.UserCustom">
+        SELECT * FROM `user` WHERE sex=#{sex} AND username LIKE '%${username}%';
+    </select>
+    
+    <!-- User的综合查询 -->
+    <select id="findUserList" parameterType="cn.test.bean.UserQueryPo" resultType="cn.test.bean.UserCustom">
+        SELECT * FROM `user` WHERE sex=#{userCustom.sex} AND username LIKE '%${userCustom.username}%';
+    </select>
+    
+    <select id="findUserById" parameterType="int" resultType="cn.test.bean.User">
+        SELECT * FROM `user` WHERE id = #{id}
+    </select>
+    
+    <select id="findUserByName" parameterType="java.lang.String" resultType="cn.test.bean.User">
+        SELECT * FROM `user` WHERE username LIKE "%${value}%"
+    </select>
+    
+    <insert id="addUser" parameterType="cn.test.bean.User">
+        <!-- selectKey:实现将主键返回，需要在返回 -->
+        <!-- keyProperty:返回的主键存储在pojo的哪个属性里 -->
+        <!-- order:selectKey执行顺序，是相对insert语句来说的，
+        	  由于MySQL的自增原理执行 执行完insert语句之后才将主键生成，所以这里selectKey的执行顺序为after,如果设为BEFORE，则id将为默认值0-->
+        <!-- resultType:返回的主键是什么类型 -->
+        <!-- LAST_INSERT_ID():是MySQL的函数，返回auto_increment自增列新记录的id -->
+        <selectKey keyProperty="id" order="AFTER" resultType="int">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO `user`(username,birthday,sex,address) VALUE (#{username},#{birthday},#{sex},#{address})
+    </insert>
+    
+    <!-- <insert id="addUser1" parameterType="cn.test.bean.User">
+        <selectKey order="BEFORE" resultType="java.lang.String" keyProperty="id">
+            select UUID()
+        </selectKey>
+		INSERT INTO `user`(id,username,birthday,sex,address) VALUE (#{id},#{username},#{birthday},#{sex},#{address})        
+    </insert> -->
+    
+    <delete id="deleteById" parameterType="int">
+		DELETE FROM `user` WHERE  id = #{id}        
+    </delete>
+    
+    <update id="updateUser" parameterType="cn.test.bean.User">
+        update user set username=#{username},birthday=#{birthday},sex=#{sex},address=#{address}
+		where id=#{id}
+    </update>
+</mapper>
