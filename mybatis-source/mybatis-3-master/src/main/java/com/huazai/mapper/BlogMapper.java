@@ -14,4 +14,6 @@ public interface BlogMapper {
   Blog selectBlogDetail(Blog blog);
 
   List<Comment> selectComment(Integer postId);
+
+  List<Blog> selectBlog(int id);
 }

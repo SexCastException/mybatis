@@ -16,6 +16,7 @@
 package org.apache.ibatis.session;
 
 /**
+ * 自动映射行为
  * Specifies if and how MyBatis should automatically map columns to fields/properties.
  *
  * @author Eduardo Macarron

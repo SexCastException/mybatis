@@ -65,4 +65,22 @@
     FROM comment
     WHERE post_id = #{post_id}
   </select>
+
+  <resultMap id="blogResult" type="com.huazai.bean.Blog">
+    <constructor>
+      <idArg column="id" javaType="int"></idArg>
+    </constructor>
+    <result property="title" column="title"></result>
+    <!--嵌套处理，其resultSets属性指向第二个结果集-->
+    <association property="author" javaType="com.huazai.bean.Author" resultSet="authors" column="author_id" foreignColumn="id">
+      <id property="id" column="id"></id>
+      <result property="username" column="username"></result>
+      <result property="password" column="password"></result>
+      <result property="email" column="email"></result>
+    </association>
+  </resultMap>
+
+  <select id="selectBlog" resultSets="blogs,authors" resultMap="blogResult" statementType="CALLABLE">
+      call get_blogs_and_authors(#{id,jdbcType=INTEGER,mode=IN})
+  </select>
 </mapper>

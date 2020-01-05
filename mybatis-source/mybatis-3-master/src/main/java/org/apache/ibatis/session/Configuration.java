@@ -99,6 +99,9 @@ public class Configuration {
    * 3.4.2版本之前settings属性中useActualParamName参数的默认值为false
    */
   protected boolean useActualParamName = true;
+  /**
+   * 用于向数据库查询不到数据时，决定返回空的结果对象还是返回null
+   */
   protected boolean returnInstanceForEmptyRow;
 
   protected String logPrefix;

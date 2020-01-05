@@ -8,6 +8,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * @author pyh
@@ -16,6 +17,8 @@ import java.io.IOException;
  */
 public class BootStrapBlog {
   SqlSession sqlSession = SqlSessionUtils.getSqlSession();
+
+  BlogMapper mapper = sqlSession.getMapper(BlogMapper.class);
 
   public BootStrapBlog() throws IOException {
   }
@@ -27,8 +30,14 @@ public class BootStrapBlog {
   @Test
   public void selectDetail() {
     Blog blog = new Blog(1);
-    BlogMapper mapper = sqlSession.getMapper(BlogMapper.class);
     Blog blog1 = mapper.selectBlogDetail(blog);
     System.out.println(blog1);
+  }
+
+  @Test
+  public void selectBlog() {
+    Blog blog = new Blog(1);
+    List<Blog> blogs = mapper.selectBlog(1);
+    System.out.println(blogs);
   }
 }

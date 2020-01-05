@@ -19,15 +19,15 @@ public class Blog implements Serializable {
   public Blog() {
   }
 
+  public Blog(Integer id) {
+    this.id = id;
+  }
+
   public Blog(Integer id, String title, Author author, List<Post> posts) {
     this.id = id;
     this.title = title;
     this.author = author;
     this.posts = posts;
-  }
-
-  public Blog(Integer id) {
-    this.id = id;
   }
 
   public Integer getId() {
