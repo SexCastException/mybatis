@@ -45,7 +45,7 @@ public class ResultMapping {
    */
   private String column;
   /**
-   * 对应节点的javaType属性，表示的是一个JavaBean的完全限定名，或一个类型别名
+   * 对应节点的javaType属性，该属性值表示的是一个JavaBean的完全限定名，或一个类型别名
    */
   private Class<?> javaType;
   /**

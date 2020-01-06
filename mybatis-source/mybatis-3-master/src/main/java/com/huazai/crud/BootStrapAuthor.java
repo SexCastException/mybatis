@@ -19,6 +19,8 @@ import java.util.Map;
 public class BootStrapAuthor {
   SqlSession sqlSession = SqlSessionUtils.getSqlSession();
 
+  AuthorMapper mapper = sqlSession.getMapper(AuthorMapper.class);
+
   public BootStrapAuthor() throws IOException {
   }
 
@@ -41,7 +43,6 @@ public class BootStrapAuthor {
 
   @Test
   public void select() {
-    AuthorMapper mapper = sqlSession.getMapper(AuthorMapper.class);
     Author author = new Author(1);
     author.setUsername("zhangsan");
     System.out.println(mapper.select(author, "123456", "739967221@qq.com"));
@@ -52,5 +53,11 @@ public class BootStrapAuthor {
     AuthorMapper mapper = sqlSession.getMapper(AuthorMapper.class);
     List<Author> authors = mapper.selectByProperty("1", "test");
     System.out.println(authors);
+  }
+
+  @Test
+  public void selectUsername() {
+    List<String> usernameList = mapper.selectUsername();
+    System.out.println(usernameList);
   }
 }

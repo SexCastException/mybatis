@@ -828,27 +828,32 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   }
 
   /**
-   * 会根据<constructor>节点的配置，选择合适的构造方法创建结果对象，其中也会涉及嵌套查询和嵌套映射的处理。
+   * 根据<constructor>节点的配置，根据constructorArgTypes和constructorArgs选择合适的构造方法创建结果对象，
+   * 其中也会涉及嵌套查询和嵌套映射的处理。
    *
    * @param rsw
    * @param resultType
    * @param constructorMappings
-   * @param constructorArgTypes
-   * @param constructorArgs
+   * @param constructorArgTypes 记录构造函数参数类型
+   * @param constructorArgs     记录构造函数实参
    * @param columnPrefix
    * @return
    */
   Object createParameterizedResultObject(ResultSetWrapper rsw, Class<?> resultType, List<ResultMapping> constructorMappings,
                                          List<Class<?>> constructorArgTypes, List<Object> constructorArgs, String columnPrefix) {
     boolean foundValues = false;
+    // 遍历<constructor>节点解析出来的ResultMapping对象
     for (ResultMapping constructorMapping : constructorMappings) {
+      // 获取当前构造函数形参的类型
       final Class<?> parameterType = constructorMapping.getJavaType();
       final String column = constructorMapping.getColumn();
+      //
       final Object value;
       try {
+        // 处理<constructor>子节点select属性指定的查询语句
         if (constructorMapping.getNestedQueryId() != null) {
           value = getNestedQueryConstructorValue(rsw.getResultSet(), constructorMapping, columnPrefix);
-        } else if (constructorMapping.getNestedResultMapId() != null) {
+        } else if (constructorMapping.getNestedResultMapId() != null) { // 处理<constructor>子节点resultMap属性指定的resultMap
           final ResultMap resultMap = configuration.getResultMap(constructorMapping.getNestedResultMapId());
           value = getRowValue(rsw, resultMap, getColumnPrefix(columnPrefix, constructorMapping));
         } else {
@@ -920,17 +925,32 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     return true;
   }
 
+  /**
+   * 创建原始对象，用于查询单列
+   *
+   * @param rsw
+   * @param resultMap
+   * @param columnPrefix
+   * @return
+   * @throws SQLException
+   */
   private Object createPrimitiveResultObject(ResultSetWrapper rsw, ResultMap resultMap, String columnPrefix) throws SQLException {
     final Class<?> resultType = resultMap.getType();
     final String columnName;
+    // 如果查询的单列是使用resultMap配置的
     if (!resultMap.getResultMappings().isEmpty()) {
+      // 获取配置单列的ResultMapping对象
       final List<ResultMapping> resultMappingList = resultMap.getResultMappings();
       final ResultMapping mapping = resultMappingList.get(0);
+      // 使用前缀拼接resultMap配置的单列名
       columnName = prependPrefix(mapping.getColumn(), columnPrefix);
     } else {
+      // 否则获取查询的列名或别名
       columnName = rsw.getColumnNames().get(0);
     }
+    // 获取相应的 TypeHandler对象
     final TypeHandler<?> typeHandler = rsw.getTypeHandler(resultType, columnName);
+    // 通过 TypeHandler对象映射相应的值
     return typeHandler.getResult(rsw.getResultSet(), columnName);
   }
 

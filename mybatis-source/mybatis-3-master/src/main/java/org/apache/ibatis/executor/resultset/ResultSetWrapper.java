@@ -26,7 +26,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 /**
- * {@link ResultSet}包装类
+ * {@link ResultSet}包装类，封装了每一列的名称、每一列对应的java类型、每一列的 {@link JdbcType}类型，他们是相同下标建立的对应关系
  * <p>
  * 在ResultSetWrapper中记录了{@link ResultSet} 中的一些元数据， 并且提供了一系列操作{@link ResultSet}的辅助方法。
  *
@@ -99,7 +99,7 @@ public class ResultSetWrapper {
   }
 
   /**
-   * 通过指定的列名返回对应的 {@link JdbcType}对象
+   * 通过指定的列名返回对应的 {@link JdbcType}对象，列名指定的下标对应的JdbcType类型下标相同
    *
    * @param columnName
    * @return
@@ -114,6 +114,12 @@ public class ResultSetWrapper {
   }
 
   /**
+   * 获取与列名或返回值类型相对应的 {@link TypeHandler}对象 <br>
+   * 步骤1：通过返回值类型获取 {@link TypeHandler}对象，获取不到转2 <br>
+   * 步骤2：通过 {@link JdbcType}类型和返回值类型获取 {@link TypeHandler}对象 ，获取不到转3<br>
+   * 步骤3：通过每列对应的java属性类型获取或 {@link JdbcType}类型获取 {@link TypeHandler}对象，获取不到转4 <br>
+   * 步骤4：如果 {@link TypeHandler}为 {@link UnknownTypeHandler}类型，则直接返回 {@link ObjectTypeHandler} <br>
+   * <p>
    * Gets the type handler to use when reading the result set.
    * Tries to get from the TypeHandlerRegistry by searching for the property type.
    * If not found it gets the column JDBC type and tries to get a handler for it.
@@ -125,19 +131,26 @@ public class ResultSetWrapper {
   public TypeHandler<?> getTypeHandler(Class<?> propertyType, String columnName) {
     // 保存解析的结果并返回
     TypeHandler<?> handler = null;
+    // 步骤1
     Map<Class<?>, TypeHandler<?>> columnHandlers = typeHandlerMap.get(columnName);
     if (columnHandlers == null) {
       columnHandlers = new HashMap<>();
+      // 暂且保存空的columnHandlers对象，以下代码解析出对应的TypeHandler对象在保存到columnHandlers对象
       typeHandlerMap.put(columnName, columnHandlers);
     } else {
       handler = columnHandlers.get(propertyType);
     }
+
+    // 步骤2
+    // 以上方法获取不到对应的TypeHandler对象，则通过JdbcTyp获取
     if (handler == null) {
       JdbcType jdbcType = getJdbcType(columnName);
       handler = typeHandlerRegistry.getTypeHandler(propertyType, jdbcType);
       // Replicate logic of UnknownTypeHandler#resolveTypeHandler
       // See issue #59 comment 10
+      // 步骤3
       if (handler == null || handler instanceof UnknownTypeHandler) {
+        //  以上方法获取不到则通过列名获取该列映射的java类型
         final int index = columnNames.indexOf(columnName);
         final Class<?> javaType = resolveClass(classNames.get(index));
         if (javaType != null && jdbcType != null) {

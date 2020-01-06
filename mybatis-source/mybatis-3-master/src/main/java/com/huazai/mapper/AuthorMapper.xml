@@ -33,4 +33,12 @@
       `author` (`username`, `password`, `email`)
       VALUES (#{username}, #{password}, #{email})
    </insert>
+
+  <resultMap id="usernameMap" type="string">
+    <result column="username"></result>
+  </resultMap>
+
+  <select id="selectUsername" resultMap="usernameMap">
+    SELECT username FROM author
+  </select>
 </mapper>

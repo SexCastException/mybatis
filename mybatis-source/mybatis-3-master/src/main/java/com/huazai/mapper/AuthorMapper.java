@@ -18,4 +18,6 @@ public interface AuthorMapper {
   @Select("select * from author where id = #{arg0}")
 //  @ResultMap("authorResult")
   List<Author> selectByProperty(String id, String name);
+
+  List<String> selectUsername();
 }
