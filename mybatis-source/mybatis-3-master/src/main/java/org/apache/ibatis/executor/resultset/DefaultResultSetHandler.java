@@ -958,9 +958,20 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   // NESTED QUERY
   //
 
+  /**
+   * 通过<constructor>子节点的 {@link ResultMapping}的select属性指定的id找到该构造器对应的形参
+   *
+   * @param rs
+   * @param constructorMapping
+   * @param columnPrefix
+   * @return
+   * @throws SQLException
+   */
   private Object getNestedQueryConstructorValue(ResultSet rs, ResultMapping constructorMapping, String columnPrefix) throws SQLException {
+    // 通过select属性找到相应的MappedStatement对象
     final String nestedQueryId = constructorMapping.getNestedQueryId();
     final MappedStatement nestedQuery = configuration.getMappedStatement(nestedQueryId);
+    // 获取查询参数的类型
     final Class<?> nestedQueryParameterType = nestedQuery.getParameterMap().getType();
     final Object nestedQueryParameterObject = prepareParameterForNestedQuery(rs, constructorMapping, nestedQueryParameterType, columnPrefix);
     Object value = null;
@@ -1003,6 +1014,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   }
 
   private Object prepareParameterForNestedQuery(ResultSet rs, ResultMapping resultMapping, Class<?> parameterType, String columnPrefix) throws SQLException {
+    // column属性值是否指定组合列
     if (resultMapping.isCompositeResult()) {
       return prepareCompositeKeyParameter(rs, resultMapping, parameterType, columnPrefix);
     } else {
@@ -1010,9 +1022,20 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     }
   }
 
+  /**
+   * 通过形参类型或映射的列名获取对应的 {@link TypeHandler}对象，并通过该处理器对象获取该列的值
+   *
+   * @param rs
+   * @param resultMapping
+   * @param parameterType
+   * @param columnPrefix
+   * @return
+   * @throws SQLException
+   */
   private Object prepareSimpleKeyParameter(ResultSet rs, ResultMapping resultMapping, Class<?> parameterType, String columnPrefix) throws SQLException {
     final TypeHandler<?> typeHandler;
-    if (typeHandlerRegistry.hasTypeHandler(parameterType)) {
+    // 是否有形参对应的TypeHandler对象
+    if (typeHandlerRegistry.hasTypeHandler(parameterType)) {  // 一般为系统内置的处理器或自定义类型处理器处理的类型
       typeHandler = typeHandlerRegistry.getTypeHandler(parameterType);
     } else {
       typeHandler = typeHandlerRegistry.getUnknownTypeHandler();
@@ -1021,11 +1044,16 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   }
 
   private Object prepareCompositeKeyParameter(ResultSet rs, ResultMapping resultMapping, Class<?> parameterType, String columnPrefix) throws SQLException {
+    // 创建形参对象
     final Object parameterObject = instantiateParameterObject(parameterType);
+    // 创建封装形参对象元数据的MetaObject对象
     final MetaObject metaObject = configuration.newMetaObject(parameterObject);
     boolean foundValues = false;
+    // 遍历复合列
     for (ResultMapping innerResultMapping : resultMapping.getComposites()) {
+      // 获取该列类型
       final Class<?> propType = metaObject.getSetterType(innerResultMapping.getProperty());
+      // 获取该列typeHandler对象
       final TypeHandler<?> typeHandler = typeHandlerRegistry.getTypeHandler(propType);
       final Object propValue = typeHandler.getResult(rs, prependPrefix(innerResultMapping.getColumn(), columnPrefix));
       // issue #353 & #560 do not execute nested query if key is null
@@ -1037,12 +1065,20 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     return foundValues ? parameterObject : null;
   }
 
+  /**
+   * 实例化parameterType指定的形参对象
+   *
+   * @param parameterType
+   * @return
+   */
   private Object instantiateParameterObject(Class<?> parameterType) {
+    // 没有指定parameterType属性值，则默认为HashMap类型
     if (parameterType == null) {
       return new HashMap<>();
     } else if (ParamMap.class.equals(parameterType)) {
       return new HashMap<>(); // issue #649
     } else {
+      // 创建并返回形参对象
       return objectFactory.create(parameterType);
     }
   }
