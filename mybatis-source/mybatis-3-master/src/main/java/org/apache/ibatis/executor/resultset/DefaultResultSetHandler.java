@@ -500,7 +500,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   }
 
   /**
-   * 根据 {@link RowBounds#offset}字段的值定位到指定的记录
+   * 根据 {@link RowBounds#offset}字段的值定位到指定的记录，可以实现分页效果
    *
    * @param rs
    * @param rowBounds
