@@ -56,7 +56,7 @@ public class ResultSetWrapper {
    */
   private final Map<String, Map<Class<?>, TypeHandler<?>>> typeHandlerMap = new HashMap<>();
   /**
-   * 被映射的列名，key是 {@link ResultMap}对象的id+列名前缀，value是该 {@link ResultMap}对象映射的列名集合
+   * 已经映射的列名，key是 {@link ResultMap}对象的id+列名前缀，value是该 {@link ResultMap}对象映射的列名集合
    */
   private final Map<String, List<String>> mappedColumnNamesMap = new HashMap<>();
   /**

@@ -29,7 +29,9 @@ import java.util.StringJoiner;
  * 其缓存项的key不能仅仅通过一一个 {@link String} 表示，所以MyBatis提供了CacheKey类来表示缓存项的key,
  * 在一个CacheKey对象中可以封装多个影响缓存项的因素。
  * <p>
- * CacheKey中可以添加多个对象，由这些对象共同确定两个CacheKey 对象是否相同。
+ * CacheKey中可以添加多个对象，由这些对象共同确定两个CacheKey 对象是否相同。<br>
+ * 即：{@link CacheKey#multiplier}、{@link CacheKey#hashcode}、{@link CacheKey#checksum}和{@link CacheKey#updateList}集合
+ * 所有项共同确定是否为同一个CacheKey对象
  *
  * @author Clinton Begin
  */
