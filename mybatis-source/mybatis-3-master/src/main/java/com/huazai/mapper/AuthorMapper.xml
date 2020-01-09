@@ -7,7 +7,11 @@
 <mapper namespace="com.huazai.mapper.AuthorMapper">
 
   <resultMap id="authorResult" type="com.huazai.bean.Author">
-    <id property="id" column="id"></id>
+    <constructor>
+<!--      <idArg column="id" javaType="int"></idArg>-->
+      <arg column="id" javaType="int"></arg>
+    </constructor>
+<!--    <id property="id" column="id"></id>-->
     <result property="username" column="username"></result>
     <result property="password" column="password"></result>
     <result property="email" column="email"></result>

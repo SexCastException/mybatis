@@ -84,6 +84,9 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   private final Map<String, List<UnMappedColumnAutoMapping>> autoMappingsCache = new HashMap<>();
 
   // temporary marking flag that indicate using constructor mapping (use field to reduce memory usage)
+  /**
+   * 标志是否使用了构造器映射
+   */
   private boolean useConstructorMappings;
 
   /**
@@ -569,10 +572,15 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   }
 
   /**
-   * 判断是否开启了自动映射功能
+   * 检测是否开启了自动映射功能，该功能会自动映射结果集中存在的，但未在 {@link ResultMap}中明确的列 <br>
+   * <p>
+   * 分以下两种情况：
+   * 一、在ResultMap中明确地配置了autoMapping属性，则优先根据该属性的值决定是否开启自动映射功能。<br>
+   * 二、如果没有配置autoMapping属性，则在根据mybatis-config.xml中<settings>节点中配置的autoMappingBehavior 值( 默认为PARTIAL)
+   * 决定是否开启自动映射功能。
    *
    * @param resultMap
-   * @param isNested  是否嵌套
+   * @param isNested  是否考虑嵌套映射的情况
    * @return
    */
   private boolean shouldApplyAutomaticMappings(ResultMap resultMap, boolean isNested) {
@@ -762,7 +770,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   //
 
   /**
-   * 创建需要映射的结果对象
+   * 创建需要映射的结果对象，可能返回null
    *
    * @param rsw
    * @param resultMap
@@ -773,32 +781,37 @@ public class DefaultResultSetHandler implements ResultSetHandler {
    */
   private Object createResultObject(ResultSetWrapper rsw, ResultMap resultMap, ResultLoaderMap lazyLoader, String columnPrefix) throws SQLException {
     this.useConstructorMappings = false; // reset previous mapping result
-    // 保存构造器参数类型
+    // 保存使用重载函数createResultObject()创建对象使用的构造函数形参类型列表，此集合非空，则表明使用了构造器映射
     final List<Class<?>> constructorArgTypes = new ArrayList<>();
-    // 保存构造函数实参
+    // 保存使用重载函数createResultObject()创建对象使用的构造函数实参值（数据库列值）列表
     final List<Object> constructorArgs = new ArrayList<>();
+    // 创建结果对象，可能构造器映射初始化了部分属性
     Object resultObject = createResultObject(rsw, resultMap, constructorArgTypes, constructorArgs, columnPrefix);
     // 判断结果对象是否有对应的TypeHandler对象
     if (resultObject != null && !hasTypeHandlerForResultObject(rsw, resultMap.getType())) {
+      // 获取配置有property属性值的ResultMapping对象，一般是<id>、<result>、<association>和<collection>节点配置生成的ResultMapping对象
       final List<ResultMapping> propertyMappings = resultMap.getPropertyResultMappings();
       for (ResultMapping propertyMapping : propertyMappings) {
         // issue gcode #109 && issue #149
+        // 没有select属性嵌套查询并且为懒加载，一般是<association>和<collection>节点配置生成的ResultMapping对象
         if (propertyMapping.getNestedQueryId() != null && propertyMapping.isLazy()) {
+          // 创建懒加载代理对象
           resultObject = configuration.getProxyFactory().createProxy(resultObject, lazyLoader, configuration, objectFactory, constructorArgTypes, constructorArgs);
           break;
         }
       }
     }
+    // constructorArgTypes非空，则表明使用了构造器映射
     this.useConstructorMappings = resultObject != null && !constructorArgTypes.isEmpty(); // set current mapping result
     return resultObject;
   }
 
   /**
-   * 创建需要映射的结果对象，重载方法<br>
+   * 创建需要映射的结果对象，重载方法，创建对象过程中，如果存在构造器映射，则先使用映射值作为构造器实参再通过构造器实例化对象<br>
    * 分为下面4种场景 <br>
    * 场景1：结果集只有一列，且存在可以处理该列的 {@link TypeHandler}对象 <br>
    * 场景2：{@link ResultMap}中记录了<constructor>节点的信息，则通过反射方式调用构造方法，创建结果对象 <br>
-   * 场景3：存在默认的无参构造函数，则直接使用 {@link ObjectFactory}创建对象 <br>
+   * 场景3：存在默认的无参构造函数，则直接使用 {@link ObjectFactory}创建对象，即不存在任何映射，返回空数据对象 <br>
    * 场景4：通过自动映射的方式查找合适的构造方法并创建结果对象 <br>
    * <p>
    * 场景1使用 {@link TypeHandler}完成单列的结果映射
@@ -880,6 +893,16 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     return foundValues ? objectFactory.create(resultType, constructorArgTypes, constructorArgs) : null;
   }
 
+  /**
+   * 选择合适的构造器并将映射的值作为构造器实参实例化对象
+   *
+   * @param rsw
+   * @param resultType
+   * @param constructorArgTypes
+   * @param constructorArgs
+   * @return
+   * @throws SQLException
+   */
   private Object createByConstructorSignature(ResultSetWrapper rsw, Class<?> resultType, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) throws SQLException {
     // 获取返回结果类型的所有构造器
     final Constructor<?>[] constructors = resultType.getDeclaredConstructors();
@@ -889,6 +912,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       return createUsingConstructor(rsw, resultType, constructorArgTypes, constructorArgs, defaultConstructor);
     } else {  // 没有只带一个形参类型的构造器或带有 @AutomapConstructor注解修改的构造器
       for (Constructor<?> constructor : constructors) {
+        // 是否允许构造器使用 TypeHandler 对象
         if (allowedConstructorUsingTypeHandlers(constructor, rsw.getJdbcTypes())) {
           return createUsingConstructor(rsw, resultType, constructorArgTypes, constructorArgs, constructor);
         }
@@ -897,16 +921,32 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     throw new ExecutorException("No constructor found in " + resultType.getName() + " matching " + rsw.getClassNames());
   }
 
+  /**
+   * 只要至少有一项通过构造器形参成功映射，则将映射的值作为实参通过构造器创建对象并返回，否则返回null
+   * <p>
+   *
+   * @param rsw
+   * @param resultType
+   * @param constructorArgTypes
+   * @param constructorArgs
+   * @param constructor
+   * @return
+   * @throws SQLException
+   */
   private Object createUsingConstructor(ResultSetWrapper rsw, Class<?> resultType, List<Class<?>> constructorArgTypes, List<Object> constructorArgs, Constructor<?> constructor) throws SQLException {
     boolean foundValues = false;
     // 遍历指定构造器的形参类型
     for (int i = 0; i < constructor.getParameterTypes().length; i++) {
       Class<?> parameterType = constructor.getParameterTypes()[i];
       String columnName = rsw.getColumnNames().get(i);
+      // 获取相应的TypeHandler对象
       TypeHandler<?> typeHandler = rsw.getTypeHandler(parameterType, columnName);
+      // 获取该列值
       Object value = typeHandler.getResult(rsw.getResultSet(), columnName);
       constructorArgTypes.add(parameterType);
+      // 将值作为构造器实参
       constructorArgs.add(value);
+      // 只要有一项映射成功即为true
       foundValues = value != null || foundValues;
     }
     return foundValues ? objectFactory.create(resultType, constructorArgTypes, constructorArgs) : null;
@@ -931,11 +971,22 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     return null;
   }
 
+  /**
+   * 是否允许构造器使用 {@link TypeHandler}对象 <br>
+   * <p>
+   * 判断构造器每一项形参是否存在对应的TypeHandler对象，只有存在的情况下，使用构造器映射的时候才能将列值作为实参赋给形参
+   *
+   * @param constructor
+   * @param jdbcTypes
+   * @return
+   */
   private boolean allowedConstructorUsingTypeHandlers(final Constructor<?> constructor, final List<JdbcType> jdbcTypes) {
+    // 获取指定构造器参数类型
     final Class<?>[] parameterTypes = constructor.getParameterTypes();
     if (parameterTypes.length != jdbcTypes.size()) {
       return false;
     }
+    // 遍历构造器类型，如果存在形参类型没有对应的TypeHandler对象的情况，则返回false
     for (int i = 0; i < parameterTypes.length; i++) {
       if (!typeHandlerRegistry.hasTypeHandler(parameterTypes[i], jdbcTypes.get(i))) {
         return false;
@@ -945,7 +996,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   }
 
   /**
-   * 创建原始对象，用于查询单列
+   * 直接返回单列映射的结果
    *
    * @param rsw
    * @param resultMap
@@ -1422,21 +1473,25 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   }
 
   private void createRowKeyForUnmappedProperties(ResultMap resultMap, ResultSetWrapper rsw, CacheKey cacheKey, String columnPrefix) throws SQLException {
+    // 获取返回结果类型的元信息
     final MetaClass metaType = MetaClass.forClass(resultMap.getType(), reflectorFactory);
+    // 获取未映射的列名
     List<String> unmappedColumnNames = rsw.getUnmappedColumnNames(resultMap, columnPrefix);
     for (String column : unmappedColumnNames) {
       String property = column;
+      // 如果配置了列前缀，则此时column和property不相同，则需要截掉列前缀
       if (columnPrefix != null && !columnPrefix.isEmpty()) {
         // When columnPrefix is specified, ignore columns without the prefix.
         if (column.toUpperCase(Locale.ENGLISH).startsWith(columnPrefix)) {
           property = column.substring(columnPrefix.length());
-        } else {
+        } else {  // 配置了列前缀但实际查询的列名或别名却不是以列前缀开头，即列名映射和java属性名称映射不匹配，注定映射不成功的
           continue;
         }
       }
+      // 判断去掉前缀的列名的字符串是否就是java属性的名称，即去掉前缀的列名是否与java属性是否一一映射
       if (metaType.findProperty(property, configuration.isMapUnderscoreToCamelCase()) != null) {
         String value = rsw.getResultSet().getString(column);
-        if (value != null) {
+        if (value != null) {  // 将映射后的列名和值更新到updateList集合
           cacheKey.update(column);
           cacheKey.update(value);
         }

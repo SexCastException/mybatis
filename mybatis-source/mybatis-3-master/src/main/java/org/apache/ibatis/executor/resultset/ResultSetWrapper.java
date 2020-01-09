@@ -189,8 +189,8 @@ public class ResultSetWrapper {
   }
 
   /**
-   * 把已经成功映射的列名加入 {@link ResultSetWrapper#mappedColumnNamesMap}集合
-   * 把未成功映射的列名加入 {@link ResultSetWrapper#unMappedColumnNamesMap}集合
+   * 把结果集中已在<resultMap>配置映射的列名加入 {@link ResultSetWrapper#mappedColumnNamesMap}集合
+   * 把结果集中未在<resultMap>配置映射的列名加入 {@link ResultSetWrapper#unMappedColumnNamesMap}集合
    *
    * @param resultMap
    * @param columnPrefix
@@ -203,6 +203,7 @@ public class ResultSetWrapper {
     List<String> unmappedColumnNames = new ArrayList<>();
     // 大写的列名前缀
     final String upperColumnPrefix = columnPrefix == null ? null : columnPrefix.toUpperCase(Locale.ENGLISH);
+    // 加前缀的列名
     final Set<String> mappedColumns = prependPrefixes(resultMap.getMappedColumns(), upperColumnPrefix);
     for (String columnName : columnNames) {
       final String upperColumnName = columnName.toUpperCase(Locale.ENGLISH);

@@ -24,19 +24,19 @@ package org.apache.ibatis.session;
 public enum AutoMappingBehavior {
 
   /**
-   * 不自动映射
+   * 取消自动映射
    * Disables auto-mapping.
    */
   NONE,
 
   /**
-   * 部分映射，仅自动映射结果，内部没有定义嵌套的结果映射。
+   * 部分映射，只会自动映射没有定义嵌套的结果集
    * Will only auto-map results with no nested result mappings defined inside.
    */
   PARTIAL,
 
   /**
-   * 全自动映射，将自动映射任何复杂性的结果映射（包含嵌套或其他形式）
+   * 全自动映射，将自动映射任何复杂性的结果集（无论是否嵌套）
    * Will auto-map result mappings of any complexity (containing nested or otherwise).
    */
   FULL
