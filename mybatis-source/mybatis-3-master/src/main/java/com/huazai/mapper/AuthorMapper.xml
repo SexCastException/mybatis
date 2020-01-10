@@ -14,7 +14,7 @@
 <!--    <id property="id" column="id"></id>-->
     <result property="username" column="username"></result>
     <result property="password" column="password"></result>
-    <result property="email" column="email"></result>
+<!--    <result property="email" column="email"></result>-->
   </resultMap>
 
   <select id="select" resultMap="authorResult">

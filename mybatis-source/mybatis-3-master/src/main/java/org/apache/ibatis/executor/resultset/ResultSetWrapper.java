@@ -44,7 +44,7 @@ public class ResultSetWrapper {
    */
   private final List<String> columnNames = new ArrayList<>();
   /**
-   * {@link ResultSet}中每列对应的Java类型
+   * {@link ResultSet}中每列对应映射的Java类型
    */
   private final List<String> classNames = new ArrayList<>();
   /**

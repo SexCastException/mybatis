@@ -98,9 +98,18 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   }
 
   private static class UnMappedColumnAutoMapping {
+    /**
+     * 未映射的列名
+     */
     private final String column;
+    /**
+     * 未映射列名对应的java属性
+     */
     private final String property;
     private final TypeHandler<?> typeHandler;
+    /**
+     * 是否为基本数据类型
+     */
     private final boolean primitive;
 
     public UnMappedColumnAutoMapping(String column, String property, TypeHandler<?> typeHandler, boolean primitive) {
@@ -648,37 +657,56 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     }
   }
 
+  /**
+   * 负责为未映射的列查找对应的属性，并将两者（列和属性）关联起来封装成 {@link UnMappedColumnAutoMapping}对象。
+   * 该方法产生的 {@link UnMappedColumnAutoMapping} 对象集合会缓存在 {@link DefaultResultSetHandler#autoMappingsCache}字段中，
+   * 其中的key由 {@link ResultMap}的id与列前缀构成。
+   *
+   * @param rsw
+   * @param resultMap
+   * @param metaObject
+   * @param columnPrefix
+   * @return
+   * @throws SQLException
+   */
   private List<UnMappedColumnAutoMapping> createAutomaticMappings(ResultSetWrapper rsw, ResultMap resultMap, MetaObject metaObject, String columnPrefix) throws SQLException {
+    // 拼接自动映射缓存key
     final String mapKey = resultMap.getId() + ":" + columnPrefix;
     List<UnMappedColumnAutoMapping> autoMapping = autoMappingsCache.get(mapKey);
     if (autoMapping == null) {
       autoMapping = new ArrayList<>();
+      // 获取未映射列名集合
       final List<String> unmappedColumnNames = rsw.getUnmappedColumnNames(resultMap, columnPrefix);
       for (String columnName : unmappedColumnNames) {
         String propertyName = columnName;
+        // 如果配置了列前缀，则去掉列前缀的部分作为属性名称
         if (columnPrefix != null && !columnPrefix.isEmpty()) {
           // When columnPrefix is specified,
           // ignore columns without the prefix.
+          // 如果以列前缀开头，则截掉列前缀
           if (columnName.toUpperCase(Locale.ENGLISH).startsWith(columnPrefix)) {
             propertyName = columnName.substring(columnPrefix.length());
-          } else {
+          } else {  // 配置了列前缀却不是以列前缀开头，则注定配置的列名和属性名是不匹配，注定映射失败的
             continue;
           }
         }
         final String property = metaObject.findProperty(propertyName, configuration.isMapUnderscoreToCamelCase());
+        // 判断MetaObject封装的元对象中是否有该属性名称并且提供了setter方法
         if (property != null && metaObject.hasSetter(property)) {
-          if (resultMap.getMappedProperties().contains(property)) {
+          if (resultMap.getMappedProperties().contains(property)) { // 这一点不是很明确为何如此操作
             continue;
           }
+          // 获取该java属性提供的setter方法形参类型
           final Class<?> propertyType = metaObject.getSetterType(property);
           if (typeHandlerRegistry.hasTypeHandler(propertyType, rsw.getJdbcType(columnName))) {
+            // 获取对应的TypeHandler 对象
             final TypeHandler<?> typeHandler = rsw.getTypeHandler(propertyType, columnName);
             autoMapping.add(new UnMappedColumnAutoMapping(columnName, property, typeHandler, propertyType.isPrimitive()));
           } else {
             configuration.getAutoMappingUnknownColumnBehavior()
               .doAction(mappedStatement, columnName, property, propertyType);
           }
-        } else {
+        } else {  // 配置了列前缀，但去掉列前缀的部分与metaObject封装的元对象没有匹配的属性或者右匹配的属性，但未提供有该属性的setter方法
           configuration.getAutoMappingUnknownColumnBehavior()
             .doAction(mappedStatement, columnName, (property != null) ? property : propertyName, null);
         }
@@ -699,16 +727,24 @@ public class DefaultResultSetHandler implements ResultSetHandler {
    * @throws SQLException
    */
   private boolean applyAutomaticMappings(ResultSetWrapper rsw, ResultMap resultMap, MetaObject metaObject, String columnPrefix) throws SQLException {
+    /*
+        获取在ResultSet中存在，但ResultMap中没有明确映射的列所对应的UnMappedColumnAutoMapping集合，
+        如果ResultMap中设置的resultType为java.util.HashMap的话，则全部的列都会在这里获取到
+    */
     List<UnMappedColumnAutoMapping> autoMapping = createAutomaticMappings(rsw, resultMap, metaObject, columnPrefix);
+    // 标志是否映射成功，只要有一项成功映射，则为true
     boolean foundValues = false;
     if (!autoMapping.isEmpty()) {
+      // 遍历集合
       for (UnMappedColumnAutoMapping mapping : autoMapping) {
         final Object value = mapping.typeHandler.getResult(rsw.getResultSet(), mapping.column);
         if (value != null) {
           foundValues = true;
         }
+        // 边界检测
         if (value != null || (configuration.isCallSettersOnNulls() && !mapping.primitive)) {
           // gcode issue #377, call setter on nulls (value is not 'found')
+          // 将映射的值赋值到对应列
           metaObject.setValue(mapping.property, value);
         }
       }
@@ -812,7 +848,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
    * 场景1：结果集只有一列，且存在可以处理该列的 {@link TypeHandler}对象 <br>
    * 场景2：{@link ResultMap}中记录了<constructor>节点的信息，则通过反射方式调用构造方法，创建结果对象 <br>
    * 场景3：存在默认的无参构造函数，则直接使用 {@link ObjectFactory}创建对象，即不存在任何映射，返回空数据对象 <br>
-   * 场景4：通过自动映射的方式查找合适的构造方法并创建结果对象 <br>
+   * 场景4：如果开启了自动映射，则通过自动映射的方式查找合适的构造方法并创建结果对象 <br>
    * <p>
    * 场景1使用 {@link TypeHandler}完成单列的结果映射
    *
@@ -943,6 +979,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       TypeHandler<?> typeHandler = rsw.getTypeHandler(parameterType, columnName);
       // 获取该列值
       Object value = typeHandler.getResult(rsw.getResultSet(), columnName);
+      // 记录使用哪个构造器创建对象的形参类型列表
       constructorArgTypes.add(parameterType);
       // 将值作为构造器实参
       constructorArgs.add(value);
@@ -1488,7 +1525,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
           continue;
         }
       }
-      // 判断去掉前缀的列名的字符串是否就是java属性的名称，即去掉前缀的列名是否与java属性是否一一映射
+      // 判断去掉前缀的部分是否就是java属性的名称，即去掉前缀的列名是否与java属性是否一一映射
       if (metaType.findProperty(property, configuration.isMapUnderscoreToCamelCase()) != null) {
         String value = rsw.getResultSet().getString(column);
         if (value != null) {  // 将映射后的列名和值更新到updateList集合

@@ -6,30 +6,23 @@
 
 <mapper namespace="com.huazai.mapper.BlogMapper">
 
-  <resultMap id="authorResult" type="com.huazai.bean.Author">
-    <id property="id" column="author_id"></id>
-    <result property="username" column="author_username"></result>
-    <result property="password" column="author_password"></result>
-    <result property="email" column="author_email"></result>
-  </resultMap>
-
   <resultMap id="blogDetailedResultMap" type="com.huazai.bean.Blog">
     <constructor>
-      <idArg column="blog_id" javaType="int"></idArg>
+      <idArg column="blog_id" columnPrefix="blog" javaType="int"></idArg>
     </constructor>
     <result property="title" column="blog_title"></result>
 
-    <association property="author" resultMap="authorResult"></association>
+    <association property="author" columnPrefix="author_" resultMap="com.huazai.mapper.AuthorMapper.authorResult"></association>
 
-    <collection property="posts" ofType="com.huazai.bean.Post">
-      <id property="id" column="post_id"></id>
-      <result property="content" column="post_content"></result>
+    <collection property="posts" ofType="com.huazai.bean.Post" columnPrefix="post_">
+      <id property="id" column="id"></id>
+      <result property="content" column="content"></result>
       <result property="draft" column="draft"></result>
-      <association property="author" resultMap="authorResult"></association>
+      <association property="author" columnPrefix="author_" resultMap="com.huazai.mapper.AuthorMapper.authorResult"></association>
       <collection property="comments" column="post_id" javaType="ArrayList" ofType="com.huazai.bean.Comment"
                   select="selectComment"></collection>
       <discriminator javaType="Integer" column="draft">
-        <case value="1" resultType="int"></case>
+        <case value="100" resultType="int"></case>
       </discriminator>
     </collection>
   </resultMap>
@@ -50,7 +43,7 @@
       P.id AS post_id,
       P.blog_id AS post_blog_id,
       P.content AS post_content,
-      P.draft AS draft
+      P.draft AS post_draft
     <include refid="fromTable">
       <property name="tableName" value="blog"/>
     </include>
