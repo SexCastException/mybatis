@@ -54,6 +54,9 @@ public final class MappedStatement {
   private List<ResultMap> resultMaps;
   private boolean flushCacheRequired;
   private boolean useCache;
+  /**
+   * 仅对嵌套映射有效
+   */
   private boolean resultOrdered;
   /**
    * SQL的类型，insert、 update、delete、select或flush

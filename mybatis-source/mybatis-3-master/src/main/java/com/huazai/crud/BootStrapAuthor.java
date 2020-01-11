@@ -42,10 +42,10 @@ public class BootStrapAuthor {
   }
 
   @Test
-  public void select() {
+  public void selectList() {
     Author author = new Author(1);
     author.setUsername("zhangsan");
-    System.out.println(mapper.select(author, "123456", "739967221@qq.com"));
+    System.out.println(mapper.selectList(author, "123456", "739967221@qq.com"));
   }
 
   @Test

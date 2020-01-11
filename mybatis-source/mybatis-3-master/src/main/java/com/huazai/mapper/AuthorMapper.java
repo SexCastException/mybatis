@@ -11,7 +11,7 @@ import java.util.List;
  * @date 2019/12/23 19:10:24
  */
 public interface AuthorMapper {
-  List<Author> select(Author author, String testParam1, String testParam2);
+  List<Author> selectList(Author author, String testParam1, String testParam2);
 
   int insert(Author author);
 

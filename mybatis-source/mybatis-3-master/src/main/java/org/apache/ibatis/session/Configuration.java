@@ -116,6 +116,9 @@ public class Configuration {
   protected ResultSetType defaultResultSetType;
   // 默认简单执行器
   protected ExecutorType defaultExecutorType = ExecutorType.SIMPLE;
+  /**
+   * 对未明确的列自动映射行为
+   */
   protected AutoMappingBehavior autoMappingBehavior = AutoMappingBehavior.PARTIAL;
   protected AutoMappingUnknownColumnBehavior autoMappingUnknownColumnBehavior = AutoMappingUnknownColumnBehavior.NONE;
 
