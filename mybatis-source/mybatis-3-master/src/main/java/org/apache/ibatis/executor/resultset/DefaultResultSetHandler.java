@@ -700,9 +700,9 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   }
 
   /**
-   * 负责为未映射的列查找对应的属性，并将两者（列和属性）关联起来封装成 {@link UnMappedColumnAutoMapping}对象。
+   * 负责为未明确映射的列查找对应的属性，并将两者（列和属性）关联起来封装成 {@link UnMappedColumnAutoMapping}对象。<br>
    * 该方法产生的 {@link UnMappedColumnAutoMapping} 对象集合会缓存在 {@link DefaultResultSetHandler#autoMappingsCache}字段中，
-   * 其中的key由 {@link ResultMap}的id与列前缀构成。
+   * 其中的key由 {@link ResultMap}的id与列前缀构成。<br>
    *
    * @param rsw
    * @param resultMap
@@ -735,7 +735,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
         final String property = metaObject.findProperty(propertyName, configuration.isMapUnderscoreToCamelCase());
         // 判断MetaObject封装的元对象中是否有该属性名称并且提供了setter方法
         if (property != null && metaObject.hasSetter(property)) {
-          // 校验，在明确映射的列中如果有该属性，则忽略一下步骤
+          // 校验，在明确映射的列中如果有该属性，则忽略以下步骤
           if (resultMap.getMappedProperties().contains(property)) {
             continue;
           }
@@ -780,6 +780,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     if (!autoMapping.isEmpty()) {
       // 遍历集合
       for (UnMappedColumnAutoMapping mapping : autoMapping) {
+        // 映射相应的值
         final Object value = mapping.typeHandler.getResult(rsw.getResultSet(), mapping.column);
         if (value != null) {
           foundValues = true;
@@ -1395,9 +1396,9 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     Object rowValue = partialObject;
     if (rowValue != null) { // 如果外层对象（已映射部分属性）是否存在，则直接嵌套映射
       final MetaObject metaObject = configuration.newMetaObject(rowValue);
-      // 将外层结果添加到 ancestorObjects 集合中
+      // 嵌套映射之前，将外层结果添加到 ancestorObjects 集合中
       putAncestor(rowValue, resultMapId);
-      // 处理嵌套映射，将生成的结果设置到外层对象相应的属性只去
+      // 处理嵌套映射，将生成的结果设置到外层对象相应的属性只
       applyNestedResultMappings(rsw, resultMap, metaObject, columnPrefix, combinedKey, false);
       // 移除外层对象
       ancestorObjects.remove(resultMapId);
@@ -1405,7 +1406,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       final ResultLoaderMap lazyLoader = new ResultLoaderMap();
       // 不存在则创建外层对象
       rowValue = createResultObject(rsw, resultMap, lazyLoader, columnPrefix);
-      // 外层对象没有对应的类型处理器
+      // 外层对象没有对应的类型处理器才处理
       if (rowValue != null && !hasTypeHandlerForResultObject(rsw, resultMap.getType())) {
         final MetaObject metaObject = configuration.newMetaObject(rowValue);
         boolean foundValues = this.useConstructorMappings;
@@ -1416,7 +1417,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
         }
         // 映射明确的列名，到此对象的部分映射（非嵌套映射）以完成
         foundValues = applyPropertyMappings(rsw, resultMap, metaObject, lazyLoader, columnPrefix) || foundValues;
-        // 将外层结果添加到 ancestorObjects 集合中
+        // 嵌套映射之前，将外层结果添加到 ancestorObjects 集合中
         putAncestor(rowValue, resultMapId);
         // 处理嵌套映射，将生成的结果设置到外层对象相应的属性只
         foundValues = applyNestedResultMappings(rsw, resultMap, metaObject, columnPrefix, combinedKey, true) || foundValues;
@@ -1446,36 +1447,47 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     for (ResultMapping resultMapping : resultMap.getPropertyResultMappings()) {
       // 获取嵌套resultMap的id
       final String nestedResultMapId = resultMapping.getNestedResultMapId();
-      // 校验是否存在嵌套映射
+      // 步骤1：校验是否存在嵌套映射
       if (nestedResultMapId != null && resultMapping.getResultSet() == null) {
         try {
           // 获取列前缀
           final String columnPrefix = getColumnPrefix(parentPrefix, resultMapping);
-          // 根据鉴别器确定使用的 ResultMap对象
+          // 步骤2：根据鉴别器确定使用的 ResultMap对象
           final ResultMap nestedResultMap = getNestedResultMap(rsw.getResultSet(), nestedResultMapId, columnPrefix);
+          // 处理循环引用的情况
           if (resultMapping.getColumnPrefix() == null) {
             // try to fill circular reference only when columnPrefix
             // is not specified for the nested result map (issue #215)
+            // 如果 ancestorObject 不为null，则表示当前映射的嵌套对象在之前已经进行过映射，可重用之前映射产生的对象。
             Object ancestorObject = ancestorObjects.get(nestedResultMapId);
             if (ancestorObject != null) {
               if (newObject) {
                 linkObjects(metaObject, resultMapping, ancestorObject); // issue #385
               }
+              // 若是循环引用，则不用执行下面的代码创建对象，而是重用之前的对象
               continue;
             }
           }
-          // 为嵌套对象创建使用的CacheKey
+          // 步骤4：为嵌套对象创建使用的CacheKey
           final CacheKey rowKey = createRowKey(nestedResultMap, rsw, columnPrefix);
-          // 与外层对象的CacheKey合并，得到全局唯一的CacheKey对象
+          // 步骤4.1：与外层对象的CacheKey合并，得到全局唯一的CacheKey对象
           final CacheKey combinedKey = combineKeys(rowKey, parentRowKey);
+          // 查找 nestedResultObjects 集合中是否拥有相同的key（相同的嵌套对象）
           Object rowValue = nestedResultObjects.get(combinedKey);
           boolean knownValue = rowValue != null;
-          // 如果外层对象的嵌套对象属性为 Collection类型，且未初始化化，则初始化
+          // 步骤5：如果外层对象的嵌套对象属性为 Collection类型，且未初始化化，则初始化
           instantiateCollectionPropertyIfAppropriate(resultMapping, metaObject); // mandatory
-          // 根据
+          // 步骤6：根据<association>和<collectin>节点的notNullColumn属性值检测结果集中的空值
           if (anyNotNullColumnHasValue(resultMapping, columnPrefix, rsw)) {
+            // 步骤7：完成嵌套映射，并生成嵌套对象，嵌套映射可以嵌套多层，也可以产生多层递归
             rowValue = getRowValue(rsw, nestedResultMap, combinedKey, columnPrefix, rowValue);
+            /*
+                attention，“!knownValue"这个条件，当嵌套对象已存在于 nestedResultObjects 集合中时，说明相关列已经映射成了嵌套对象。
+                现假设对象A中有b1和b2两个属性都指向了对象B，且这两个属性都是由同一ResultMap进行映射的。在对一行记录进行映射时，
+                首先映射的bl属性会生成B对象且成功赋值，而b2属性则为null。
+            */
             if (rowValue != null && !knownValue) {
+              // 步骤8：将步骤7中得到的嵌套对象保存到外层对象的相应属性中
               linkObjects(metaObject, resultMapping, rowValue);
               foundValues = true;
             }
@@ -1583,14 +1595,24 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     return cacheKey;
   }
 
+  /**
+   * 合并 {@link CacheKey}
+   *
+   * @param rowKey
+   * @param parentRowKey
+   * @return
+   */
   private CacheKey combineKeys(CacheKey rowKey, CacheKey parentRowKey) {
+    // 边界检查
     if (rowKey.getUpdateCount() > 1 && parentRowKey.getUpdateCount() > 1) {
       CacheKey combinedKey;
       try {
+        // 获取 rowKey 的克隆对象
         combinedKey = rowKey.clone();
       } catch (CloneNotSupportedException e) {
         throw new ExecutorException("Error cloning cache key.  Cause: " + e, e);
       }
+
       combinedKey.update(parentRowKey);
       return combinedKey;
     }
@@ -1702,8 +1724,17 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     }
   }
 
+  /**
+   * 将已存在的嵌套对象设置到外层对象的相应属性中。
+   *
+   * @param metaObject
+   * @param resultMapping
+   * @param rowValue
+   */
   private void linkObjects(MetaObject metaObject, ResultMapping resultMapping, Object rowValue) {
+    // 检查外层对象的指定属性是否为Collection类型，如果是且未初始化，则初始化该集合属性并返回
     final Object collectionProperty = instantiateCollectionPropertyIfAppropriate(resultMapping, metaObject);
+    // 根据属性是否为集合类型，调用MetaObject的相应方法，将嵌套对象记录到外层对象的相应属性中
     if (collectionProperty != null) {
       final MetaObject targetMetaObject = configuration.newMetaObject(collectionProperty);
       targetMetaObject.add(rowValue);
@@ -1712,15 +1743,25 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     }
   }
 
+  /**
+   * 实例化集合属性并赋值到相应属性中
+   *
+   * @param resultMapping
+   * @param metaObject
+   * @return
+   */
   private Object instantiateCollectionPropertyIfAppropriate(ResultMapping resultMapping, MetaObject metaObject) {
+    // 获取相应java属性名
     final String propertyName = resultMapping.getProperty();
+    // 根据属性名获取相应属性值
     Object propertyValue = metaObject.getValue(propertyName);
-    if (propertyValue == null) {
+    if (propertyValue == null) {  // 为null，表示相应属性尚未初始化
       Class<?> type = resultMapping.getJavaType();
-      if (type == null) {
+      if (type == null) { // 优先使用javaType属性值配置的集合类型，否则使用该属性值对应setter方法的形参类型
         type = metaObject.getSetterType(propertyName);
       }
       try {
+        // 判断如果是Collection类型，则实例化相应集合并赋值到相应属性中
         if (objectFactory.isCollection(type)) {
           propertyValue = objectFactory.create(type);
           metaObject.setValue(propertyName, propertyValue);
@@ -1729,9 +1770,10 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       } catch (Exception e) {
         throw new ExecutorException("Error instantiating collection property for result '" + resultMapping.getProperty() + "'.  Cause: " + e, e);
       }
-    } else if (objectFactory.isCollection(propertyValue.getClass())) {
+    } else if (objectFactory.isCollection(propertyValue.getClass())) {  // 相应属性值不为null，且值为Collection类型，直接返回
       return propertyValue;
     }
+    // 属性非Collection类型，返回null
     return null;
   }
 
