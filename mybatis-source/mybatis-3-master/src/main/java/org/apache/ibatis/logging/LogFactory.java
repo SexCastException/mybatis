@@ -138,7 +138,7 @@ public final class LogFactory {
       Constructor<? extends Log> candidate = implClass.getConstructor(String.class);
       // 实例化适配器
       Log log = candidate.newInstance(LogFactory.class.getName());
-      // 如果开启了日志功能则打印日志
+      // 如果开启了日志功能则打印日志，说明使用了哪个日志实现类
       if (log.isDebugEnabled()) {
         log.debug("Logging initialized using '" + implClass + "' adapter.");
       }
