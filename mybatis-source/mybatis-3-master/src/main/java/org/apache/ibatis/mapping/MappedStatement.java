@@ -29,7 +29,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * MyBatis使用 MappedStatement 表示映射配置文件中定义的Statement节点（<select>、<update>、<delete>和<insert>），MappedStatement包含了这些节点的很多属性。
+ * MyBatis使用 MappedStatement 表示映射配置文件中定义的Statement节点（&lt;select>、&lt;update>、&lt;delete>和&lt;insert>），MappedStatement包含了这些节点的很多属性。
  *
  * @author Clinton Begin
  */

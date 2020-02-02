@@ -64,6 +64,7 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
   static Object crateProxy(Class<?> type, MethodHandler callback, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
 
     ProxyFactory enhancer = new ProxyFactory();
+    // 设置代理对象需要继承的父类
     enhancer.setSuperclass(type);
 
     try {
@@ -132,10 +133,22 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
       this.constructorArgs = constructorArgs;
     }
 
+    /**
+     * 创建代理对象，并将目标对象的属性值赋值给代理对象
+     *
+     * @param target
+     * @param lazyLoader
+     * @param configuration
+     * @param objectFactory
+     * @param constructorArgTypes
+     * @param constructorArgs
+     * @return
+     */
     public static Object createProxy(Object target, ResultLoaderMap lazyLoader, Configuration configuration, ObjectFactory objectFactory, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
       final Class<?> type = target.getClass();
       EnhancedResultObjectProxyImpl callback = new EnhancedResultObjectProxyImpl(type, lazyLoader, configuration, objectFactory, constructorArgTypes, constructorArgs);
       Object enhanced = crateProxy(type, callback, constructorArgTypes, constructorArgs);
+      // 将目标被代理对象属性值拷贝到新生成的代理对象
       PropertyCopier.copyBeanProperties(type, target, enhanced);
       return enhanced;
     }
@@ -169,7 +182,12 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
               return original;
             }
           } else {
+            // 检测是否存在延迟加载的属性，以及调用方法名是否为“finalize”
             if (lazyLoader.size() > 0 && !FINALIZE_METHOD.equals(methodName)) {
+              /*
+                如果aggressiveLazyLoading配置项为true，或是调用方法的名称存在于lazyLoadTriggerMethods列表中，
+                则将全部的属性都加载完成
+               */
               if (aggressive || lazyLoadTriggerMethods.contains(methodName)) {
                 lazyLoader.loadAll();
               } else if (PropertyNamer.isSetter(methodName)) {
@@ -178,7 +196,7 @@ public class JavassistProxyFactory implements org.apache.ibatis.executor.loader.
               } else if (PropertyNamer.isGetter(methodName)) {
                 final String property = PropertyNamer.methodToProperty(methodName);
                 if (lazyLoader.hasLoader(property)) {
-                  lazyLoader.load(property);
+                  lazyLoader.load(property);  // 触发该属性的加载操作
                 }
               }
             }

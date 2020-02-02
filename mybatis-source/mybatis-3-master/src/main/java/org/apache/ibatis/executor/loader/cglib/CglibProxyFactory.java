@@ -61,9 +61,18 @@ public class CglibProxyFactory implements ProxyFactory {
     return EnhancedDeserializationProxyImpl.createProxy(target, unloadedProperties, objectFactory, constructorArgTypes, constructorArgs);
   }
 
+  /**
+   * @param type                需要创建代理的目标类
+   * @param callback
+   * @param constructorArgTypes 创建代理对象时，使用的构造器形参列表类型
+   * @param constructorArgs     创建代理对象时，使用的构造器实参列表值
+   * @return
+   */
   static Object crateProxy(Class<?> type, Callback callback, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
     Enhancer enhancer = new Enhancer();
+    // 设置 Callback对象
     enhancer.setCallback(callback);
+    // 指定生成代理类的父类
     enhancer.setSuperclass(type);
     try {
       type.getDeclaredMethod(WRITE_REPLACE_METHOD);
@@ -77,9 +86,10 @@ public class CglibProxyFactory implements ProxyFactory {
       // nothing to do here
     }
     Object enhanced;
+    // 如果参数列表为空，则通过默认构造函数创建代理对象
     if (constructorArgTypes.isEmpty()) {
       enhanced = enhancer.create();
-    } else {
+    } else {  // 否则通过有参构造函数创建代理对象
       Class<?>[] typesArray = constructorArgTypes.toArray(new Class[constructorArgTypes.size()]);
       Object[] valuesArray = constructorArgs.toArray(new Object[constructorArgs.size()]);
       enhanced = enhancer.create(typesArray, valuesArray);
@@ -101,7 +111,7 @@ public class CglibProxyFactory implements ProxyFactory {
      */
     private final ResultLoaderMap lazyLoader;
     /**
-     * 在mybatis-config.xml文件中，aggressiveLazyLoading 配置项的值
+     * 在mybatis-config.xml文件中，aggressiveLazyLoading 配置项的值，表示是否积极延迟加载
      */
     private final boolean aggressive;
     /**
@@ -118,7 +128,16 @@ public class CglibProxyFactory implements ProxyFactory {
      */
     private final List<Object> constructorArgs;
 
-    // 私有化构造器
+    /**
+     * 私有化构造器，通过 {@link EnhancedResultObjectProxyImpl#createProxy}方法实例化对象
+     *
+     * @param type
+     * @param lazyLoader
+     * @param configuration
+     * @param objectFactory
+     * @param constructorArgTypes
+     * @param constructorArgs
+     */
     private EnhancedResultObjectProxyImpl(Class<?> type, ResultLoaderMap lazyLoader, Configuration configuration, ObjectFactory objectFactory, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
       this.type = type;
       this.lazyLoader = lazyLoader;
@@ -129,15 +148,37 @@ public class CglibProxyFactory implements ProxyFactory {
       this.constructorArgs = constructorArgs;
     }
 
+    /**
+     * 创建代理对象，并将目标对象的属性值赋值给代理对象
+     *
+     * @param target              需要创建代理的目标类
+     * @param lazyLoader
+     * @param configuration
+     * @param objectFactory
+     * @param constructorArgTypes 创建代理对象时，使用的构造器形参列表类型
+     * @param constructorArgs     创建代理对象时，使用的构造器实参列表值
+     * @return
+     */
     public static Object createProxy(Object target, ResultLoaderMap lazyLoader, Configuration configuration, ObjectFactory objectFactory, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
       final Class<?> type = target.getClass();
       EnhancedResultObjectProxyImpl callback = new EnhancedResultObjectProxyImpl(type, lazyLoader, configuration, objectFactory, constructorArgTypes, constructorArgs);
       // 创建代理对象
       Object enhanced = crateProxy(type, callback, constructorArgTypes, constructorArgs);
+      // 将目标被代理对象属性值拷贝到新生成的代理对象
       PropertyCopier.copyBeanProperties(type, target, enhanced);
       return enhanced;
     }
 
+    /**
+     * 当前指定的方法，决定是否触发对延迟加载的属性进行加载
+     *
+     * @param enhanced    代理对象
+     * @param method
+     * @param args
+     * @param methodProxy
+     * @return
+     * @throws Throwable
+     */
     @Override
     public Object intercept(Object enhanced, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
       final String methodName = method.getName();
@@ -145,11 +186,12 @@ public class CglibProxyFactory implements ProxyFactory {
         synchronized (lazyLoader) {
           if (WRITE_REPLACE_METHOD.equals(methodName)) {
             Object original;
-            if (constructorArgTypes.isEmpty()) {
+            if (constructorArgTypes.isEmpty()) {  // 参数列表为空，通过默认构造函数创建原始对象
               original = objectFactory.create(type);
-            } else {
+            } else {  // 否则通过有参构造函数创建原始对象
               original = objectFactory.create(type, constructorArgTypes, constructorArgs);
             }
+            // 拷贝属性值
             PropertyCopier.copyBeanProperties(type, enhanced, original);
             if (lazyLoader.size() > 0) {
               return new CglibSerialStateHolder(original, lazyLoader.getProperties(), objectFactory, constructorArgTypes, constructorArgs);
@@ -157,21 +199,29 @@ public class CglibProxyFactory implements ProxyFactory {
               return original;
             }
           } else {
+            // 检测是否存在延迟加载的属性，以及调用方法名是否为“finalize”
             if (lazyLoader.size() > 0 && !FINALIZE_METHOD.equals(methodName)) {
+              /*
+                如果aggressiveLazyLoading配置项为true，或是调用方法的名称存在于lazyLoadTriggerMethods列表中，
+                则将全部的属性都加载完成
+               */
               if (aggressive || lazyLoadTriggerMethods.contains(methodName)) {
                 lazyLoader.loadAll();
               } else if (PropertyNamer.isSetter(methodName)) {
+                // 获取属性名称
                 final String property = PropertyNamer.methodToProperty(methodName);
                 lazyLoader.remove(property);
               } else if (PropertyNamer.isGetter(methodName)) {
+                // 获取属性名称
                 final String property = PropertyNamer.methodToProperty(methodName);
-                if (lazyLoader.hasLoader(property)) {
-                  lazyLoader.load(property);
+                if (lazyLoader.hasLoader(property)) { // 检测是否为延迟加载的属性
+                  lazyLoader.load(property);  // 触发该属性的加载操作
                 }
               }
             }
           }
         }
+        // 调用目标对象的方法（即enhanced父类的方法）
         return methodProxy.invokeSuper(enhanced, args);
       } catch (Throwable t) {
         throw ExceptionUtil.unwrapThrowable(t);
@@ -186,11 +236,22 @@ public class CglibProxyFactory implements ProxyFactory {
       super(type, unloadedProperties, objectFactory, constructorArgTypes, constructorArgs);
     }
 
+    /**
+     * 创建代理对象，并将原始对象的属性值赋给代理对象
+     *
+     * @param target
+     * @param unloadedProperties
+     * @param objectFactory
+     * @param constructorArgTypes
+     * @param constructorArgs
+     * @return
+     */
     public static Object createProxy(Object target, Map<String, ResultLoaderMap.LoadPair> unloadedProperties, ObjectFactory objectFactory,
                                      List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
       final Class<?> type = target.getClass();
       EnhancedDeserializationProxyImpl callback = new EnhancedDeserializationProxyImpl(type, unloadedProperties, objectFactory, constructorArgTypes, constructorArgs);
       Object enhanced = crateProxy(type, callback, constructorArgTypes, constructorArgs);
+      // 将原始对象的属性值赋值给代理对象
       PropertyCopier.copyBeanProperties(type, target, enhanced);
       return enhanced;
     }

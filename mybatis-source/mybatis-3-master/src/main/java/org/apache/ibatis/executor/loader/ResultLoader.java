@@ -101,7 +101,9 @@ public class ResultLoader {
    * @throws SQLException
    */
   public Object loadResult() throws SQLException {
+    // 执行延迟加载，得到结果对象
     List<Object> list = selectList();
+    // 将list集合转换成targetType指定类型的对象
     resultObject = resultExtractor.extractObjectFromList(list, targetType);
     return resultObject;
   }
@@ -122,27 +124,39 @@ public class ResultLoader {
       // 执行查询操作，得到延迟加载的对象
       return localExecutor.query(mappedStatement, parameterObject, RowBounds.DEFAULT, Executor.NO_RESULT_HANDLER, cacheKey, boundSql);
     } finally {
+      // 如果是在selectList()方法中新建的Executor对象，则需要关闭
       if (localExecutor != executor) {
-        // 如果是在selectList()方法中新建的Executor对象，则需要关闭
         localExecutor.close(false);
       }
     }
   }
 
+  /**
+   * 创建SQL执行器
+   *
+   * @return
+   */
   private Executor newExecutor() {
     final Environment environment = configuration.getEnvironment();
     if (environment == null) {
       throw new ExecutorException("ResultLoader could not load lazily.  Environment was not configured.");
     }
+    // 获取数据源
     final DataSource ds = environment.getDataSource();
     if (ds == null) {
       throw new ExecutorException("ResultLoader could not load lazily.  DataSource was not configured.");
     }
+    // 创建事务
     final TransactionFactory transactionFactory = environment.getTransactionFactory();
     final Transaction tx = transactionFactory.newTransaction(ds, null, false);
     return configuration.newExecutor(tx, ExecutorType.SIMPLE);
   }
 
+  /**
+   * 判断延迟加载对象是否为null
+   *
+   * @return
+   */
   public boolean wasNull() {
     return resultObject == null;
   }

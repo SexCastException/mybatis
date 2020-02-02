@@ -126,7 +126,7 @@ public class ResultLoaderMap {
      */
     private static final String FACTORY_METHOD = "getConfiguration";
     /**
-     * 检查我们是否进行了序列化 <br>
+     * 检查是否进行了序列化 <br>
      * Object to check whether we went through serialization..
      */
     private final transient Object serializationCheck = new Object();
@@ -244,6 +244,7 @@ public class ResultLoaderMap {
           old.parameterObject, old.targetType, old.cacheKey, old.boundSql);
       }
 
+      // 调用ResultLoader.loadResult()方法执行延迟加载，并将加载得到的嵌套对象设置到外层对象中
       this.metaResultObject.setValue(property, this.resultLoader.loadResult());
     }
 

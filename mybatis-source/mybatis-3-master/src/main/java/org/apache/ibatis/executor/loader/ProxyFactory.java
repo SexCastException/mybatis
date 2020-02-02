@@ -40,7 +40,7 @@ public interface ProxyFactory {
   /**
    * 创建代理对象
    *
-   * @param target
+   * @param target 需要创建代理的目标类
    * @param lazyLoader
    * @param configuration
    * @param objectFactory
