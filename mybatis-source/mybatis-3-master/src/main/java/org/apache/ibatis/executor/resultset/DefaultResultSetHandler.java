@@ -645,7 +645,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     for (ResultMapping propertyMapping : propertyMappings) {
       // 处理列前缀
       String column = prependPrefix(propertyMapping.getColumn(), columnPrefix);
-      // 如果用户配置了嵌套映射，则忽略配置的列名
+      // 如果用户配置了嵌套映射，则忽略配置的column属性值
       if (propertyMapping.getNestedResultMapId() != null) {
         // the user added a column attribute to a nested result map, ignore it
         column = null;
@@ -682,6 +682,17 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     return foundValues;
   }
 
+  /**
+   * 获取 {@link ResultMapping}的property属性相应的映射列值
+   *
+   * @param rs
+   * @param metaResultObject
+   * @param propertyMapping
+   * @param lazyLoader
+   * @param columnPrefix
+   * @return
+   * @throws SQLException
+   */
   private Object getPropertyMappingValue(ResultSet rs, MetaObject metaResultObject, ResultMapping propertyMapping, ResultLoaderMap lazyLoader, String columnPrefix)
     throws SQLException {
     if (propertyMapping.getNestedQueryId() != null) { // 嵌套查询
@@ -749,7 +760,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
             configuration.getAutoMappingUnknownColumnBehavior()
               .doAction(mappedStatement, columnName, property, propertyType);
           }
-        } else {  // 配置了列前缀，但去掉列前缀的部分与metaObject封装的元对象没有匹配的属性或者右匹配的属性，但未提供有该属性的setter方法
+        } else {  // 配置了列前缀，但去掉列前缀的部分与metaObject封装的元对象没有匹配的属性或者有匹配的属性，但未提供有该属性的setter方法
           configuration.getAutoMappingUnknownColumnBehavior()
             .doAction(mappedStatement, columnName, (property != null) ? property : propertyName, null);
         }
@@ -760,7 +771,8 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   }
 
   /**
-   * 自动映射ResultMap中未明确的列
+   * 自动映射ResultMap中未明确的列 <br>
+   * 未明确列：指在 {@link ResultSet}中存在的列名或别名，但在ResultMap中没有明确指定要映射这些列名且结果对象中存在与该列名相匹配的属性
    *
    * @param rsw
    * @param resultMap
@@ -849,7 +861,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   //
 
   /**
-   * 创建需要映射的结果对象，可能返回null
+   * 创建需要映射的结果对象，可能返回null，如果存在延迟记载，则返回结果类型的代理对象，并将结果对象的已映射的属性值赋值给代理对象
    *
    * @param rsw
    * @param resultMap
@@ -872,6 +884,8 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       final List<ResultMapping> propertyMappings = resultMap.getPropertyResultMappings();
       for (ResultMapping propertyMapping : propertyMappings) {
         // issue gcode #109 && issue #149
+        // 如果存在嵌套查询且该属性为延迟加载的属性，则使用ProxyFactory 创建代理对象，
+        // 默认使用的是 JavassistProxyFactory
         // 没有select属性嵌套查询并且为懒加载，一般是<association>和<collection>节点配置生成的ResultMapping对象
         if (propertyMapping.getNestedQueryId() != null && propertyMapping.isLazy()) {
           // 创建懒加载代理对象
@@ -953,7 +967,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
           // 嵌套处理，处理该查询然后得到实参
           value = getNestedQueryConstructorValue(rsw.getResultSet(), constructorMapping, columnPrefix);
         } else if (constructorMapping.getNestedResultMapId() != null) { // 处理<constructor>子节点resultMap属性指定的resultMap
-          // 嵌套处理，处理该查询然后得到实参
+          // 嵌套+递归处理，处理该查询然后得到实参
           final ResultMap resultMap = configuration.getResultMap(constructorMapping.getNestedResultMapId());
           value = getRowValue(rsw, resultMap, getColumnPrefix(columnPrefix, constructorMapping));
         } else {
@@ -1029,6 +1043,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       // 只要有一项映射成功即为true
       foundValues = value != null || foundValues;
     }
+    // 创建并返回对象
     return foundValues ? objectFactory.create(resultType, constructorArgTypes, constructorArgs) : null;
   }
 
@@ -1109,7 +1124,8 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   //
 
   /**
-   * 通过<constructor>子节点的 {@link ResultMapping}的select属性指定的id找到该构造器对应的形参
+   * 通过<constructor>子节点的 {@link ResultMapping}的select属性指定的id找到该构造器对应的形参 <br>
+   * 在创建构造函数的参数时涉及的嵌套查询，无论配置如何，都不会延迟加载。
    *
    * @param rs
    * @param constructorMapping
@@ -1126,9 +1142,12 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     final Object nestedQueryParameterObject = prepareParameterForNestedQuery(rs, constructorMapping, nestedQueryParameterType, columnPrefix);
     Object value = null;
     if (nestedQueryParameterObject != null) {
+      // 获取嵌套查询对应的BoundSql对象和相应的CacheKey对象
       final BoundSql nestedBoundSql = nestedQuery.getBoundSql(nestedQueryParameterObject);
       final CacheKey key = executor.createCacheKey(nestedQuery, nestedQueryParameterObject, RowBounds.DEFAULT, nestedBoundSql);
+      // 获取嵌套查询结果集经过映射后的目标类型
       final Class<?> targetType = constructorMapping.getJavaType();
+      // 创建ResultLoader对象，并调用loadResult() 方法执行嵌套查询，得到相应的构造方法参数值
       final ResultLoader resultLoader = new ResultLoader(configuration, executor, nestedQuery, nestedQueryParameterObject, targetType, key, nestedBoundSql);
       value = resultLoader.loadResult();
     }
@@ -1137,25 +1156,38 @@ public class DefaultResultSetHandler implements ResultSetHandler {
 
   private Object getNestedQueryMappingValue(ResultSet rs, MetaObject metaResultObject, ResultMapping propertyMapping, ResultLoaderMap lazyLoader, String columnPrefix)
     throws SQLException {
+    // 获取嵌套查询的id
     final String nestedQueryId = propertyMapping.getNestedQueryId();
+    // 获取需要映射的属性值
     final String property = propertyMapping.getProperty();
+    // 通过id获取嵌套查询的MappedStatement对象
     final MappedStatement nestedQuery = configuration.getMappedStatement(nestedQueryId);
     final Class<?> nestedQueryParameterType = nestedQuery.getParameterMap().getType();
     final Object nestedQueryParameterObject = prepareParameterForNestedQuery(rs, propertyMapping, nestedQueryParameterType, columnPrefix);
     Object value = null;
     if (nestedQueryParameterObject != null) {
+      // 获取嵌套查询对应的BoundSq1对象和相应CacheKey对象
       final BoundSql nestedBoundSql = nestedQuery.getBoundSql(nestedQueryParameterObject);
       final CacheKey key = executor.createCacheKey(nestedQuery, nestedQueryParameterObject, RowBounds.DEFAULT, nestedBoundSql);
+      // 获取嵌套查询结果集经过映射后的目标类型
       final Class<?> targetType = propertyMapping.getJavaType();
+      // 检测缓存中是否存在该嵌套查询的结果对象
       if (executor.isCached(nestedQuery, key)) {
+        // 创建DeferredLoad对象，并通过该DeferredLoad对象从缓存中加载结果对象
         executor.deferLoad(nestedQuery, metaResultObject, property, key, targetType);
+        // 返回 DEFERRED 标识(是一个特殊的标识对象)
         value = DEFERRED;
       } else {
+        // 创建嵌套查询相应的ResultLoader对象
         final ResultLoader resultLoader = new ResultLoader(configuration, executor, nestedQuery, nestedQueryParameterObject, targetType, key, nestedBoundSql);
+        /*
+            如果该属性配置了延迟加载，则将其添加到ResultLoaderMap中，等待真正使用时再执行嵌套查询并得到结果对象
+        */
         if (propertyMapping.isLazy()) {
           lazyLoader.addLoader(property, metaResultObject, resultLoader);
-          value = DEFERRED;
+          value = DEFERRED; // 返回DEFERED标识
         } else {
+          // 没有配置延迟加载，则直接调用 ResultLoader.loadResult() 方法执行嵌套查询，并映射得到结果对象
           value = resultLoader.loadResult();
         }
       }
@@ -1163,6 +1195,16 @@ public class DefaultResultSetHandler implements ResultSetHandler {
     return value;
   }
 
+  /**
+   * 映射嵌套查询的实参值
+   *
+   * @param rs
+   * @param resultMapping
+   * @param parameterType
+   * @param columnPrefix
+   * @return
+   * @throws SQLException
+   */
   private Object prepareParameterForNestedQuery(ResultSet rs, ResultMapping resultMapping, Class<?> parameterType, String columnPrefix) throws SQLException {
     // column属性值是否指定组合列
     if (resultMapping.isCompositeResult()) {

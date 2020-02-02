@@ -63,7 +63,7 @@ public class ResultMapping {
    */
   private String nestedResultMapId;
   /**
-   * 对应节点的select属性，该属性通过id引用了另一个<select>节点定义，它会把指定的列的值传入
+   * 对应节点的select属性，该属性通过id引用了另一个&lt;select>节点定义，它会把指定的列的值传入
    * select属性指定的select语句中作为参数进行查询。
    * <p>
    * 使用select属性可能会导致N+1问题。
