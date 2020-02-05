@@ -64,7 +64,10 @@
       <idArg column="id" javaType="int"></idArg>
     </constructor>
     <result property="title" column="title"></result>
-    <!--嵌套处理，其resultSets属性指向第二个结果集-->
+    <!--
+        嵌套处理，其resultSets属性指向第二个结果集，
+        foreignColumn作用：为blog表的外键author_id与author表的主键id相关联，所以该属性为空则报错，foreignColumn为author表的的列名或别名，多个值用“,”隔开
+    -->
     <association property="author" javaType="com.huazai.bean.Author" resultSet="authors" column="author_id" foreignColumn="id">
       <id property="id" column="id"></id>
       <result property="username" column="username"></result>
