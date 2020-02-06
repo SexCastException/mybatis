@@ -1,24 +1,19 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2019 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.cursor.defaults;
-
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 import org.apache.ibatis.cursor.Cursor;
 import org.apache.ibatis.executor.resultset.DefaultResultSetHandler;
@@ -27,6 +22,12 @@ import org.apache.ibatis.mapping.ResultMap;
 import org.apache.ibatis.session.ResultContext;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
+import org.apache.ibatis.session.SqlSession;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * This is the default implementation of a MyBatis Cursor.
@@ -37,18 +38,42 @@ import org.apache.ibatis.session.RowBounds;
 public class DefaultCursor<T> implements Cursor<T> {
 
   // ResultSetHandler stuff
+  /**
+   * 用于完成映射的DefaultResultSetHandler对象
+   */
   private final DefaultResultSetHandler resultSetHandler;
   private final ResultMap resultMap;
+  /**
+   * 封装结果集 {@link ResultSet}对象的相关元信息
+   */
   private final ResultSetWrapper rsw;
+  /**
+   * 指定了对结果集进行映射的起止位置
+   */
   private final RowBounds rowBounds;
+  /**
+   * 暂存映射的结果对象
+   */
   protected final ObjectWrapperResultHandler<T> objectWrapperResultHandler = new ObjectWrapperResultHandler<>();
 
+  /**
+   * 获取映射得到的结果对象
+   */
   private final CursorIterator cursorIterator = new CursorIterator();
+  /**
+   * 标识是否正在迭代结果集
+   */
   private boolean iteratorRetrieved;
 
   private CursorStatus status = CursorStatus.CREATED;
+  /**
+   * 记录已经完成映射的行数
+   */
   private int indexWithRowBound = -1;
 
+  /**
+   * 游标状态
+   */
   private enum CursorStatus {
 
     /**
@@ -103,6 +128,9 @@ public class DefaultCursor<T> implements Cursor<T> {
     return cursorIterator;
   }
 
+  /**
+   * 关闭结果集对象和游标对象
+   */
   @Override
   public void close() {
     if (isClosed()) {
@@ -121,43 +149,68 @@ public class DefaultCursor<T> implements Cursor<T> {
     }
   }
 
+  /**
+   * 完成结果集的映射
+   *
+   * @return
+   */
   protected T fetchNextUsingRowBound() {
+    // 映射一行数据库记录，得到结果对象
     T result = fetchNextObjectFromDatabase();
+    // 从结果集开始一条条记录映射，但是将RowBounds.offset之前的映射结果全部忽略
     while (objectWrapperResultHandler.fetched && indexWithRowBound < rowBounds.getOffset()) {
       result = fetchNextObjectFromDatabase();
     }
     return result;
   }
 
+  /**
+   * 映射结果集对象并保存到 {@link ObjectWrapperResultHandler#fetched}属性中
+   * @return
+   */
   protected T fetchNextObjectFromDatabase() {
+    // 检测当前游标是否关闭
     if (isClosed()) {
       return null;
     }
 
     try {
       objectWrapperResultHandler.fetched = false;
+      // 更新游标状态
       status = CursorStatus.OPEN;
       if (!rsw.getResultSet().isClosed()) {
+        // 映射结果并将结果保存到 objectWrapperResultHandler.result 中
+
         resultSetHandler.handleRowValues(rsw, resultMap, objectWrapperResultHandler, RowBounds.DEFAULT, null);
       }
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
 
+    // 获取结果对象
     T next = objectWrapperResultHandler.result;
     if (objectWrapperResultHandler.fetched) {
+      // 统计返回的结果对象数量
       indexWithRowBound++;
     }
     // No more object or limit reached
+    // 检测是否还存在需要映射的记录，如果没有则关闭游标和结果集对象
     if (!objectWrapperResultHandler.fetched || getReadItemsCount() == rowBounds.getOffset() + rowBounds.getLimit()) {
       close();
+      // 映射完后更新游标状态
       status = CursorStatus.CONSUMED;
     }
     objectWrapperResultHandler.result = null;
 
+    // 返回结果集对象
     return next;
   }
 
+  /**
+   * 检测当前游标是否关闭
+   *
+   * @return
+   */
   private boolean isClosed() {
     return status == CursorStatus.CLOSED || status == CursorStatus.CONSUMED;
   }
@@ -168,6 +221,9 @@ public class DefaultCursor<T> implements Cursor<T> {
 
   protected static class ObjectWrapperResultHandler<T> implements ResultHandler<T> {
 
+    /**
+     * 保存映射的结果集对象
+     */
     protected T result;
     protected boolean fetched;
 
@@ -179,6 +235,9 @@ public class DefaultCursor<T> implements Cursor<T> {
     }
   }
 
+  /**
+   * 游标迭代器
+   */
   protected class CursorIterator implements Iterator<T> {
 
     /**
@@ -199,18 +258,26 @@ public class DefaultCursor<T> implements Cursor<T> {
       return objectWrapperResultHandler.fetched;
     }
 
+    /**
+     * 当用户通过 {@link SqlSession}得到DefaultCursor对象后，可以调用其iterator()方法获取迭代器对结果集进行迭代，
+     * 在迭代过程中才会真正执行映射操作，将记录行映射成结果对象。{@link CursorIterator} 作为一个迭代器，其next()方法会返回一行记录映射的结果对象。
+     *
+     * @return
+     */
     @Override
     public T next() {
       // Fill next with object fetched from hasNext()
       T next = object;
 
       if (!objectWrapperResultHandler.fetched) {
+        // 对结果集进行映射的核心
         next = fetchNextUsingRowBound();
       }
 
       if (objectWrapperResultHandler.fetched) {
         objectWrapperResultHandler.fetched = false;
         object = null;
+        // 记录返回结果对象的个数
         iteratorIndex++;
         return next;
       }
