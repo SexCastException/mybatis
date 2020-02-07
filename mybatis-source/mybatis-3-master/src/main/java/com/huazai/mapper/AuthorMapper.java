@@ -20,4 +20,8 @@ public interface AuthorMapper {
   List<Author> selectByProperty(String id, String name);
 
   List<String> selectUsername();
+
+  Integer batchInsertForKeyGenerator(List<Author> authors);
+
+  Integer insertForSelectKey(Author author);
 }

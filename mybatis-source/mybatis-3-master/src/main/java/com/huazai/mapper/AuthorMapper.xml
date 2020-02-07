@@ -45,4 +45,19 @@
   <select id="selectUsername" resultMap="usernameMap">
     SELECT username FROM author
   </select>
+
+  <insert id="batchInsertForKeyGenerator" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO author(username,password,email) VALUES
+    <foreach collection="list" item="item" separator=",">
+      (#{item.username},#{item.password},#{item.email})
+    </foreach>
+  </insert>
+
+  <insert id="insertForSelectKey">
+    <selectKey keyProperty="id" resultType="integer" order="BEFORE">
+      SELECT FLOOR(RAND() * 10000) ;
+    </selectKey>
+    INSERT INTO author(username,password,email) VALUES
+    (#{username},#{password},#{email})
+  </insert>
 </mapper>

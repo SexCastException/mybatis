@@ -227,6 +227,7 @@ public class Configuration {
     typeAliasRegistry.registerAlias("LOG4J", Log4jImpl.class);
     typeAliasRegistry.registerAlias("LOG4J2", Log4j2Impl.class);
     typeAliasRegistry.registerAlias("JDK_LOGGING", Jdk14LoggingImpl.class);
+    // StdOutImpl是默认的日志输出实现类
     typeAliasRegistry.registerAlias("STDOUT_LOGGING", StdOutImpl.class);
     typeAliasRegistry.registerAlias("NO_LOGGING", NoLoggingImpl.class);
 

@@ -52,6 +52,12 @@ public class Author implements Serializable {
     this.id = id;
   }
 
+  public Author(String username, String password, String email) {
+    this.username = username;
+    this.password = password;
+    this.email = email;
+  }
+
   public Author(Integer id, String username, String password, String email) {
     this.id = id;
     this.username = username;

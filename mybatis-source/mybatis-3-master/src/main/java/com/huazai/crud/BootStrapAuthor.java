@@ -7,6 +7,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,5 +60,26 @@ public class BootStrapAuthor {
   public void selectUsername() {
     List<String> usernameList = mapper.selectUsername();
     System.out.println(usernameList);
+  }
+
+  @Test
+  public void testBatchInsertForKeyGenerator() {
+    List<Author> authors = new ArrayList<>();
+    authors.add(new Author("username", "password", "email@email.com"));
+    authors.add(new Author("username1", "password1", "email1@email.com"));
+    authors.add(new Author("username2", "password2", "email2@email.com"));
+
+    Object integer = mapper.batchInsertForKeyGenerator(authors);
+    sqlSession.commit();
+
+    SqlSessionUtils.close(sqlSession);
+    System.out.println(integer);
+  }
+
+  @Test
+  public void testInsertForSelectKey() {
+    Integer integer = mapper.insertForSelectKey(new Author("u1","p1","e1@email.com"));
+    sqlSession.commit();
+    System.out.println(integer);
   }
 }
