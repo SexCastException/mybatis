@@ -26,6 +26,7 @@ import org.apache.ibatis.session.SqlSession;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -166,6 +167,7 @@ public class DefaultCursor<T> implements Cursor<T> {
 
   /**
    * 映射结果集对象并保存到 {@link ObjectWrapperResultHandler#fetched}属性中
+   *
    * @return
    */
   protected T fetchNextObjectFromDatabase() {
@@ -261,6 +263,11 @@ public class DefaultCursor<T> implements Cursor<T> {
     /**
      * 当用户通过 {@link SqlSession}得到DefaultCursor对象后，可以调用其iterator()方法获取迭代器对结果集进行迭代，
      * 在迭代过程中才会真正执行映射操作，将记录行映射成结果对象。{@link CursorIterator} 作为一个迭代器，其next()方法会返回一行记录映射的结果对象。
+     * <p>
+     * <p>
+     * 每个{@link Statement}对象只能对应一个结果集, 当多次调用queryCursor()方法执行同一SQL语句时，会复用同一个{@link Statement}对象，
+     * 只有最后一个 {@link ResultSet} 是可用的。而queryCursor()方法返回的是{@link Cursor}对象，在用户迭代{@link Cursor}对象时，
+     * 才会真正遍历结果集对象并进行映射操作，这就可能导致使用前面创建的 {@link Cursor}对象中封装的结果集关闭。示例如下:
      *
      * @return
      */

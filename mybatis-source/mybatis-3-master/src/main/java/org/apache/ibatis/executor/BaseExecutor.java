@@ -62,6 +62,9 @@ public abstract class BaseExecutor implements Executor {
    * 实现事务的提交、回滚和关闭操作
    */
   protected Transaction transaction;
+  /**
+   * 被装饰的 {@link Executor}对象
+   */
   protected Executor wrapper;
 
   /**
@@ -83,7 +86,7 @@ public abstract class BaseExecutor implements Executor {
    */
   protected int queryStack;
   /**
-   * 当前Executor对象是否已关闭
+   * 当前Executor对象是否已关闭，默认false
    */
   private boolean closed;
 
@@ -448,6 +451,11 @@ public abstract class BaseExecutor implements Executor {
   protected abstract <E> Cursor<E> doQueryCursor(MappedStatement ms, Object parameter, RowBounds rowBounds, BoundSql boundSql)
     throws SQLException;
 
+  /**
+   * 关闭 {@link Statement}对象
+   *
+   * @param statement
+   */
   protected void closeStatement(Statement statement) {
     if (statement != null) {
       try {
@@ -459,6 +467,7 @@ public abstract class BaseExecutor implements Executor {
   }
 
   /**
+   * 设置 {@link Statement}对象的超时时间
    * Apply a transaction timeout.
    *
    * @param statement a current statement
@@ -555,7 +564,7 @@ public abstract class BaseExecutor implements Executor {
   }
 
   /**
-   * 负责从 {@link BaseExecutor#localCache}缓存中延迟加载结果对象
+   * 负责从 {@link BaseExecutor#localCache}缓存中延迟加载结果对象并设置到 {@link DeferredLoad#resultObject}封装对象的相应属性中
    */
   private static class DeferredLoad {
 

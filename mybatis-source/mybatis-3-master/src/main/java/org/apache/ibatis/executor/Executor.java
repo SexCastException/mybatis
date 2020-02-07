@@ -28,6 +28,8 @@ import java.sql.SQLException;
 import java.util.List;
 
 /**
+ * 负责处理缓存和执行SQL语句
+ *
  * @author Clinton Begin
  */
 public interface Executor {

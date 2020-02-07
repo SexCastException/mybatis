@@ -45,8 +45,14 @@ public class SimpleExecutor extends BaseExecutor {
     Statement stmt = null;
     try {
       Configuration configuration = ms.getConfiguration();
+      /*
+        创建StatementHandler对象,实际返回的是RoutingStatementHandler对象，
+        其中根据MappedStatement.statementType选择具体的StatementHandler实现
+      */
       StatementHandler handler = configuration.newStatementHandler(this, ms, parameter, RowBounds.DEFAULT, null, null);
+      // 完成Statement的创建和初始化，并处理占位符
       stmt = prepareStatement(handler, ms.getStatementLog());
+      // 执行SQL语句
       return handler.update(stmt);
     } finally {
       closeStatement(stmt);
@@ -63,12 +69,9 @@ public class SimpleExecutor extends BaseExecutor {
         其中根据MappedStatement.statementType选择具体的StatementHandler实现
       */
       StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler, boundSql);
-      /*
-          完成Statement的创建和初始化，该方法首先会调用StatementHandler.prepare()方法创建
-          Statement对象，然后调用StatementHandler.parameterize()方法处理占位符
-      */
+      // 完成Statement的创建和初始化，并处理占位符
       stmt = prepareStatement(handler, ms.getStatementLog());
-      // 调用StatementHandler.query()方法，执行SQL语句，并通过ResultSetHandler完成结果集的映射
+      // 执行SQL语句，并通过ResultSetHandler完成结果集的映射
       return handler.query(stmt, resultHandler);
     } finally {
       // 关闭Statement对象
@@ -79,8 +82,14 @@ public class SimpleExecutor extends BaseExecutor {
   @Override
   protected <E> Cursor<E> doQueryCursor(MappedStatement ms, Object parameter, RowBounds rowBounds, BoundSql boundSql) throws SQLException {
     Configuration configuration = ms.getConfiguration();
+    /*
+        创建StatementHandler对象,实际返回的是RoutingStatementHandler对象，
+        其中根据MappedStatement.statementType选择具体的StatementHandler实现
+    */
     StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, null, boundSql);
+    // 完成Statement的创建和初始化，并处理占位符
     Statement stmt = prepareStatement(handler, ms.getStatementLog());
+    // 执行SQL语句并返回相应的游标对象
     Cursor<E> cursor = handler.queryCursor(stmt);
     stmt.closeOnCompletion();
     return cursor;
