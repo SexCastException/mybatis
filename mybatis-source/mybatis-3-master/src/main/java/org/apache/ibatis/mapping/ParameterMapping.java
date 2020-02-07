@@ -36,7 +36,7 @@ public class ParameterMapping {
    */
   private String property;
   /**
-   * 输入参数还是输出参数，枚举类型，默认为 {@link ParameterMode#IN}
+   * 参数类型，枚举类型，默认为 {@link ParameterMode#IN}
    */
   private ParameterMode mode;
   /**
