@@ -37,9 +37,12 @@ import java.util.List;
 public class CachingExecutor implements Executor {
 
   /**
-   * 
+   * 底层被装饰的操作数据库的 {@link Executor}对象
    */
   private final Executor delegate;
+  /**
+   * 管理缓存的 {@link TransactionalCacheManager}对象
+   */
   private final TransactionalCacheManager tcm = new TransactionalCacheManager();
 
   public CachingExecutor(Executor delegate) {
@@ -93,20 +96,27 @@ public class CachingExecutor implements Executor {
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql)
     throws SQLException {
+    // 获取查询语句所在命名空间的二级缓存
     Cache cache = ms.getCache();
-    if (cache != null) {
+    if (cache != null) {  // 缓存命中
+      // 根据flushCache配置决定是否清空二级缓存
       flushCacheIfRequired(ms);
+      // 检查是否开启了二级缓存，如果没有开启二级缓存，则从数据库中查询数据
       if (ms.isUseCache() && resultHandler == null) {
         ensureNoOutParams(ms, boundSql);
         @SuppressWarnings("unchecked")
-        List<E> list = (List<E>) tcm.getObject(cache, key);
-        if (list == null) {
+        // 获取二级缓存
+          List<E> list = (List<E>) tcm.getObject(cache, key);
+        if (list == null) { // 缓存未命中
+          // 查询数据库，查询数据库之前先查询一级缓存
           list = delegate.query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
+          // 将查询结果保存到TransactionalCache.entriesToAddOnCommit集合中
           tcm.putObject(cache, key, list); // issue #578 and #116
         }
         return list;
       }
     }
+    // 缓存没命中，查询数据库
     return delegate.query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
   }
 
@@ -117,21 +127,31 @@ public class CachingExecutor implements Executor {
 
   @Override
   public void commit(boolean required) throws SQLException {
+    // 调用底层的Executor对象，提交事务
     delegate.commit(required);
+    // 遍历所有相关的TransactionalCache对象执行commit()方法
     tcm.commit();
   }
 
   @Override
   public void rollback(boolean required) throws SQLException {
     try {
+      // 调用底层的Executor对象，回滚事务
       delegate.rollback(required);
     } finally {
       if (required) {
+        // 遍历所有相关的TransactionalCache对象执行rollback()方法
         tcm.rollback();
       }
     }
   }
 
+  /**
+   * 检查储存过程查询操作是否包含输出类型的参数，有则抛出 {@link ExecutorException}异常
+   *
+   * @param ms
+   * @param boundSql
+   */
   private void ensureNoOutParams(MappedStatement ms, BoundSql boundSql) {
     if (ms.getStatementType() == StatementType.CALLABLE) {
       for (ParameterMapping parameterMapping : boundSql.getParameterMappings()) {
@@ -162,6 +182,11 @@ public class CachingExecutor implements Executor {
     delegate.clearLocalCache();
   }
 
+  /**
+   * 根据 &lt;select>节点的flushCache配置是否清空二级缓存
+   *
+   * @param ms
+   */
   private void flushCacheIfRequired(MappedStatement ms) {
     Cache cache = ms.getCache();
     if (cache != null && ms.isFlushCacheRequired()) {

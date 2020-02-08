@@ -16,6 +16,7 @@
 package org.apache.ibatis.cache.decorators;
 
 import org.apache.ibatis.cache.Cache;
+import org.apache.ibatis.cache.CacheKey;
 import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.session.SqlSession;
@@ -48,8 +49,17 @@ public class TransactionalCache implements Cache {
    * 底层封装的二级缓存所对应的 {@link Cache}对象
    */
   private final Cache delegate;
+  /**
+   * 当该字段为true时，则表示当前TransactionalCache不可查询，且提交事务时会将底层 {@link Cache}清空
+   */
   private boolean clearOnCommit;
+  /**
+   * 暂时记录添加到TransactionalCache中的数据。在事务提交时，会将其中的数据添加到二级缓存中
+   */
   private final Map<Object, Object> entriesToAddOnCommit;
+  /**
+   * 记录缓存未命中的 {@link CacheKey}对象
+   */
   private final Set<Object> entriesMissedInCache;
 
   public TransactionalCache(Cache delegate) {
@@ -69,11 +79,19 @@ public class TransactionalCache implements Cache {
     return delegate.getSize();
   }
 
+  /**
+   * 首先会查询底层的二级缓存，并将未命中的key记录到 {@link TransactionalCache#entriesMissedInCache}中，之后会根据
+   * {@link TransactionalCache#clearOnCommit}字段的值决定具体的返回值。
+   *
+   * @param key The key
+   * @return
+   */
   @Override
   public Object getObject(Object key) {
     // issue #116
+    // 获取缓存
     Object object = delegate.getObject(key);
-    if (object == null) {
+    if (object == null) { // 未命中缓存
       entriesMissedInCache.add(key);
     }
     // issue #146
@@ -84,6 +102,13 @@ public class TransactionalCache implements Cache {
     }
   }
 
+  /**
+   * 该方法并没有直接将结果对象记录到其封装的二级缓存中，而是暂时保存在{@link TransactionalCache#entriesToAddOnCommit}集合中，
+   * 在事务提交时才会将这些结果对象从{@link TransactionalCache#entriesToAddOnCommit}集合添加到二级缓存中。
+   *
+   * @param key    Can be any object but usually it is a {@link CacheKey}
+   * @param object
+   */
   @Override
   public void putObject(Object key, Object object) {
     entriesToAddOnCommit.put(key, object);
@@ -94,25 +119,41 @@ public class TransactionalCache implements Cache {
     return null;
   }
 
+  /**
+   * 清空 {@link TransactionalCache#entriesToAddOnCommit}集合，并设置 {@link TransactionalCache#clearOnCommit}为true。
+   */
   @Override
   public void clear() {
     clearOnCommit = true;
     entriesToAddOnCommit.clear();
   }
 
+  /**
+   * 根据 {@link TransactionalCache#clearOnCommit}字段的值决定是否清空二级缓存，然后调用 {@link TransactionalCache#flushPendingEntries}
+   * 方法将 {@link TransactionalCache#entriesToAddOnCommit}集合中记录的结果对象保存到二级缓存中。
+   */
   public void commit() {
     if (clearOnCommit) {
+      // 提交事务前，清空二级缓存
       delegate.clear();
     }
+    // 将entriesToAddOnCommit集合和entriesToAddOnCommit集合中的数据保存到二级缓存
     flushPendingEntries();
+    // 重置clearOnCommit为false,并清空entriesToAddOnCommit、entriesMissedInCache集合
     reset();
   }
 
   public void rollback() {
+    // 将entriesMissedInCache集合中记录的缓存项从二级缓存中删除
     unlockMissedEntries();
+    // 重置clearOnCommit为false,并清空entriesToAddOnCommit、entriesMissedInCache集合
     reset();
   }
 
+  /**
+   * 将 {@link TransactionalCache#entriesMissedInCache}集合中记录的缓存项从二级缓存中删除，并清空
+   * {@link TransactionalCache#entriesToAddOnCommit}集合和 {@link TransactionalCache#entriesMissedInCache}集合。
+   */
   private void reset() {
     clearOnCommit = false;
     entriesToAddOnCommit.clear();
@@ -120,9 +161,11 @@ public class TransactionalCache implements Cache {
   }
 
   private void flushPendingEntries() {
+    // 遍历entriesToAddOnCommit集合，将其中记录的缓存项添加到二级缓存中
     for (Map.Entry<Object, Object> entry : entriesToAddOnCommit.entrySet()) {
       delegate.putObject(entry.getKey(), entry.getValue());
     }
+    // 遍历entriesMissedInCache集合，将entriesToAddOnCommit集合中不包含的缓存项添加到二级缓存中
     for (Object entry : entriesMissedInCache) {
       if (!entriesToAddOnCommit.containsKey(entry)) {
         delegate.putObject(entry, null);
@@ -131,6 +174,7 @@ public class TransactionalCache implements Cache {
   }
 
   private void unlockMissedEntries() {
+    // 遍历entriesMissedInCache集合，将其中的缓存项从二级缓存中移除
     for (Object entry : entriesMissedInCache) {
       try {
         delegate.removeObject(entry);
