@@ -1,4 +1,4 @@
-package com.huazai.test;
+package com.huazai.test.basis;
 
 import org.apache.ibatis.reflection.TypeParameterResolver;
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;

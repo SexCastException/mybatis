@@ -1,4 +1,4 @@
-package com.huazai.test;
+package com.huazai.test.basis;
 
 import org.junit.Test;
 import org.w3c.dom.Document;

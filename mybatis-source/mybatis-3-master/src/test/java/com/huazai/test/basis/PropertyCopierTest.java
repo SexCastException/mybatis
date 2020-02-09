@@ -1,12 +1,7 @@
-package com.huazai.test;
+package com.huazai.test.basis;
 
 import org.apache.ibatis.reflection.property.PropertyCopier;
 import org.junit.jupiter.api.Test;
-
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author pyh
