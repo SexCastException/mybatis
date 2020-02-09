@@ -22,6 +22,7 @@ import org.apache.ibatis.session.RowBounds;
 public class ExamplePlugin implements Interceptor {
   @Override
   public Object intercept(Invocation invocation) throws Throwable {
-    return null;
+    System.out.println("自定义插件拦截Executor的query(MappedStatement, Object, RowBounds, ResultHandler)方法");
+    return invocation.proceed();
   }
 }
