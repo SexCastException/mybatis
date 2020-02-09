@@ -614,6 +614,7 @@ public class Configuration {
 
   public ParameterHandler newParameterHandler(MappedStatement mappedStatement, Object parameterObject, BoundSql boundSql) {
     ParameterHandler parameterHandler = mappedStatement.getLang().createParameterHandler(mappedStatement, parameterObject, boundSql);
+    // 创建ParameterHandler的代理对象
     parameterHandler = (ParameterHandler) interceptorChain.pluginAll(parameterHandler);
     return parameterHandler;
   }
@@ -621,12 +622,14 @@ public class Configuration {
   public ResultSetHandler newResultSetHandler(Executor executor, MappedStatement mappedStatement, RowBounds rowBounds, ParameterHandler parameterHandler,
                                               ResultHandler resultHandler, BoundSql boundSql) {
     ResultSetHandler resultSetHandler = new DefaultResultSetHandler(executor, mappedStatement, parameterHandler, resultHandler, boundSql, rowBounds);
+    // 创建ResultSetHandler的代理对象
     resultSetHandler = (ResultSetHandler) interceptorChain.pluginAll(resultSetHandler);
     return resultSetHandler;
   }
 
   public StatementHandler newStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
     StatementHandler statementHandler = new RoutingStatementHandler(executor, mappedStatement, parameterObject, rowBounds, resultHandler, boundSql);
+    // 创建StatementHandler的代理对象
     statementHandler = (StatementHandler) interceptorChain.pluginAll(statementHandler);
     return statementHandler;
   }
@@ -639,6 +642,7 @@ public class Configuration {
     executorType = executorType == null ? defaultExecutorType : executorType;
     executorType = executorType == null ? ExecutorType.SIMPLE : executorType;
     Executor executor;
+    // 根据配置信息创建合适的Executor对象
     if (ExecutorType.BATCH == executorType) {
       executor = new BatchExecutor(this, transaction);
     } else if (ExecutorType.REUSE == executorType) {
@@ -646,9 +650,11 @@ public class Configuration {
     } else {
       executor = new SimpleExecutor(this, transaction);
     }
+    // 根据配置决定是否开启二级缓存，本质就是添加 CachingExecutor装饰器
     if (cacheEnabled) {
       executor = new CachingExecutor(executor);
     }
+    // 创建Executor的代理对象
     executor = (Executor) interceptorChain.pluginAll(executor);
     return executor;
   }

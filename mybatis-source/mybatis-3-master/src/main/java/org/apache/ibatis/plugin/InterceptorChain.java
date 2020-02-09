@@ -20,7 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * 拦截器链，没有使用责任链模式
+ * 拦截器链，责任链模式
  *
  * @author Clinton Begin
  */
@@ -29,6 +29,7 @@ public class InterceptorChain {
   private final List<Interceptor> interceptors = new ArrayList<>();
 
   public Object pluginAll(Object target) {
+    // 遍历interceptors集合，执行每个 Interceptor对象的plugin方法
     for (Interceptor interceptor : interceptors) {
       target = interceptor.plugin(target);
     }

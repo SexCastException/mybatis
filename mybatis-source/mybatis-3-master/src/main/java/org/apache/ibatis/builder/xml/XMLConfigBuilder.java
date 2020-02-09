@@ -279,7 +279,7 @@ public class XMLConfigBuilder extends BaseBuilder {
         Interceptor interceptorInstance = (Interceptor) resolveClass(interceptor).getDeclaredConstructor().newInstance();
         // 将子标签<property>的信息赋值到Interceptor对象的配置中去
         interceptorInstance.setProperties(properties);
-        // Configuration全局配置文件中添加Interceptor对象
+        // Configuration全局配置文件中的interceptorChain添加Interceptor对象
         configuration.addInterceptor(interceptorInstance);
       }
     }
