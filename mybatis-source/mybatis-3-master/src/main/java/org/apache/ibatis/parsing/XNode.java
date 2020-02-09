@@ -78,7 +78,7 @@ public class XNode {
    */
   public XNode getParent() {
     Node parent = node.getParentNode();
-    if (!(parent instanceof Element)) {
+    if (!(parent instanceof Element)) { // 如果该节点不是元素节点，没有父节点，返回null
       return null;
     } else {
       return new XNode(xpathParser, parent, variables);
@@ -435,7 +435,7 @@ public class XNode {
   }
 
   /**
-   * 解析指定标签的子标签的name和value属性
+   * 解析指定标签的子标签的name和value属性，并将name和value属性值封装成 {@link Properties}对象返回
    *
    * @return
    */

@@ -15,6 +15,8 @@
  */
 package org.apache.ibatis.builder;
 
+import org.apache.ibatis.builder.annotation.MapperAnnotationBuilder;
+import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.cache.Cache;
 import org.apache.ibatis.cache.decorators.LruCache;
 import org.apache.ibatis.cache.impl.PerpetualCache;
@@ -30,6 +32,8 @@ import org.apache.ibatis.type.TypeHandler;
 import java.util.*;
 
 /**
+ * Mapper构建助手，常被用于 {@link XMLMapperBuilder}和 {@link MapperAnnotationBuilder}类
+ *
  * @author Clinton Begin
  */
 public class MapperBuilderAssistant extends BaseBuilder {
@@ -105,7 +109,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
   /**
    * 根据namespace（Cache的id）从{@link Configuration} 对象中缓存获取对应的缓存对象
    *
-   * @param namespace
+   * @param namespace 被引用缓存所在的Mapper映射文件所在的命名空间
    * @return
    */
   public Cache useCacheRef(String namespace) {

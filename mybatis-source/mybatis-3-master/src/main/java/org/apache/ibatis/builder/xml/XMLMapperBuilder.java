@@ -76,6 +76,14 @@ public class XMLMapperBuilder extends BaseBuilder {
       configuration, resource, sqlFragments);
   }
 
+  /**
+   * 多个public重载构造函数，最终会调用此私有构造函数
+   *
+   * @param parser
+   * @param configuration
+   * @param resource
+   * @param sqlFragments
+   */
   private XMLMapperBuilder(XPathParser parser, Configuration configuration, String resource, Map<String, XNode> sqlFragments) {
     super(configuration);
     this.builderAssistant = new MapperBuilderAssistant(configuration, resource);
@@ -325,7 +333,7 @@ public class XMLMapperBuilder extends BaseBuilder {
 
     // 获取<resultMap>节点的type属性，表示结果集将被映射成type指定类型的对象
     // type为null取ofType属性值，ofType为null取resultType属性值，resultType为null取javaType属性值
-    // 主要做法是用于嵌套解析
+    // 主要做法是用于嵌套解析匿名ResultMap对象
     String type = resultMapNode.getStringAttribute("type",
       resultMapNode.getStringAttribute("ofType",
         resultMapNode.getStringAttribute("resultType",
@@ -333,13 +341,12 @@ public class XMLMapperBuilder extends BaseBuilder {
     // 通过type属性值获取对应的java类型对象，可以指定别名
     Class<?> typeClass = resolveClass(type);
     if (typeClass == null) {
-      // 如果通过属性值type获取不到Class对象，则默认为extends属性值指定的<resultMap>节点的type属性值的Class对象
-      // 获取继承封装属性**************************************************做个标志
       typeClass = inheritEnclosingType(resultMapNode, enclosingType);
     }
     Discriminator discriminator = null;
-    // 用于记录解析后的结果
+    // 用于记录解析后和嵌套解析之后的结果
     List<ResultMapping> resultMappings = new ArrayList<>();
+    // 合并嵌套解析之后的结果
     resultMappings.addAll(additionalResultMappings);
     // 处理<resultMap>节点的子节点
     List<XNode> resultChildren = resultMapNode.getChildren();
@@ -383,10 +390,12 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   /**
-   * 继承封装类型
+   * 如果是&lt;association>节点，则获取该节点的property属性值，返回该属性值在 enclosingType类中对应的属性类型，
+   * 如果是&lt;discriminator>节点，则直接返回enclosingType类型，
+   * 否则返回null
    *
    * @param resultMapNode
-   * @param enclosingType
+   * @param enclosingType 外层封装类型
    * @return
    */
   protected Class<?> inheritEnclosingType(XNode resultMapNode, Class<?> enclosingType) {

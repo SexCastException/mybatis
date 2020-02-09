@@ -15,8 +15,22 @@
  */
 package org.apache.ibatis.builder;
 
+import org.apache.ibatis.mapping.CacheBuilder;
+
 /**
  * Interface that indicate to provide a initialization method.
+ * 除了构造方法初始化外，提供了另外的接口初始化某些类，可以参考学习借鉴下。
+ * for example：
+ *
+ *  if (InitializingObject.class.isAssignableFrom(cache.getClass())) {
+ *       try {
+ *         ((InitializingObject) cache).initialize();
+ *       } catch (Exception e) {
+ *         throw new CacheException("Failed cache initialization for '"
+ *           + cache.getId() + "' on '" + cache.getClass().getName() + "'", e);
+ *       }
+ *     }
+ *     tips：see {@link CacheBuilder}
  *
  * @since 3.4.2
  * @author Kazuki Shimizu

@@ -116,10 +116,14 @@ public class Configuration {
   protected ResultSetType defaultResultSetType;
   // 默认简单执行器
   protected ExecutorType defaultExecutorType = ExecutorType.SIMPLE;
+
+  /**
+   * 自动映射行为
+   */
+  protected AutoMappingBehavior autoMappingBehavior = AutoMappingBehavior.PARTIAL;
   /**
    * 对未明确的列自动映射行为
    */
-  protected AutoMappingBehavior autoMappingBehavior = AutoMappingBehavior.PARTIAL;
   protected AutoMappingUnknownColumnBehavior autoMappingUnknownColumnBehavior = AutoMappingUnknownColumnBehavior.NONE;
 
   protected Properties variables = new Properties();
@@ -153,6 +157,9 @@ public class Configuration {
   protected final Map<String, MappedStatement> mappedStatements = new StrictMap<MappedStatement>("Mapped Statements collection")
     .conflictMessageProducer((savedValue, targetValue) ->
       ". please check " + savedValue.getResource() + " and " + targetValue.getResource());
+  /**
+   * key为命名空间，value为 {@link Cache}缓存对象
+   */
   protected final Map<String, Cache> caches = new StrictMap<>("Caches collection");
   protected final Map<String, ResultMap> resultMaps = new StrictMap<>("Result Maps collection");
   //
@@ -169,6 +176,9 @@ public class Configuration {
    * //   * Mapper 映射文件：例如：com/huazai/mapper/AuthorMapper.xml
    */
   protected final Set<String> loadedResources = new HashSet<>();
+  /**
+   * 记录了<sql>节点的id和封装该节点的{@link XNode}对象的映射关系
+   */
   protected final Map<String, XNode> sqlFragments = new StrictMap<>("XML fragments parsed from previous mappers");
 
   protected final Collection<XMLStatementBuilder> incompleteStatements = new LinkedList<>();

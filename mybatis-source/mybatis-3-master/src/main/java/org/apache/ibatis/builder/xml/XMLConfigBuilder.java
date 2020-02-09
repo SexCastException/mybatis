@@ -101,11 +101,20 @@ public class XMLConfigBuilder extends BaseBuilder {
     this(new XPathParser(inputStream, true, props, new XMLMapperEntityResolver()), environment, props);
   }
 
+  /**
+   * 此类有多个重载的构造函数，最终都会调用到该私有的构造函数
+   *
+   * @param parser
+   * @param environment
+   * @param props
+   */
   private XMLConfigBuilder(XPathParser parser, String environment, Properties props) {
     // 配置文件对象对象在此实例化
     super(new Configuration());
     ErrorContext.instance().resource("SQL Mapper Configuration");
+    // 将配置信息设置到Configuration对象的variables属性
     this.configuration.setVariables(props);
+    // 默认未解析过配置文件
     this.parsed = false;
     this.environment = environment;
     this.parser = parser;
@@ -121,6 +130,7 @@ public class XMLConfigBuilder extends BaseBuilder {
     if (parsed) {
       throw new BuilderException("Each XMLConfigBuilder can only be used once.");
     }
+    // 配置文件修改为解析
     parsed = true;
     // 从<configuration><configuration/>根节点开始解析
     // 解析配置文件根节点以及所有子节点
@@ -146,13 +156,13 @@ public class XMLConfigBuilder extends BaseBuilder {
       typeAliasesElement(root.evalNode("typeAliases"));
       // 解析<plugins>节点
       pluginElement(root.evalNode("plugins"));
-      // 解析<objectFactory>节点
+      // 解析<objectFactory>节点，流程和pluginElement()方法类似
       objectFactoryElement(root.evalNode("objectFactory"));
-      // 解析<objectWrapperFactory>节点
+      // 解析<objectWrapperFactory>节点，流程和pluginElement()方法类似
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
-      // 解析<reflectorFactory>节点
+      // 解析<reflectorFactory>节点，流程和pluginElement()方法类似
       reflectorFactoryElement(root.evalNode("reflectorFactory"));
-      settingsElement(settings);  // 将settings设置到Configuration的字段中
+      settingsElement(settings);  // 将settings配置初始化Configuration字段
       // read it after objectFactory and objectWrapperFactory issue #631
 
       // 解析<environments>节点
@@ -206,7 +216,8 @@ public class XMLConfigBuilder extends BaseBuilder {
       for (String clazz : clazzes) {
         if (!clazz.isEmpty()) {
           @SuppressWarnings("unchecked")
-          Class<? extends VFS> vfsImpl = (Class<? extends VFS>) Resources.classForName(clazz);
+          // 使用类加载加载指定的类
+            Class<? extends VFS> vfsImpl = (Class<? extends VFS>) Resources.classForName(clazz);
           configuration.setVfsImpl(vfsImpl);
         }
       }
@@ -264,7 +275,7 @@ public class XMLConfigBuilder extends BaseBuilder {
         String interceptor = child.getStringAttribute("interceptor");
         // 获取封装<plugin>子标签<property>的属性name 和value的Properties对象
         Properties properties = child.getChildrenAsProperties();
-        // 通过interceptor属性配置的值获取（优先从TypeAliasRegistry获取）Interceptor对象
+        // 通过interceptor属性配置的值解析Class对象（支持别名），并通过默认构造器实例化Interceptor对象
         Interceptor interceptorInstance = (Interceptor) resolveClass(interceptor).getDeclaredConstructor().newInstance();
         // 将子标签<property>的信息赋值到Interceptor对象的配置中去
         interceptorInstance.setProperties(properties);
@@ -313,7 +324,9 @@ public class XMLConfigBuilder extends BaseBuilder {
 
   /**
    * 解析mybatis-config.xml配置文件中的<properties>节点并形成{@link Properties} 对象，之后将该对象设置到{@link XPathParser} 和
-   * {@link Configuration}中的variables属性去，在后面的解析中，会使用{@link Properties}对象的信息替换占位符“${}”里的值
+   * {@link Configuration}中的variables属性去，在后面的解析中，会使用{@link Properties}对象的信息替换占位符“${}”里的值。<br><br>
+   * <p>
+   * 优先级：resource > url
    *
    * @param context
    * @throws Exception
@@ -487,7 +500,9 @@ public class XMLConfigBuilder extends BaseBuilder {
 
   private DataSourceFactory dataSourceElement(XNode context) throws Exception {
     if (context != null) {
+      // 解析<environment>子节点<dataSource>的type属性值，该值指定了使用数据源的类型
       String type = context.getStringAttribute("type");
+      // 解析<dataSource>节点子节点<property>的配置信息，该配置信息为数据源初始化的配置，包含数据库账号密码，连接超时时间、url等等
       Properties props = context.getChildrenAsProperties();
       DataSourceFactory factory = (DataSourceFactory) resolveClass(type).getDeclaredConstructor().newInstance();
       factory.setProperties(props);
@@ -568,14 +583,14 @@ public class XMLConfigBuilder extends BaseBuilder {
             ErrorContext.instance().resource(resource);
             // 将resource属性指定的资源路劲通过类加载器加载并返回资源输入流对象
             InputStream inputStream = Resources.getResourceAsStream(resource);
-            // 创建 XMLMapperBuilder 对象
+            // 创建 XMLMapperBuilder 对象，XMLMapperBuilder对象在此创建
             XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, resource, configuration.getSqlFragments());
             mapperParser.parse();
           } else if (resource == null && url != null && mapperClass == null) {
             ErrorContext.instance().resource(url);
             // 将url属性指定的资源路劲通过类加载器加载并返回资源输入流对象
             InputStream inputStream = Resources.getUrlAsStream(url);
-            // 创建 XMLMapperBuilder 对象
+            // 创建 XMLMapperBuilder 对象，XMLMapperBuilder对象在此创建
             XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, url, configuration.getSqlFragments());
             mapperParser.parse();
           } else if (resource == null && url == null && mapperClass != null) {

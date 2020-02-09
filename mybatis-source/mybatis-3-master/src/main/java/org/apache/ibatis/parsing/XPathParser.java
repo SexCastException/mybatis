@@ -228,7 +228,7 @@ public class XPathParser {
   }
 
   /**
-   * 将多个{@link Node} 封装成 {@link List<XNode>} 集合
+   * 将多个{@link Node} 封装成 {@link List<XNode>} 集合并返回
    *
    * @param root
    * @param expression
