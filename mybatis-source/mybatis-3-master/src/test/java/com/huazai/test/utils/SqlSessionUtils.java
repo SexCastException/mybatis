@@ -1,4 +1,4 @@
-package com.huazai.utils;
+package com.huazai.test.utils;
 
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
@@ -13,7 +13,7 @@ import java.io.InputStream;
  * @date 2019/12/23 21:48
  */
 public class SqlSessionUtils {
-  private static String resource = "com/huazai/mybatis-config.xml";
+  private static String resource = "resources/huazai/mybatis-config.xml";
 
   public static SqlSession getSqlSession() throws IOException {
     InputStream inputStream = Resources.getResourceAsStream(resource);

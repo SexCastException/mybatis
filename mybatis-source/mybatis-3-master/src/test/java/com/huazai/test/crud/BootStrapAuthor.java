@@ -1,8 +1,8 @@
-package com.huazai.crud;
+package com.huazai.test.crud;
 
-import com.huazai.bean.Author;
-import com.huazai.mapper.AuthorMapper;
-import com.huazai.utils.SqlSessionUtils;
+import com.huazai.test.bean.Author;
+import com.huazai.test.mapper.AuthorMapper;
+import com.huazai.test.utils.SqlSessionUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.junit.jupiter.api.Test;
 
@@ -36,7 +36,7 @@ public class BootStrapAuthor {
     author.setUsername("lisi");
     author.setPassword("123456");
     author.setEmail("lisi@qq.com");
-    int insert = sqlSession.insert("com.huazai.mapper.AuthorMapper.insert", author);
+    int insert = sqlSession.insert("com.huazai.test.mapper.AuthorMapper.insert", author);
     sqlSession.commit();
     SqlSessionUtils.close(sqlSession);
     System.out.println(insert);

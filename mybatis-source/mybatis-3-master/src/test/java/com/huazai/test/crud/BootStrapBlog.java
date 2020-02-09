@@ -1,9 +1,9 @@
-package com.huazai.crud;
+package com.huazai.test.crud;
 
 
-import com.huazai.bean.Blog;
-import com.huazai.mapper.BlogMapper;
-import com.huazai.utils.SqlSessionUtils;
+import com.huazai.test.bean.Blog;
+import com.huazai.test.mapper.BlogMapper;
+import com.huazai.test.utils.SqlSessionUtils;
 import org.apache.ibatis.session.SqlSession;
 import org.junit.jupiter.api.Test;
 

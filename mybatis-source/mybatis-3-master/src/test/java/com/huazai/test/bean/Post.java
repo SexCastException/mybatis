@@ -1,4 +1,4 @@
-package com.huazai.bean;
+package com.huazai.test.bean;
 
 import java.io.Serializable;
 import java.util.List;

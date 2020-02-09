@@ -1,7 +1,7 @@
-package com.huazai.mapper;
+package com.huazai.test.mapper;
 
-import com.huazai.bean.Blog;
-import com.huazai.bean.Comment;
+import com.huazai.test.bean.Blog;
+import com.huazai.test.bean.Comment;
 
 import java.util.List;
 

@@ -1,8 +1,8 @@
 package com.huazai.test.ognl;
 
-import com.huazai.bean.Author;
-import com.huazai.bean.Blog;
-import com.huazai.bean.Post;
+import com.huazai.test.bean.Author;
+import com.huazai.test.bean.Blog;
+import com.huazai.test.bean.Post;
 import ognl.Ognl;
 import ognl.OgnlContext;
 import ognl.OgnlException;

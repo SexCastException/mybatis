@@ -1,4 +1,4 @@
-package com.huazai.mapper;
+package com.huazai.test.mapper;
 
 /**
  * @author pyh

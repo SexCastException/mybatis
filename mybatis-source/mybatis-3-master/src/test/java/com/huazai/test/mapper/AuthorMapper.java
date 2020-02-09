@@ -1,6 +1,6 @@
-package com.huazai.mapper;
+package com.huazai.test.mapper;
 
-import com.huazai.bean.Author;
+import com.huazai.test.bean.Author;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
