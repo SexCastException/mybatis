@@ -1,28 +1,19 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2019 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.session.defaults;
-
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.ibatis.binding.BindingException;
 import org.apache.ibatis.cursor.Cursor;
@@ -39,6 +30,11 @@ import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.session.SqlSession;
 
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.*;
+
 /**
  * The default implementation for {@link SqlSession}.
  * Note that this class is not Thread-Safe.
@@ -50,8 +46,18 @@ public class DefaultSqlSession implements SqlSession {
   private final Configuration configuration;
   private final Executor executor;
 
+  /**
+   * 是否自动提交事务
+   */
   private final boolean autoCommit;
+  /**
+   * 当前缓存中是否有脏数据
+   */
   private boolean dirty;
+  /**
+   * 为防止用户忘记关闭已打开的游标对象，会通过该字段记录由该 {@link SqlSession}对象生成的游标对象，
+   * 在 {@link DefaultSqlSession#close}方法中会统一关闭这些游标对象
+   */
   private List<Cursor<?>> cursorList;
 
   public DefaultSqlSession(Configuration configuration, Executor executor, boolean autoCommit) {
@@ -97,7 +103,7 @@ public class DefaultSqlSession implements SqlSession {
   public <K, V> Map<K, V> selectMap(String statement, Object parameter, String mapKey, RowBounds rowBounds) {
     final List<? extends V> list = selectList(statement, parameter, rowBounds);
     final DefaultMapResultHandler<K, V> mapResultHandler = new DefaultMapResultHandler<>(mapKey,
-            configuration.getObjectFactory(), configuration.getObjectWrapperFactory(), configuration.getReflectorFactory());
+      configuration.getObjectFactory(), configuration.getObjectWrapperFactory(), configuration.getReflectorFactory());
     final DefaultResultContext<V> context = new DefaultResultContext<>();
     for (V o : list) {
       context.nextResultObject(o);
@@ -312,6 +318,12 @@ public class DefaultSqlSession implements SqlSession {
     cursorList.add(cursor);
   }
 
+  /**
+   * {@link DefaultSqlSession#autoCommit}、{@link DefaultSqlSession#dirty}和force共同决定是否提交\回滚事务
+   *
+   * @param force
+   * @return
+   */
   private boolean isCommitOrRollbackRequired(boolean force) {
     return (!autoCommit && dirty) || force;
   }

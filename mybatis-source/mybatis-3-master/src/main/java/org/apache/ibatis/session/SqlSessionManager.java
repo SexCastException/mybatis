@@ -1,19 +1,25 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2019 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.session;
+
+import org.apache.ibatis.cursor.Cursor;
+import org.apache.ibatis.executor.BatchResult;
+import org.apache.ibatis.reflection.ExceptionUtil;
+import org.apache.ibatis.session.defaults.DefaultSqlSession;
+import org.apache.ibatis.session.defaults.DefaultSqlSessionFactory;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -25,26 +31,47 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.ibatis.cursor.Cursor;
-import org.apache.ibatis.executor.BatchResult;
-import org.apache.ibatis.reflection.ExceptionUtil;
-
 /**
+ * 同时实现了 {@link SqlSession} 接口和 {@link SqlSessionFactory}接口，也就同时提供了 {@link SqlSessionFactory}创建
+ * {@link SqlSession}对象以及 {@link SqlSession}操纵数据库的功能。<br><br>
+ * <p>
+ * {@link SqlSessionManager}与 {@link DefaultSqlSessionFactory}的主要不同点是{@link SqlSessionManager}提供了两种模式：<br>
+ * 一：与 {@link DefaultSqlSessionFactory}的行为相同，同一线程每次通过 {@link SqlSessionManager}对象访问数据库时，
+ * 都会创建新的 {@link DefaultSqlSession}对象完成数据库操作；<br>
+ * 二：{@link SqlSessionManager}通过 {@link SqlSessionManager#localSqlSession}这个 {@link ThreadLocal}变量，记录与当前线程
+ * 绑定的 {@link SqlSession}对象，供当前线程循环使用，从而避免在同一线程多次创建 {@link SqlSession}对象带来的性能损失。<br>
+ *
  * @author Larry Meadors
  */
 public class SqlSessionManager implements SqlSessionFactory, SqlSession {
 
+  /**
+   * 底层封装的 {@link SqlSessionFactory}对象
+   */
   private final SqlSessionFactory sqlSessionFactory;
+  /**
+   * {@link SqlSessionManager#localSqlSession}中记录的 {@link SqlSession}对象的代理对象，在 {@link SqlSessionManager}
+   * 初始化时，会使用JDK动态代理的方式初始化{@link {@link SqlSessionManager#sqlSessionProxy}}属性
+   */
   private final SqlSession sqlSessionProxy;
 
+  /**
+   * 记录一个与当前线程绑定的 {@link SqlSession}对象
+   */
   private final ThreadLocal<SqlSession> localSqlSession = new ThreadLocal<>();
 
+  /**
+   * 构造方法私有化
+   *
+   * @param sqlSessionFactory
+   */
   private SqlSessionManager(SqlSessionFactory sqlSessionFactory) {
     this.sqlSessionFactory = sqlSessionFactory;
+    // 使用JDK动态代理方式生成SqlSessionFactory对象
     this.sqlSessionProxy = (SqlSession) Proxy.newProxyInstance(
-        SqlSessionFactory.class.getClassLoader(),
-        new Class[]{SqlSession.class},
-        new SqlSessionInterceptor());
+      SqlSessionFactory.class.getClassLoader(), // 使用加载SqlSessionFactory的类加载器
+      new Class[]{SqlSession.class},
+      new SqlSessionInterceptor());
   }
 
   public static SqlSessionManager newInstance(Reader reader) {
@@ -339,25 +366,31 @@ public class SqlSessionManager implements SqlSessionFactory, SqlSession {
 
   private class SqlSessionInterceptor implements InvocationHandler {
     public SqlSessionInterceptor() {
-        // Prevent Synthetic Access
+      // Prevent Synthetic Access
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+      // 获取当前线程绑定的SqlSession对象
       final SqlSession sqlSession = SqlSessionManager.this.localSqlSession.get();
-      if (sqlSession != null) {
+      if (sqlSession != null) { // 第二种模式，即当前线程绑定的SqlSession
         try {
+          // 调用真正的SqlSession，完成数据库的操作
           return method.invoke(sqlSession, args);
         } catch (Throwable t) {
           throw ExceptionUtil.unwrapThrowable(t);
         }
-      } else {
+      } else {  // 第二种模式
+        // 当前线程未绑定SqlSession，则创建新的SqlSession对象
         try (SqlSession autoSqlSession = openSession()) {
           try {
+            // 通过新建的SqlSession对象完成数据库的操作
             final Object result = method.invoke(autoSqlSession, args);
+            // 提交事务
             autoSqlSession.commit();
             return result;
           } catch (Throwable t) {
+            // 抛出异常回滚事务
             autoSqlSession.rollback();
             throw ExceptionUtil.unwrapThrowable(t);
           }

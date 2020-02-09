@@ -1,37 +1,37 @@
 /**
- *    Copyright 2009-2019 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2019 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.session.defaults;
-
-import java.sql.Connection;
-import java.sql.SQLException;
 
 import org.apache.ibatis.exceptions.ExceptionFactory;
 import org.apache.ibatis.executor.ErrorContext;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.Environment;
-import org.apache.ibatis.session.Configuration;
-import org.apache.ibatis.session.ExecutorType;
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.apache.ibatis.session.TransactionIsolationLevel;
+import org.apache.ibatis.session.*;
 import org.apache.ibatis.transaction.Transaction;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.transaction.managed.ManagedTransactionFactory;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+
 /**
+ * 主要提供了两种创建 {@link DefaultSqlSession}对象的方式：<br>
+ * 一、通过数据源获取数据库连接，并创建 {@link Executor} 对象以及 {@link DefaultSqlSession}对象。See {@link DefaultSqlSessionFactory#openSessionFromDataSource}<br>
+ * 二、用户提供数据库连接对象，{@link DefaultSqlSessionFactory} 会使用该数据库连接对象创建 {@link Executor}对象以及 {@link DefaultSqlSession}对象。See {@link DefaultSqlSessionFactory#openSessionFromConnection} <br>
+ *
  * @author Clinton Begin
  */
 public class DefaultSqlSessionFactory implements SqlSessionFactory {
@@ -88,9 +88,10 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
   }
 
   /**
+   * 从数据源中开启会话
    *
-   * @param execType 执行器类型，{@link ExecutorType}
-   * @param level 事务隔离类型，{@link TransactionIsolationLevel}
+   * @param execType   执行器类型，{@link ExecutorType}
+   * @param level      事务隔离类型，{@link TransactionIsolationLevel}
    * @param autoCommit 是否自动提交
    * @return
    */
@@ -115,6 +116,13 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
     }
   }
 
+  /**
+   * 从连接对象 {@link Connection}开启会话
+   *
+   * @param execType
+   * @param connection
+   * @return
+   */
   private SqlSession openSessionFromConnection(ExecutorType execType, Connection connection) {
     try {
       boolean autoCommit;
@@ -137,6 +145,12 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
     }
   }
 
+  /**
+   * 通过数据库配置环境 {@link Environment}对象获取 {@link TransactionFactory}，默认返回 {@link ManagedTransactionFactory}
+   *
+   * @param environment
+   * @return
+   */
   private TransactionFactory getTransactionFactoryFromEnvironment(Environment environment) {
     if (environment == null || environment.getTransactionFactory() == null) {
       return new ManagedTransactionFactory();
@@ -144,6 +158,11 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
     return environment.getTransactionFactory();
   }
 
+  /**
+   * 关闭事务
+   *
+   * @param tx
+   */
   private void closeTransaction(Transaction tx) {
     if (tx != null) {
       try {
