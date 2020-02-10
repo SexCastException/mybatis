@@ -190,6 +190,7 @@ public class ResultMapping {
 
     public ResultMapping build() {
       // lock down collections
+      // 把flags和composites更改为不可修改集合
       resultMapping.flags = Collections.unmodifiableList(resultMapping.flags);
       resultMapping.composites = Collections.unmodifiableList(resultMapping.composites);
       // 根据javaType和jdbcType解析获取TypeHandler对象
@@ -236,7 +237,7 @@ public class ResultMapping {
     }
 
     /**
-     * 如果typeHandler属性没有定义，则通过 javaType 和 jdbcType属性解析并确定一个typeHandler对象
+     * 如果typeHandler属性没有定义，则通过 javaType 和 jdbcType属性解析并确定一个 {@link TypeHandler}对象
      */
     private void resolveTypeHandler() {
       if (resultMapping.typeHandler == null && resultMapping.javaType != null) {

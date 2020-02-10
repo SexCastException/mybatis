@@ -28,6 +28,7 @@ import org.apache.ibatis.scripting.LanguageDriver;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandler;
+import org.apache.ibatis.type.UnknownTypeHandler;
 
 import java.util.*;
 
@@ -447,7 +448,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
   }
 
   /**
-   * 解析复合列名，默认使用 未知类型处理器
+   * 解析复合列名，默认使用 {@link UnknownTypeHandler}未知类型处理器，此类解析算法参考 {@link com.huazai.test.basis.MyTest}
    *
    * @param columnName column属性值指定的符合列名
    * @return
@@ -471,7 +472,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
   }
 
   /**
-   * 如果指定了javaType属性值，则返回该属性值对应的Class对象，否则返回property属性值指定的字段的setter方法形参的Class对象
+   * 如果指定了javaType属性值，则返回该属性值类型对应的Class对象，否则返回property属性值指定的字段的setter方法形参的Class对象
    * <p>
    * 如果property和javaType都没有指定，或指定的不存在则返回Object.Class对象
    *

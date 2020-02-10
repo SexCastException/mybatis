@@ -145,13 +145,21 @@ public class Configuration {
    */
   protected Class<?> configurationFactory;
 
-  // 映射注册器
+  /**
+   * 映射注册器
+   */
   protected final MapperRegistry mapperRegistry = new MapperRegistry(this);
-  // 拦截器链
+  /**
+   * 拦截器链
+   */
   protected final InterceptorChain interceptorChain = new InterceptorChain();
-  // 类型处理器注册器
+  /**
+   * 类型处理器注册器
+   */
   protected final TypeHandlerRegistry typeHandlerRegistry = new TypeHandlerRegistry();
-  // 类型别名注册器
+  /**
+   * 类型别名注册器
+   */
   protected final TypeAliasRegistry typeAliasRegistry = new TypeAliasRegistry();
   protected final LanguageDriverRegistry languageRegistry = new LanguageDriverRegistry();
 

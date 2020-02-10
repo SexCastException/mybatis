@@ -73,9 +73,9 @@ public class MapperRegistry {
   }
 
   /**
-   * 在MyBatis初始化过程中会读取映射配置文件以及Mapper 接口中的注解信息，并调用 addMapper()方法填充 knownMappers 集合。
+   * 在MyBatis初始化过程中会读取映射配置文件以及Mapper 接口中的注解信息，并调用 addMapper()方法填充 {@link MapperRegistry#knownMappers}集合。
    * <p>
-   * knownMappers 集合的key是Mapper接口对应的Class对象，value 为 MapperProxyFactory 工厂对象，可以为Mapper接口创建代理对象。
+   * {@link MapperRegistry#knownMappers}集合的key是Mapper接口对应的Class对象，value 为 {@link MapperProxyFactory}工厂对象，可以为Mapper接口创建代理对象。
    *
    * @param type
    * @param <T>
@@ -83,10 +83,11 @@ public class MapperRegistry {
   public <T> void addMapper(Class<T> type) {
     // type 是否为接口，要求 Mapper 一定为接口
     if (type.isInterface()) {
-      // 检测knownMappers集合是否已经加入过该接口
+      // 检测knownMappers集合是否已经加入过该接口，如果加入过了，重复加入则抛出异常
       if (hasMapper(type)) {
         throw new BindingException("Type " + type + " is already known to the MapperRegistry.");
       }
+      // 判断type对应的MapperProxyFactory是否已经注册成功
       boolean loadCompleted = false;
       try {
         // 将Mapper接口对应的Class对象和MapperProxyFactory对象添加到 knownMappers 集合
@@ -115,6 +116,7 @@ public class MapperRegistry {
 
   /**
    * 包扫描添加添加Mapper
+   *
    * @param packageName
    * @param superType
    */

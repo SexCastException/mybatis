@@ -50,7 +50,7 @@ public class XMLMapperBuilder extends BaseBuilder {
    */
   private final Map<String, XNode> sqlFragments;
   /**
-   * 映射文件的资源路径
+   * 映射文件的资源路径，resource或url
    */
   private final String resource;
 
@@ -426,6 +426,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     // 遍历子节点
     for (XNode argChild : argChildren) {
       List<ResultFlag> flags = new ArrayList<>();
+      // <constructor>的所有子节点添加ResultFlag.CONSTRUCTOR标志
       flags.add(ResultFlag.CONSTRUCTOR);
       if ("idArg".equals(argChild.getName())) {
         flags.add(ResultFlag.ID);
@@ -533,7 +534,7 @@ public class XMLMapperBuilder extends BaseBuilder {
   private ResultMapping buildResultMappingFromContext(XNode context, Class<?> resultType, List<ResultFlag> flags) throws Exception {
     //
     String property;
-    // 如果是<constructor>节点则获取那么属性值，否则获取property属性值，如<id>、<result>等
+    // 如果是<constructor>节点则获取name属性值，否则获取property属性值，如<id>、<result>等
     if (flags.contains(ResultFlag.CONSTRUCTOR)) {
       property = context.getStringAttribute("name");
     } else {

@@ -62,7 +62,7 @@ public final class TypeHandlerRegistry {
   private final TypeHandler<Object> unknownTypeHandler = new UnknownTypeHandler(this);
 
   /**
-   * 记录了全部TypeHandler的类型以及该类型相应的TypeHandler对象，键为TypeHandler的Class对象，值为TypeHandler
+   * 记录了全部 {@link TypeHandler}的类型以及该类型相应的 {@link TypeHandler}对象，键为 {@link TypeHandler}的 {@link Class}对象，值为 {@link TypeHandler}
    */
   private final Map<Class<?>, TypeHandler<?>> allTypeHandlersMap = new HashMap<>();
 
