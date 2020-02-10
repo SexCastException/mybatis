@@ -12,7 +12,7 @@
   </settings>
   
   <plugins>
-    <plugin interceptor="com.huazai.test.plugin.ExamplePlugin"></plugin>
+    <plugin interceptor="com.huazai.test.plugin.PageInterceptor"></plugin>
   </plugins>
 
   <environments default="development">
