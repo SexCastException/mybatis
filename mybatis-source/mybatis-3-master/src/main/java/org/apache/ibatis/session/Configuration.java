@@ -96,7 +96,8 @@ public class Configuration {
   protected boolean cacheEnabled = true;
   protected boolean callSettersOnNulls;
   /**
-   * 3.4.2版本之前settings属性中useActualParamName参数的默认值为false
+   * 使用真实参数变量名称作为name，如[arg0, arg1, arg2] <br>
+   * 3.4.2版本之前settings属性中useActualParamName参数的默认值为false <br>
    */
   protected boolean useActualParamName = true;
   /**
@@ -154,6 +155,10 @@ public class Configuration {
   protected final TypeAliasRegistry typeAliasRegistry = new TypeAliasRegistry();
   protected final LanguageDriverRegistry languageRegistry = new LanguageDriverRegistry();
 
+  /**
+   * 记录了每个Mapper方法对应的statementId与 {@link MappedStatement}之间的映射关系 <br>
+   * key为Mapper方法对应的statementId<br>
+   */
   protected final Map<String, MappedStatement> mappedStatements = new StrictMap<MappedStatement>("Mapped Statements collection")
     .conflictMessageProducer((savedValue, targetValue) ->
       ". please check " + savedValue.getResource() + " and " + targetValue.getResource());

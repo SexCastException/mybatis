@@ -29,7 +29,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 /**
- * 用于处理Mapper接口中定义的方法的参数列表。
+ * 参数名称解析器，用于处理Mapper接口中定义的方法的参数列表。
  */
 public class ParamNameResolver {
 
@@ -37,9 +37,9 @@ public class ParamNameResolver {
 
   /**
    * 记录了参数在参数列表中的位置索引与参数名称之间的对应关系,其中key表示参数在参数列表中的索引位置，
-   * value表示参数名称，参数名称可以通过@Param注解指定，如果没有指定@Param注解，则使用参数索引作为其名称。
+   * value表示参数名称，参数名称可以通过{@link Param}注解指定，如果没有指定{@link Param}注解，则使用参数索引作为其名称。
    * 如果参数列表中包含{@link RowBounds}类型或{@link ResultHandler}类型的参数,则这两种类型的参数并不会被记录到name集合中，
-   * 这就会导致参数的索引与名称不一-致，例如，method(int a, RowBounds rb, int b)方法对应的names集合为{{0, "0"}, {2, "1"}}
+   * 这就会导致参数的索引与名称不一致，例如，method(int a, RowBounds rb, int b)方法对应的names集合为{{0, "0"}, {2, "1"}}
    *
    * <p>
    * The key is the index and the value is the name of the parameter.<br />
@@ -65,10 +65,12 @@ public class ParamNameResolver {
     final Class<?>[] paramTypes = method.getParameterTypes();
     // 获取参数列表中的注解
     final Annotation[][] paramAnnotations = method.getParameterAnnotations();
+    // key为参数所在形参列表中的索引
     final SortedMap<Integer, String> map = new TreeMap<>();
-    // 参数列表中注解的个数，遍历时使用
+    // 参数列表中注解的一维个数，遍历时使用
     int paramCount = paramAnnotations.length;
     // get names from @Param annotations
+    // paramIndex每个参数在参数列表中对应的索引
     for (int paramIndex = 0; paramIndex < paramCount; paramIndex++) {
       // 如果参数是RowBounds类型或ResultHandler类型，则跳过对该参数的分析
       if (isSpecialParameter(paramTypes[paramIndex])) {
@@ -140,7 +142,7 @@ public class ParamNameResolver {
     final int paramCount = names.size();
     if (args == null || paramCount == 0) {  // 无参数，返回null
       return null;
-    } else if (!hasParamAnnotation && paramCount == 1) {  // 未使用@Param 且只有一个参数
+    } else if (!hasParamAnnotation && paramCount == 1) {  // 未使用@Param 且只有一个参数，则直接返回实参，即Mapper文件不使用不用类似这些格式：“${arg0.username}”或“${param1.username}”，而是直接“${username}”
       return args[names.firstKey()];
     } else {  // 处理使用@Param注解指定了参数名称或有多个参数的情况
       final Map<String, Object> param = new ParamMap<>();
@@ -152,6 +154,7 @@ public class ParamNameResolver {
         // 为参数创建"param+索引"格式的默认参数名称，例如: param1, param2 等，并添加到param集合中，从1开始
         final String genericParamName = GENERIC_NAME_PREFIX + String.valueOf(i + 1);
         // ensure not to overwrite parameter named with @Param
+        // 确保不覆盖@Param注解配置的值与genericParamName相同的名字
         if (!names.containsValue(genericParamName)) {
           param.put(genericParamName, args[entry.getKey()]);
         }

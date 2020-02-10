@@ -9,11 +9,12 @@
   <settings>
     <setting name="logImpl" value="STDOUT_LOGGING" />
     <setting name="useGeneratedKeys" value="false" />
+    <setting name="useActualParamName" value="true" />
   </settings>
   
-  <plugins>
+  <!--<plugins>
     <plugin interceptor="com.huazai.test.plugin.PageInterceptor"></plugin>
-  </plugins>
+  </plugins>-->
 
   <environments default="development">
     <environment id="development">
