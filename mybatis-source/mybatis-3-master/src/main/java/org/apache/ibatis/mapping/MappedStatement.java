@@ -36,7 +36,7 @@ import java.util.List;
 public final class MappedStatement {
 
   /**
-   * 节点中的id属性(包括命名空间前缀)
+   * Mapper映射文件的资源路径
    */
   private String resource;
   private Configuration configuration;

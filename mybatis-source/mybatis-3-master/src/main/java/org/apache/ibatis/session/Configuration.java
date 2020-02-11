@@ -174,6 +174,9 @@ public class Configuration {
    * key为命名空间，value为 {@link Cache}缓存对象
    */
   protected final Map<String, Cache> caches = new StrictMap<>("Caches collection");
+  /**
+   * key为namespace+resultMapId，value为 {@link ResultMap}
+   */
   protected final Map<String, ResultMap> resultMaps = new StrictMap<>("Result Maps collection");
   //
   protected final Map<String, ParameterMap> parameterMaps = new StrictMap<>("Parameter Maps collection");
@@ -190,7 +193,7 @@ public class Configuration {
    */
   protected final Set<String> loadedResources = new HashSet<>();
   /**
-   * 记录了<sql>节点的id和封装该节点的{@link XNode}对象的映射关系
+   * 记录了&lt;sql>节点的id和封装该节点的{@link XNode}对象的映射关系
    */
   protected final Map<String, XNode> sqlFragments = new StrictMap<>("XML fragments parsed from previous mappers");
 

@@ -33,7 +33,8 @@ import org.apache.ibatis.type.UnknownTypeHandler;
 import java.util.*;
 
 /**
- * Mapper构建助手，常被用于 {@link XMLMapperBuilder}和 {@link MapperAnnotationBuilder}类
+ * Mapper构建助手，常被用于 {@link XMLMapperBuilder}和 {@link MapperAnnotationBuilder}类，主要负责创建 {@link Cache}、{@link ResultMap}
+ * {@link ResultMapping}、 {@link ParameterMap}、 {@link ParameterMapping}和 {@link MappedStatement}等
  *
  * @author Clinton Begin
  */
@@ -43,6 +44,9 @@ public class MapperBuilderAssistant extends BaseBuilder {
    * 映射文件的命名空间
    */
   private String currentNamespace;
+  /**
+   * 映射文件的资源路径，resource或url
+   */
   private final String resource;
   /**
    * 当前映射文件的缓存对象
@@ -87,14 +91,15 @@ public class MapperBuilderAssistant extends BaseBuilder {
     if (base == null) {
       return null;
     }
-    // 校验<resultMap>节点是否是完整的resultMap的属性名
     if (isReference) {
       // is it qualified with any namespace yet?
+      // 校验<resultMap>节点是否是完整的resultMap的属性名
       if (base.contains(".")) {
         return base;
       }
     } else {
       // is it qualified with this namespace yet?
+      // 校验<resultMap>节点是否是完整的resultMap的属性名
       if (base.startsWith(currentNamespace + ".")) {
         return base;
       }
@@ -221,7 +226,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
       // 移除该ResultMap覆盖的ResultMapping集合
       extendedResultMappings.removeAll(resultMappings);
       // Remove parent constructor if this resultMap declares a constructor.
-      // 如果此resultMap声明了构造函数，则删除父构造函数
+      // 如果此resultMap声明了构造函数，则删除父构造函数相应的ResultMapping对象
       boolean declaresConstructor = false;
       for (ResultMapping resultMapping : resultMappings) {
         if (resultMapping.getFlags().contains(ResultFlag.CONSTRUCTOR)) {
@@ -230,9 +235,10 @@ public class MapperBuilderAssistant extends BaseBuilder {
         }
       }
       if (declaresConstructor) {
+        // 删除父构造函数相应的ResultMapping对象，即带ResultFlag.CONSTRUCTOR标志的ResultMapping对象
         extendedResultMappings.removeIf(resultMapping -> resultMapping.getFlags().contains(ResultFlag.CONSTRUCTOR));
       }
-      // 添加需要继承的ResultMapping集合
+      // 合并父子类的ResultMapping对象
       resultMappings.addAll(extendedResultMappings);
     }
     ResultMap resultMap = new ResultMap.Builder(configuration, id, type, resultMappings, autoMapping)
@@ -242,6 +248,17 @@ public class MapperBuilderAssistant extends BaseBuilder {
     return resultMap;
   }
 
+  /**
+   * 保存<discriminator>的子节点<case>value属性和resultMap属性值的映射关系
+   *
+   * @param resultType
+   * @param column
+   * @param javaType
+   * @param jdbcType
+   * @param typeHandler
+   * @param discriminatorMap
+   * @return
+   */
   public Discriminator buildDiscriminator(
     Class<?> resultType,
     String column,
@@ -249,6 +266,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
     JdbcType jdbcType,
     Class<? extends TypeHandler<?>> typeHandler,
     Map<String, String> discriminatorMap) {
+    // 构建<discriminator>节点对应的ResultMapping对象
     ResultMapping resultMapping = buildResultMapping(
       resultType,
       null,
@@ -265,6 +283,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
       null,
       false);
     Map<String, String> namespaceDiscriminatorMap = new HashMap<>();
+    // 遍历拼接<discriminator>的子节点<case>指定的resultMap属性值的完整resultMap的id
     for (Map.Entry<String, String> e : discriminatorMap.entrySet()) {
       String resultMap = e.getValue();
       resultMap = applyCurrentNamespace(resultMap, true);

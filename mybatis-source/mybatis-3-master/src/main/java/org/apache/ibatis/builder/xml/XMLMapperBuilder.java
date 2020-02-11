@@ -46,7 +46,8 @@ public class XMLMapperBuilder extends BaseBuilder {
    */
   private final MapperBuilderAssistant builderAssistant;
   /**
-   * 记录了<sql>节点的id和封装该节点的{@link XNode}对象的映射关系
+   * 记录了&lt;sql>节点的id和封装该节点的{@link XNode}对象的映射关系，
+   * 只有&lt;sql>节点的databaseId与当前 {@link Configuration#databaseId}值相同时才保存该映射关系
    */
   private final Map<String, XNode> sqlFragments;
   /**
@@ -106,11 +107,11 @@ public class XMLMapperBuilder extends BaseBuilder {
       bindMapperForNamespace();
     }
 
-    // 处理 configurationElement() 方法中解析失败的<resultMap>节点
+    // 处理 resultMapElements()方法中解析失败的<resultMap>节点
     parsePendingResultMaps();
-    // 处理 configurationElement() 方法中解析失败的<cache-ref>节点
+    // 处理 cacheRefElement()方法中解析失败的<cache-ref>节点
     parsePendingCacheRefs();
-    // 处理 configurationElement() 方法中解析失败的SQL语句节点
+    // 处理 sqlElement()方法中解析失败的SQL语句节点
     parsePendingStatements();
   }
 
@@ -152,13 +153,13 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   /**
-   * 对于Statement节点（<select>、<update>、<delete>和<insert>）的解析，主要交由{@link XMLStatementBuilder}完成
+   * 对于SQL语句节点（&lt;select>、&lt;update>、&lt;delete>和&lt;insert>）的解析，主要交由{@link XMLStatementBuilder}完成
    *
    * @param list
    * @param requiredDatabaseId
    */
   private void buildStatementFromContext(List<XNode> list, String requiredDatabaseId) {
-    // 遍历Statement节点
+    // 遍历SQL语句节点
     for (XNode context : list) {
       final XMLStatementBuilder statementParser = new XMLStatementBuilder(configuration, builderAssistant, context, requiredDatabaseId);
       try {
@@ -169,6 +170,9 @@ public class XMLMapperBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * 处理 {@link XMLMapperBuilder#resultMapElements}方法中解析失败的&lt;resultMap>节点
+   */
   private void parsePendingResultMaps() {
     Collection<ResultMapResolver> incompleteResultMaps = configuration.getIncompleteResultMaps();
     synchronized (incompleteResultMaps) {
@@ -184,6 +188,9 @@ public class XMLMapperBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * 处理{@link XMLMapperBuilder#cacheRefElement}方法中解析失败的&lt;cache-ref>节点
+   */
   private void parsePendingCacheRefs() {
     Collection<CacheRefResolver> incompleteCacheRefs = configuration.getIncompleteCacheRefs();
     synchronized (incompleteCacheRefs) {
@@ -199,6 +206,9 @@ public class XMLMapperBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * 处理 {@link XMLMapperBuilder#sqlElement}方法中解析失败的SQL语句节点
+   */
   private void parsePendingStatements() {
     Collection<XMLStatementBuilder> incompleteStatements = configuration.getIncompleteStatements();
     synchronized (incompleteStatements) {
@@ -320,7 +330,7 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   /**
-   * 解析映射文件中的全部<resultMap>节点，该方法会循环调用resultMapElement() 方法处理每个<resultMap>节点。
+   * 解析映射文件中的全部&lt;resultMap>节点，并解析后的 {@link ResultMap}对象保存在 {@link Configuration#resultMaps}集合中。
    *
    * @param resultMapNode
    * @param additionalResultMappings
@@ -473,7 +483,8 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   /**
-   * 在映射配置文件中，可以使用<sql>节点定义可重用的SQL语句片段。点中定义的SQL语句片段时，只需要使用<include>节点引入相应的片段即可，这样，在编写
+   * 在映射配置文件中，可以使用SQL语句节点定义可重用的SQL语句片段，该片段与数据库环境相关，即dataBaseId相关。<br>
+   * 映射文件中定义的SQL语句片段，只需要使用&lt;include>节点引入相应的片段。<br>
    *
    * @param list
    */
@@ -485,14 +496,15 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   private void sqlElement(List<XNode> list, String requiredDatabaseId) {
-    // 遍历所有的<sql>节点
+    // 遍历所有的SQL语句节点
     for (XNode context : list) {
-      // 获取<sql>节点的 databaseId 属性值
+      // 获取SQL语句节点的 databaseId 属性值
       String databaseId = context.getStringAttribute("databaseId");
+      // 获取SQL语句节点的 id 属性值
       String id = context.getStringAttribute("id");
       // 为id添加命名空间
       id = builderAssistant.applyCurrentNamespace(id, false);
-      // 检测<sq1>的databaseId与当前Configuration中记录的databaseId是否一致
+      // 检测SQL语句节点的databaseId与当前Configuration中记录的databaseId是否一致
       if (databaseIdMatchesCurrent(id, databaseId, requiredDatabaseId)) {
         sqlFragments.put(id, context);
       }
@@ -500,7 +512,7 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   /**
-   * 检测<sq1>的databaseId与当前Configuration中记录的databaseId是否一致
+   * 检测<sq1>的databaseId与requiredDatabaseId是否一致
    *
    * @param id
    * @param databaseId
@@ -514,12 +526,12 @@ public class XMLMapperBuilder extends BaseBuilder {
     if (databaseId != null) {
       return false;
     }
-    // 否则requiredDatabaseId 和 databaseId都为null，且此<sql>节点并没有加入sqlFragments集合中
+    // 否则requiredDatabaseId 和 databaseId都为null，且此SQL语句节点并没有加入sqlFragments集合中
     if (!this.sqlFragments.containsKey(id)) {
       return true;
     }
     // skip this fragment if there is a previous one with a not null databaseId
-    // sqlFragments中已存在该<sql>节点，并且此时databaseId为null，如果此时databaseId对应的<sql>节点的databaseId为null，则与requiredDatabaseId相等
+    // sqlFragments中已存在该SQL语句节点，并且此时databaseId为null，此时databaseId对应的SQL语句节点的databaseId为null，则与requiredDatabaseId相等
     XNode context = this.sqlFragments.get(id);
     return context.getStringAttribute("databaseId") == null;
   }
@@ -546,6 +558,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     String jdbcType = context.getStringAttribute("jdbcType");
     String nestedSelect = context.getStringAttribute("select");
     String nestedResultMap = context.getStringAttribute("resultMap",
+      // 获取嵌套ResultMap的id
       processNestedResultMappings(context, Collections.emptyList(), resultType));
     String notNullColumn = context.getStringAttribute("notNullColumn");
     String columnPrefix = context.getStringAttribute("columnPrefix");
@@ -565,7 +578,8 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   /**
-   * 处理嵌套的 ResultMap
+   * 处理嵌套的{@link ResultMap}，即使没有&lt;association>或&lt;collection>节点没有明确配置resultMap属性，配置了这两个节点
+   * 也会拥有其对应的 {@link ResultMap}，也属于嵌套查询，多结果映射情况除外。
    *
    * @param context        封装<association>、<collection>或<case>节点的{@link XNode}对象
    * @param resultMappings 保存解析的结果
@@ -582,7 +596,7 @@ public class XMLMapperBuilder extends BaseBuilder {
       if (context.getStringAttribute("select") == null) {
         // 校验<collection>节点的property属性是否在对应的javaBean中有该字段
         validateCollection(context, enclosingType);
-        // 嵌套解析resultMap，并将解析的结果保存到 resultMappings中
+        // 嵌套解析resultMap，并将解析的ResultMapping结果保存到 resultMappings中
         ResultMap resultMap = resultMapElement(context, resultMappings, enclosingType);
         return resultMap.getId();
       }

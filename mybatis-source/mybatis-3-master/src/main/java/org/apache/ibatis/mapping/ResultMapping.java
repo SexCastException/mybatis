@@ -322,7 +322,7 @@ public class ResultMapping {
   }
 
   /**
-   * property标识是否为同一ResultMapping对象
+   * property标识是否为同一 {@link ResultMapping}对象，用于后序移除子 {@link ResultMap}被父 {@link ResultMap}覆盖的 {@link ResultMapping}对象
    *
    * @param o
    * @return

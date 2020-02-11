@@ -63,7 +63,7 @@ public class ResultMap {
    */
   private List<ResultMapping> propertyResultMappings;
   /**
-   * 记录所有映射关系中涉及的column属性的集合
+   * 记录所有映射关系中涉及的column属性的集合，包括复合列的column值
    */
   private Set<String> mappedColumns;
   /**
@@ -135,6 +135,7 @@ public class ResultMap {
       final List<String> constructorArgNames = new ArrayList<>();
       for (ResultMapping resultMapping : resultMap.resultMappings) {
         resultMap.hasNestedQueries = resultMap.hasNestedQueries || resultMapping.getNestedQueryId() != null;
+        // 如果配置了多结果集映射，即使有匿名的ResultMap（比如存在<association>和<collection>节点），也不属于嵌套映射
         resultMap.hasNestedResultMaps = resultMap.hasNestedResultMaps || (resultMapping.getNestedResultMapId() != null && resultMapping.getResultSet() == null);
         final String column = resultMapping.getColumn();
         if (column != null) {
@@ -151,20 +152,28 @@ public class ResultMap {
         }
         final String property = resultMapping.getProperty();
         if (property != null) {
+          // 保存映射文件的所有property属性值
           resultMap.mappedProperties.add(property);
         }
         if (resultMapping.getFlags().contains(ResultFlag.CONSTRUCTOR)) {
           resultMap.constructorResultMappings.add(resultMapping);
           if (resultMapping.getProperty() != null) {
+            /*
+                如果是构造函数的ResultMapping对象，则该对象的property并不是<idArg>或<arg>节点的“property”属性值，
+                而是他们的“name”属性值，See org.apache.ibatis.builder.xml.XMLMapperBuilder.buildResultMappingFromContext方法
+             */
+            // 保存<constructor>节点配置的参数列表
             constructorArgNames.add(resultMapping.getProperty());
           }
         } else {
           resultMap.propertyResultMappings.add(resultMapping);
         }
+        // 将<id>和<constructor>的子节点<idArg>对应的ResultMapping对象保存在idResultMappings集合
         if (resultMapping.getFlags().contains(ResultFlag.ID)) {
           resultMap.idResultMappings.add(resultMapping);
         }
       }
+      // 如果没有<id>或<idArg>，则将所有一般属性的ResultMapping对象保存idResultMappings集合
       if (resultMap.idResultMappings.isEmpty()) {
         resultMap.idResultMappings.addAll(resultMap.resultMappings);
       }
@@ -183,6 +192,7 @@ public class ResultMap {
         });
       }
       // lock down collections
+      // 转换以下集合的类型
       resultMap.resultMappings = Collections.unmodifiableList(resultMap.resultMappings);
       resultMap.idResultMappings = Collections.unmodifiableList(resultMap.idResultMappings);
       resultMap.constructorResultMappings = Collections.unmodifiableList(resultMap.constructorResultMappings);
@@ -192,8 +202,10 @@ public class ResultMap {
     }
 
     private List<String> argNamesOfMatchingConstructor(List<String> constructorArgNames) {
+      // 获取构造函数列表
       Constructor<?>[] constructors = resultMap.type.getDeclaredConstructors();
       for (Constructor<?> constructor : constructors) {
+        // 获取构造函数形参列表
         Class<?>[] paramTypes = constructor.getParameterTypes();
         if (constructorArgNames.size() == paramTypes.length) {
           List<String> paramNames = getArgNames(constructor);
@@ -232,6 +244,7 @@ public class ResultMap {
       final Annotation[][] paramAnnotations = constructor.getParameterAnnotations();
       // 形参注解的个数
       int paramCount = paramAnnotations.length;
+      // paramIndex也表示形参列表每个参数对应的索引
       for (int paramIndex = 0; paramIndex < paramCount; paramIndex++) {
         String name = null;
         for (Annotation annotation : paramAnnotations[paramIndex]) {

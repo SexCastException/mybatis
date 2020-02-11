@@ -33,8 +33,8 @@ import java.util.Properties;
 /**
  * XML映射文件<include>节点装换器
  * <p>
- * 在解析Statement节点之前，首先通过 XMLIncludeTransformer 解析SQL语句中的<include>节点，
- * 该过程会将<include>节点替换成<sql>节点中定义的SQL片段，并将其中的“${xx}”占位符替换成真实的参数。
+ * 在解析SQL语句节点之前，首先通过 XMLIncludeTransformer 解析SQL语句中的&lt;include>节点，
+ * 该过程会将&lt;include>节点替换成&lt;sql>节点中定义的SQL片段，并将其中的“${xx}”占位符替换成真实的参数。
  *
  * @author Frank D. Martinez [mnesarco]
  */
@@ -48,6 +48,9 @@ public class XMLIncludeTransformer {
     this.builderAssistant = builderAssistant;
   }
 
+  /**
+   * @param source 封装SQL语句语句 {@link Node}对象
+   */
   public void applyIncludes(Node source) {
     Properties variablesContext = new Properties();
     // 获取mybatis-config.xml中<properties>节点下定义的变量集合
@@ -61,27 +64,31 @@ public class XMLIncludeTransformer {
    *
    * @param source           Include node in DOM tree
    * @param variablesContext Current context for static variables with values
+   * @param included
    */
   private void applyIncludes(Node source, final Properties variablesContext, boolean included) {
     if (source.getNodeName().equals("include")) { // 处理<include>节点
       // 查找refid属性指向的<sq1>节点，返回的是其深克隆的Node对象
       Node toInclude = findSqlFragment(getStringAttribute(source, "refid"), variablesContext);
-      // 解析<include>节点下的<property>节点,将得到的键值对添加到variablesContext中,并形成新的Properties对象返回，用于替换占位符
+      // 解析<include>节点下的<property>节点,将得到的键值与variablesContext合并,并形成新的Properties对象返回，用于替换占位符
       Properties toIncludeContext = getVariablesContext(source, variablesContext);
-      // 递归处理<include>节点属性值refid指定的<sql>节点，在<sql>节 点中可能会使用<include>引用了其他SQL片段
+      // 递归处理<include>节点属性值refid指定的<sql>节点，在<sql>节点中可能会使用<include>引用了其他SQL片段
       applyIncludes(toInclude, toIncludeContext, true);
+      // 检测toInclude节点所在的XML文档不是source节点所在的XML文档，主要用于一个Mapper映射文件引用了另外一个Mapper映射文件的sql片段
       if (toInclude.getOwnerDocument() != source.getOwnerDocument()) {
+        // 把toInclude节点复制到source文档，第二个参数，表示深度复制，即复制toInclude的子孙节点
         toInclude = source.getOwnerDocument().importNode(toInclude, true);
       }
       // 将<sql>节点替代<include>节点，将<sql>节点的文本内容插入到<sql>节点之前，最后删除<sql>节点，完美用<sql>节点的内容替换了<include>节点
-      // 将<include>节点替换成<sql>节点
+      // 将<include>节点替换成<sql>节点，并解除父节点对source子节点的引用
       source.getParentNode().replaceChild(toInclude, source);
       while (toInclude.hasChildNodes()) { // 将<sq1>节点的子节点（文本节点）添加到<sql>节点前面
+        // 如果<sql>节点有嵌套引用其他<sql>节点的sql片段，则此时的<sql>节点已递归解析完成，即此时的<sql>的子节点全部都为文本节点
         toInclude.getParentNode().insertBefore(toInclude.getFirstChild(), toInclude);
       }
       // 从父节点中删除<sql>节点
       toInclude.getParentNode().removeChild(toInclude);
-    } else if (source.getNodeType() == Node.ELEMENT_NODE) { // 处理除<include>元素节点，如<select>、<update>和<sql>等
+    } else if (source.getNodeType() == Node.ELEMENT_NODE) { // 处理除<include>元素节点，如<select>、<update>、<delete>和<insert>
       if (included && !variablesContext.isEmpty()) {
         // replace variables in attribute values
         // 解析替换元素节点属性值的占位符
@@ -124,11 +131,19 @@ public class XMLIncludeTransformer {
     }
   }
 
+  /**
+   * 获取 {@link Node}指定的name属性值
+   *
+   * @param node
+   * @param name
+   * @return
+   */
   private String getStringAttribute(Node node, String name) {
     return node.getAttributes().getNamedItem(name).getNodeValue();
   }
 
   /**
+   * 解析&lt;include>节点下的&lt;property>节点,将得到的键值与variablesContext合并,并形成新的 {@link Properties}对象返回，用于替换占位符
    * Read placeholders and their values from include node definition.
    *
    * @param node                      Include node instance   <include>元素节点

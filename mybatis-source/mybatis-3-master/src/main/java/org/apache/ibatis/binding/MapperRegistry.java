@@ -74,8 +74,9 @@ public class MapperRegistry {
 
   /**
    * 在MyBatis初始化过程中会读取映射配置文件以及Mapper 接口中的注解信息，并调用 addMapper()方法填充 {@link MapperRegistry#knownMappers}集合。
-   * <p>
-   * {@link MapperRegistry#knownMappers}集合的key是Mapper接口对应的Class对象，value 为 {@link MapperProxyFactory}工厂对象，可以为Mapper接口创建代理对象。
+   * <p><br>
+   * {@link MapperRegistry#knownMappers}集合的key是Mapper接口对应的Class对象，value 为 {@link MapperProxyFactory}工厂对象，可以为Mapper接口创建代理对象。<br>
+   * 该方法会触犯Mapper注解配置方式的解析 <br>
    *
    * @param type
    * @param <T>
