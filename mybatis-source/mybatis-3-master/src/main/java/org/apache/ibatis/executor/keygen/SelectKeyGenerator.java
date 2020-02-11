@@ -30,7 +30,7 @@ import java.util.List;
  * 对于不支持自动生成自增主键的数据库，例如Oracle数据库，用户可以利用MyBatis提供的 {@link SelectKeyGenerator}来生成主键，
  * {@link SelectKeyGenerator} 也可以实现类似于 {@link Jdbc3KeyGenerator}提供的、获取数据库自动生成的主键的功能。
  * <p>
- * 该类会执行映射配置文件中定义的<selectKey>节点的SQL语句，该语句会获取insert语句所需要的主键。
+ * 该类会执行映射配置文件中定义的&lt;selectKey>节点的SQL语句，该语句会获取insert语句所需要的主键。
  *
  * @author Clinton Begin
  * @author Jeff Butler
@@ -39,13 +39,13 @@ public class SelectKeyGenerator implements KeyGenerator {
 
   public static final String SELECT_KEY_SUFFIX = "!selectKey";
   /**
-   * 标识<selectKey>节点中定义的SQL语句是在insert语句之前执行还是之后执行
+   * 标识&lt;selectKey>节点中定义的SQL语句是在insert语句之前执行还是之后执行
    * <p>
-   * 根据<selectKey>节点的order属性值，如果为BEFORE则为true，否则为false
+   * 根据&lt;selectKey>节点的order属性值，如果为BEFORE则为true，否则为false
    */
   private final boolean executeBefore;
   /**
-   * <selectKey>节点中定义的SQL语句所对应的 {@link MappedStatement}对象。该对象是在解析<selectKey>节点时创建的。
+   * &lt;selectKey>节点中定义的SQL语句所对应的 {@link MappedStatement}对象。该对象是在解析&lt;selectKey>节点时创建的。
    */
   private final MappedStatement keyStatement;
 

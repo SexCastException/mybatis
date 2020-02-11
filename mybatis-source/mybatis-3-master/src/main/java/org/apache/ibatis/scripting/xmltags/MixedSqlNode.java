@@ -18,7 +18,7 @@ package org.apache.ibatis.scripting.xmltags;
 import java.util.List;
 
 /**
- * 混合SQL节点，组合模式
+ * 混合动态SQL节点，组合模式
  *
  * @author Clinton Begin
  */

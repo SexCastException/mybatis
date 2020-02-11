@@ -78,7 +78,7 @@ public class XMLStatementBuilder extends BaseBuilder {
     boolean resultOrdered = context.getBooleanAttribute("resultOrdered", false);
 
     // Include Fragments before parsing
-    // 在解析SQL语句之前，先处理其中的<include>节点
+    // 在解析SQL语句之前，先处理其中的<include>节点，即将<include>节点替换为<sql>的文本节点
     XMLIncludeTransformer includeParser = new XMLIncludeTransformer(configuration, builderAssistant);
     includeParser.applyIncludes(context.getNode());
 
@@ -102,7 +102,7 @@ public class XMLStatementBuilder extends BaseBuilder {
     if (configuration.hasKeyGenerator(keyStatementId)) {
       keyGenerator = configuration.getKeyGenerator(keyStatementId);
     } else {
-      // 获取useGeneratedKeys配置的keyGenerator对象，如果配置了useGeneratedKeys属性为true，并且SQL类型为insert，则默认使用Jdbc3KeyGenerator
+      // 如果配置了useGeneratedKeys属性为true，并且SQL类型为insert，则默认使用Jdbc3KeyGenerator
       keyGenerator = context.getBooleanAttribute("useGeneratedKeys",
         configuration.isUseGeneratedKeys() && SqlCommandType.INSERT.equals(sqlCommandType))
         ? Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE;
@@ -152,8 +152,8 @@ public class XMLStatementBuilder extends BaseBuilder {
   }
 
   /**
-   * 为<selectKey>节点生成id，检测 databaseId 是否匹配以及是否已经加载过相同id且 databaseId 不为空的<selectKey>节点，
-   * 并调用 parseSelectKeyNode()方法处理每个<selectKey>节点。
+   * 为&lt;selectKey>节点生成id，检测 databaseId 是否匹配以及是否已经加载过相同id且 databaseId 不为空的&lt;selectKey>节点，
+   * 并调用 parseSelectKeyNode()方法处理每个&lt;selectKey>节点。
    *
    * @param parentId             SQL语句节点的id属性值
    * @param list                 <selectKey>节点集合
@@ -174,6 +174,16 @@ public class XMLStatementBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * 解析&lt;selectKey节点，为&lt;selectKey创建相应的 {@link MappedStatement}，并加入 {@link Configuration}相应属性中，
+   * 之后也会创建 {@link KeyGenerator}对象加入{@link Configuration}中
+   *
+   * @param id
+   * @param nodeToHandle
+   * @param parameterTypeClass
+   * @param langDriver
+   * @param databaseId
+   */
   private void parseSelectKeyNode(String id, XNode nodeToHandle, Class<?> parameterTypeClass, LanguageDriver langDriver, String databaseId) {
     // 获取<selectKey>节点的resultType属性值
     String resultType = nodeToHandle.getStringAttribute("resultType");
@@ -188,6 +198,7 @@ public class XMLStatementBuilder extends BaseBuilder {
     boolean executeBefore = "BEFORE".equals(nodeToHandle.getStringAttribute("order", "AFTER"));
 
     //defaults
+    // <selectKey>节点没有一下属性，所以初始化为默认值
     boolean useCache = false;
     boolean resultOrdered = false;
     KeyGenerator keyGenerator = NoKeyGenerator.INSTANCE;
@@ -206,7 +217,7 @@ public class XMLStatementBuilder extends BaseBuilder {
      /*
       通过MapperBuilderAssistant创建 MappedStatement 对象，并添加到 Configuration.mappedStatements集合中保存，
       该集合为StrictMap<MappedStatement>类型
-      <selectKey>节点的内容也视为MapperStatement
+      处理<select>，<update>等节点会生成相应的MappedStatement对象，<selectKey>节点也会生成相应的MappedStatement对象
      */
     builderAssistant.addMappedStatement(id, sqlSource, statementType, sqlCommandType,
       fetchSize, timeout, parameterMap, parameterTypeClass, resultMap, resultTypeClass,

@@ -136,6 +136,9 @@ public class Configuration {
   protected boolean lazyLoadingEnabled = false;
   protected ProxyFactory proxyFactory = new JavassistProxyFactory(); // #224 Using internal Javassist instead of OGNL
 
+  /**
+   * 该值在解析 &lt;selectKey或sql片段时候都会用到，主要根据不同数据库产品实现不同数据库方言的作用
+   */
   protected String databaseId;
   /**
    * Configuration factory class.
@@ -181,7 +184,7 @@ public class Configuration {
   //
   protected final Map<String, ParameterMap> parameterMaps = new StrictMap<>("Parameter Maps collection");
   /**
-   * key：namespace + !selectKey
+   * key：namespace + “!selectKey”
    */
   protected final Map<String, KeyGenerator> keyGenerators = new StrictMap<>("Key Generators collection");
 

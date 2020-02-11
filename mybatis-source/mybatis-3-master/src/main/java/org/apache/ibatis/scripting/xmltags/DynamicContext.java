@@ -26,8 +26,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 /**
- * DynamicContext主要用于记录解析动态SQL语句之后产生的SQL语句片段，可以认为它
- * 是一个用于记录动态SQL语句解析结果的容器。
+ * DynamicContext主要用于记录解析动态SQL语句之后产生的SQL语句片段，可以认为它是一个用于记录动态SQL语句解析结果的容器。
  *
  * @author Clinton Begin
  */

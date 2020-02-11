@@ -78,7 +78,8 @@ public class BootStrapAuthor {
 
   @Test
   public void testInsertForSelectKey() {
-    Integer integer = mapper.insertForSelectKey(new Author("u1","p1","e1@email.com"));
+    Author author = new Author("u1", "p1", "e1@email.com");
+    Integer integer = mapper.insertForSelectKey(author);
     sqlSession.commit();
     System.out.println(integer);
   }

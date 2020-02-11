@@ -34,12 +34,21 @@ import java.util.Map;
  */
 public class XMLScriptBuilder extends BaseBuilder {
 
+  /**
+   * 封装需要解析动态SQL {@link XNode}对象
+   */
   private final XNode context;
   /**
    * 是否为动态SQL
    */
   private boolean isDynamic;
+  /**
+   *
+   */
   private final Class<?> parameterType;
+  /**
+   * 保存动态SQL节点名称与对应处理器映射关系
+   */
   private final Map<String, NodeHandler> nodeHandlerMap = new HashMap<>();
 
   public XMLScriptBuilder(Configuration configuration, XNode context) {
@@ -67,6 +76,11 @@ public class XMLScriptBuilder extends BaseBuilder {
     nodeHandlerMap.put("bind", new BindHandler());
   }
 
+  /**
+   * 解析脚本节点，如<if><if/>、<where></where>和<set><set/>节点等
+   *
+   * @return
+   */
   public SqlSource parseScriptNode() {
     // 判断当前的节点是不是有动态SQL,包含占位符或是动态SQL的相关节点的属于动态SQL
     MixedSqlNode rootSqlNode = parseDynamicTags(context);
@@ -89,7 +103,7 @@ public class XMLScriptBuilder extends BaseBuilder {
   protected MixedSqlNode parseDynamicTags(XNode node) {
     // 记录生成的SqlNode集合
     List<SqlNode> contents = new ArrayList<>();
-    // 获取 <selectKey>的所有子节点
+    // 获取node封装的所有子节点
     NodeList children = node.getNode().getChildNodes();
     for (int i = 0; i < children.getLength(); i++) {
       // 创建封装Node对象的XNode，并解析“${}”占位符
