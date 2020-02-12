@@ -1,8 +1,8 @@
-# [mybatis-source](https://github.com/SexCastException/mybatis/tree/master/mybatis-source)：mybatis源码中文注释项目
+# [mybatis-source](https://github.com/SexCastException/mybatis/tree/master/mybatis-source)：mybatis高级源码篇
 
-# [mybatis_learning](https://github.com/SexCastException/mybatis/tree/master/mybatis_learning)：mybatis入门项目
+# [mybatis_learning](https://github.com/SexCastException/mybatis/tree/master/mybatis_learning)：mybatis入门篇
 
-# [mybatis_plus_learning](https://github.com/SexCastException/mybatis/tree/master/mybatis_plus_learning)：国产mybatis插件项目
+# [mybatis_plus_learning](https://github.com/SexCastException/mybatis/tree/master/mybatis_plus_learning)：mybatis-plus项目
 
 
 mybatis-plus官方链接：  
