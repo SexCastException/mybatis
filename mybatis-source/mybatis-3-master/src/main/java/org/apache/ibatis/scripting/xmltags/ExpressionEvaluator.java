@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 表达式解析器，如 &lt;if>或&lt;when的test属性值指定的表达式解析，封装了 OGNL解析功能
+ *
  * @author Clinton Begin
  */
 public class ExpressionEvaluator {

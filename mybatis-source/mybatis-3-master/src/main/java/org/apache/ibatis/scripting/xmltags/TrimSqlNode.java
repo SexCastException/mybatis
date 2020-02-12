@@ -25,23 +25,23 @@ import java.util.*;
 public class TrimSqlNode implements SqlNode {
 
   /**
-   * <trim>节点的子节点
+   * &lt;trim>节点的子节点
    */
   private final SqlNode contents;
   /**
-   * <trim>节点的prefix属性值，前缀字符串
+   * &lt;trim>节点的prefix属性值，前缀字符串
    */
   private final String prefix;
   /**
-   * <trim>节点的suffix属性值，后缀字符串
+   * &lt;trim>节点的suffix属性值，后缀字符串
    */
   private final String suffix;
   /**
-   * 如果<trim>节点包裹的SQL语句是空语句(经常出现在if判断为否的情况下),删除指定的前缀，如where
+   * 如果&lt;trim>节点包裹的SQL语句是空语句(经常出现在if判断为否的情况下)，删除指定的前缀，如“where”
    */
   private final List<String> prefixesToOverride;
   /**
-   * 如果<trim>包裹的SQL语句是空语句(经常出现在if判断为否的情况下),删除指定的后缀，如逗号
+   * 如果&lt;trim>包裹的SQL语句是空语句(经常出现在if判断为否的情况下),删除指定的后缀，如“,”
    */
   private final List<String> suffixesToOverride;
   private final Configuration configuration;
@@ -76,7 +76,7 @@ public class TrimSqlNode implements SqlNode {
 
   private static List<String> parseOverrides(String overrides) {
     if (overrides != null) {
-      // 使用“|”分隔
+      // 多个使用“|”分隔
       final StringTokenizer parser = new StringTokenizer(overrides, "|", false);
       // 分隔后的数量初始化集合
       final List<String> list = new ArrayList<>(parser.countTokens());
@@ -143,7 +143,7 @@ public class TrimSqlNode implements SqlNode {
     }
 
     /**
-     * 注意此处调用的不是代理对象的append()方法，解析<trim>子节点生成的sql语句暂存在sqlBuffer，待处理后再追加到
+     * 注意此处调用的不是代理对象的append()方法，解析&lt;trim>子节点生成的sql语句暂存在sqlBuffer，待处理后再追加到
      * 代理对象delegate的sqlBuilder中去
      *
      * @param sql
@@ -164,7 +164,7 @@ public class TrimSqlNode implements SqlNode {
         prefixApplied = true;
         if (prefixesToOverride != null) {
           for (String toRemove : prefixesToOverride) {
-            // 每一项如果以toRemove开头，则移除
+            // 每一项如果以toRemove开头，则移除toRemove
             if (trimmedUppercaseSql.startsWith(toRemove)) {
               sql.delete(0, toRemove.trim().length());
               break;
@@ -185,7 +185,7 @@ public class TrimSqlNode implements SqlNode {
         suffixApplied = true;
         if (suffixesToOverride != null) {
           for (String toRemove : suffixesToOverride) {
-            // 每一项如果以toRemove结束，则移除
+            // 每一项如果以toRemove结束，则移除toRemove
             if (trimmedUppercaseSql.endsWith(toRemove) || trimmedUppercaseSql.endsWith(toRemove.trim())) {
               int start = sql.length() - toRemove.trim().length();
               int end = sql.length();

@@ -22,8 +22,20 @@
             *
         FROM
             `author`
-        WHERE id = #{arg0.id,javaType=INT} OR username = #{param1.username,jdbcType=VARCHAR}
-         OR password = #{arg1,javaType=STRING,jdbcType=VARCHAR} OR email = #{param3}
+      <where>
+        <if test="arg0.id != null">
+          AND id = #{arg0.id,javaType=INT}
+        </if>
+        <if test="param1.username != null">
+          OR username = #{param1.username,jdbcType=VARCHAR}
+        </if>
+        <if test="arg1 != null">
+          OR password = #{arg1,javaType=STRING,jdbcType=VARCHAR}
+        </if>
+        <if test="param3 != null">
+          OR email = #{param3}
+        </if>
+      </where>
   </select>
 
   <insert id="insert" parameterType="com.huazai.test.bean.Author">

@@ -21,6 +21,7 @@ import org.apache.ibatis.parsing.GenericTokenParser;
 import org.apache.ibatis.parsing.TokenHandler;
 import org.apache.ibatis.reflection.MetaClass;
 import org.apache.ibatis.reflection.MetaObject;
+import org.apache.ibatis.scripting.xmltags.DynamicContext;
 import org.apache.ibatis.scripting.xmltags.SqlNode;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.type.JdbcType;
@@ -30,9 +31,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 在经过SqINode.apply()方法的解析之后，SQL语句会被传递到SqlSourceBuilder 中进行进一步的解析。
+ * 在经过 {@link SqlNode#apply(DynamicContext)}方法的解析之后，SQL语句会被传递到SqlSourceBuilder 中进行进一步的解析。
  * SqlSourceBuilder 主要完成了两方面的操作：
- * 一、解析SQL语句中的“#{}”占位符中定义的属性，格式类似于#{_ frc. item_ 0, javaType=int, jdbcType=NUMERIC,typeHandler=MyTypeHandler}。
+ * 一、解析SQL语句中的“#{}”占位符中定义的属性，格式类似于#{_frc.item_0, javaType=int, jdbcType=NUMERIC,typeHandler=MyTypeHandler}。
  * 二、将SQL语句中的“#{}”占位符替换成“?”占位符。
  *
  * @author Clinton Begin
@@ -46,7 +47,7 @@ public class SqlSourceBuilder extends BaseBuilder {
   }
 
   /**
-   * SQL占位符的替换和 {@link ParameterMapping}集合的创建，并返回StaticSqlSource 对象。
+   * SQL占位符的替换和 {@link ParameterMapping}集合的创建，并返回 {@link StaticSqlSource}对象。
    *
    * @param originalSql          {@link SqlNode} 处理之后的SQL语句
    * @param parameterType        用户传入的实参类型
@@ -58,7 +59,7 @@ public class SqlSourceBuilder extends BaseBuilder {
     ParameterMappingTokenHandler handler = new ParameterMappingTokenHandler(configuration, parameterType, additionalParameters);
     // 带有“#{}”标识为占位符
     GenericTokenParser parser = new GenericTokenParser("#{", "}", handler);
-    //
+    // 处理了“#{}”占位符之后的SQL语句
     String sql = parser.parse(originalSql);
     // 创建StaticSqlSource,其中封装了占位符被替换成"?"的SQL语句以及参数对应的ParameterMapping集合
     return new StaticSqlSource(configuration, sql, handler.getParameterMappings());
@@ -75,7 +76,7 @@ public class SqlSourceBuilder extends BaseBuilder {
      */
     private Class<?> parameterType;
     /**
-     * DynamicContext.bindings 集合对应的Metaobject对象
+     * {@link DynamicContext#bindings} 集合对应的 {@link MetaObject}对象
      */
     private MetaObject metaParameters;
 
@@ -90,7 +91,7 @@ public class SqlSourceBuilder extends BaseBuilder {
     }
 
     /**
-     * 根据占位符创建对应的 {@link ParameterMapping}，并将占位符替换为“?”
+     * 将占位符的内容保存到{@link ParameterMapping}，并将占位符替换为“?”
      *
      * @param content
      * @return
@@ -103,17 +104,18 @@ public class SqlSourceBuilder extends BaseBuilder {
     }
 
     /**
-     * 根据占位符（如：#{_ frc. item_ 0, javaType=int, jdbcType=NUMERIC,typeHandler=MyTypeHandler}）的内容构建 {@link ParameterMapping}对象
+     * 根据占位符（如：#{_frc.item_0, javaType=int, jdbcType=NUMERIC, typeHandler=MyTypeHandler}）的内容，
+     * 并将解析后的值分别设置到{@link ParameterMapping}对象属性值并返回该对象
      *
      * @param content
      * @return
      */
     private ParameterMapping buildParameterMapping(String content) {
       Map<String, String> propertiesMap = parseParameterMapping(content);
-      // 获取 property参数值
+      // 获取key为 property的值，也为配置的javabean属性值
       String property = propertiesMap.get("property");
       Class<?> propertyType;
-      // 根据确定参数的javaType类型
+      // 判断是否存在property指定字符串的getter方法
       if (metaParameters.hasGetter(property)) { // issue #448 get type from additional params
         propertyType = metaParameters.getGetterType(property);
       } else if (typeHandlerRegistry.hasTypeHandler(parameterType)) {

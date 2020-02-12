@@ -36,7 +36,7 @@ public class XMLStatementBuilder extends BaseBuilder {
 
   private final MapperBuilderAssistant builderAssistant;
   /**
-   * 封装SQL语句节点（<select>、<update>、<delete>和<insert>）的{@link XNode}对象
+   * 封装SQL语句节点（&lt;select>、&lt;update>、&lt;delete>和&lt;insert>）的{@link XNode}对象
    */
   private final XNode context;
   private final String requiredDatabaseId;

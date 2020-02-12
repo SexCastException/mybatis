@@ -21,15 +21,15 @@ import org.apache.ibatis.session.Configuration;
 import java.util.Map;
 
 /**
- * 在动态SQL语句中构建IN条件语句的时候，通常需要对一一个集合进行迭代，MyBatis 提供了<foreach>标签实现该功能。
- * 在使用<foreach>标签迭代集合时，不仅可以使用集合的元素和索引值，还可以在循环开始之前或结束之后添加指定的字符串，
+ * 在动态SQL语句中构建IN条件语句的时候，通常需要对一一个集合进行迭代，MyBatis 提供了&lt;foreach>标签实现该功能。
+ * 在使用&lt;foreach>标签迭代集合时，不仅可以使用集合的元素和索引值，还可以在循环开始之前或结束之后添加指定的字符串，
  * 也允许在迭代过程中添加指定的分隔符。
  *
  * @author Clinton Begin
  */
 public class ForEachSqlNode implements SqlNode {
   /**
-   *
+   * 用于拼接生成新的“#{}”占位符名称，以防和被解析节点外的占位符里的字符串重名
    */
   public static final String ITEM_PREFIX = "__frch_";
 
@@ -38,31 +38,31 @@ public class ForEachSqlNode implements SqlNode {
    */
   private final ExpressionEvaluator evaluator;
   /**
-   * 迭代集合表达式
+   * 迭代集合表达式——collection指定的属性值
    */
   private final String collectionExpression;
   /**
-   * <foreach>节点的子节点
+   * 封装&lt;foreach>子节点的 {@link SqlNode}对象
    */
   private final SqlNode contents;
   /**
-   * 循环开始前需要添加的字符串
+   * 循环开始前需要添加的字符串——collection指定的属性值
    */
   private final String open;
   /**
-   * 循环结束后需要添加的字符串
+   * 循环结束后需要添加的字符串——open 指定的属性值
    */
   private final String close;
   /**
-   * 循环过程中，每项的分隔符
+   * 循环过程中，每项的分隔符——close 指定的属性值
    */
   private final String separator;
   /**
-   * 本次迭代的元素，如果迭代 {@link Map}，则item是value值
+   * 本次迭代的元素，如果迭代 {@link Map}，则item是value值——separator 指定的属性值
    */
   private final String item;
   /**
-   * 当前迭代的次数，如果迭代 {@link Map}，则index是key值
+   * 当前迭代的索引值，如果迭代 {@link Map}，则index是key值——item 指定的属性值
    */
   private final String index;
   private final Configuration configuration;
@@ -81,8 +81,9 @@ public class ForEachSqlNode implements SqlNode {
 
   @Override
   public boolean apply(DynamicContext context) {
+    // 保存解析之后的参数
     Map<String, Object> bindings = context.getBindings();
-    // 解析集合表达式对应的实际参数
+    // 解析集合表达式对应的实数
     final Iterable<?> iterable = evaluator.evaluateIterable(collectionExpression, bindings);
     if (!iterable.iterator().hasNext()) {
       return true;
@@ -91,27 +92,28 @@ public class ForEachSqlNode implements SqlNode {
     // 循环开始前，追加open属性指定的表达式
     applyOpen(context);
     int i = 0;
+    // 迭代实参
     for (Object o : iterable) {
       // 记录当前 DynamicContext 对象
       DynamicContext oldContext = context;
       // 没有指定分割符，并且第一次循环，则不添加任何前缀
       if (first || separator == null) {
+        // 使用PrefixedContext代理对象覆盖原来DynamicContext对象
         context = new PrefixedContext(context, "");
       } else {  // 否则每次遍历添加 separator 属性值指定的分隔符
+        // 使用PrefixedContext代理对象覆盖原来DynamicContext对象
         context = new PrefixedContext(context, separator);
       }
       // uniqueNumber从0开始，每次递增1,用于转换生成新的“#{}”占位符名称，以防和foreach外的占位符里的字符串重名
       int uniqueNumber = context.getUniqueNumber();
       // Issue #709
-      // 如果集合是Map
+      // 如果实参是Map，则绑定处理过的key和value
       if (o instanceof Map.Entry) {
         @SuppressWarnings("unchecked")
         Map.Entry<Object, Object> mapEntry = (Map.Entry<Object, Object>) o;
-        // Map，则绑定key和处理过的key和value以及处理过的value
         applyIndex(context, mapEntry.getKey(), uniqueNumber);
         applyItem(context, mapEntry.getValue(), uniqueNumber);
-      } else {
-        // 否则绑定当前索引的下标和当前索引值
+      } else {  // 否则绑定当前索引的下标和当前索引值
         applyIndex(context, i, uniqueNumber);
         applyItem(context, o, uniqueNumber);
       }
@@ -273,7 +275,7 @@ public class ForEachSqlNode implements SqlNode {
     }
 
     /**
-     * 追加的SQL语句，添加前缀 prefix 才加入被代理对象中
+     * 追加的SQL语句，添加前缀 prefix 之后才将sql语句加入被代理对象中
      *
      * @param sql
      */

@@ -2,6 +2,7 @@ package com.huazai.test.basis;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.StringJoiner;
 import java.util.StringTokenizer;
 
 /**
@@ -17,5 +18,12 @@ public class MyTest {
       String token = parser.nextToken();
       System.out.println(token);
     }
+  }
+
+  @Test
+  public void testStringJoiner(){
+    StringJoiner sqlBuilder = new StringJoiner(",");
+    sqlBuilder.add("aa").add("bb").add(",").add("dd");
+    System.out.println(sqlBuilder.toString());
   }
 }

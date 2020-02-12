@@ -23,8 +23,8 @@ import java.util.List;
 /**
  * WhereSqlNode继承了 {@link TrimSqlNode}， 其中WhereSqlNode指定了prefix 字段为“WHERE”，
  * prefixesToOverride 集合中的项为“AND”和“OR”。suffix 字段和suffixesToOverride集合为null。
- * 也就是说，<where>节点解析后的SQL语句片段如果以“AND”或“OR”开头，则将开头处的“AND”或“OR”删除，之后再将“WHERE”
- * 关键字添加到SQL片段开始位置，从而得到该<where> 节点最终生成的SQL片段。
+ * 也就是说，&lt;where>节点解析后的SQL语句片段如果以“AND”或“OR”开头，则将开头处的“AND”或“OR”删除，之后再将“WHERE”
+ * 关键字添加到SQL片段开始位置，从而得到该&lt;where> 节点最终生成的SQL片段。
  *
  * @author Clinton Begin
  */

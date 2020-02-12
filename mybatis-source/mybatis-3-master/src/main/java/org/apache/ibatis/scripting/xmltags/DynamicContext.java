@@ -32,7 +32,13 @@ import java.util.StringJoiner;
  */
 public class DynamicContext {
 
+  /**
+   * 映射参数的key值
+   */
   public static final String PARAMETER_OBJECT_KEY = "_parameter";
+  /**
+   * 映射 databaseId的key值
+   */
   public static final String DATABASE_ID_KEY = "_databaseId";
 
   static {
@@ -40,20 +46,27 @@ public class DynamicContext {
   }
 
   /**
-   * 参数上下文
+   * {@link Map}类型对象，用于保存用户实参和动态节点某些属性值与其所代表含义的映射关系
    */
   private final ContextMap bindings;
   /**
-   * 在 {@link SqlNode}解析动态SQL时，会将解析后的SQL语句片段添加到该属性中保存，最终拼凑出一条完成的SQL语句
+   * 在 {@link SqlNode}解析动态SQL时，会将解析后的SQL语句片段添加到该属性中保存，最终拼凑出一条完成的SQL语句,
+   * “ ”是拼接SQL语句后的默认的分隔符
    */
   private final StringJoiner sqlBuilder = new StringJoiner(" ");
+  /**
+   * 用于拼接生成新的“#{}”占位符名称，以防和被解析节点外的占位符里的字符串重名
+   */
   private int uniqueNumber = 0;
 
   /**
+   * 实例化 {@link DynamicContext#bindings}集合
+   *
    * @param configuration
-   * @param parameterObject 运行时用户传入的参数，包含了后续用于替换“#{}”占位符的参数
+   * @param parameterObject 运行时用户传入的实参，包含了后续用于替换“#{}”占位符的参数
    */
   public DynamicContext(Configuration configuration, Object parameterObject) {
+    // 如果实参类型不是Map
     if (parameterObject != null && !(parameterObject instanceof Map)) {
       MetaObject metaObject = configuration.newMetaObject(parameterObject);
       // 是否存在parameterObject的类型处理器
@@ -102,6 +115,9 @@ public class DynamicContext {
      * 将用户传入的参数封装成 {@link MetaObject}
      */
     private final MetaObject parameterMetaObject;
+    /**
+     * 标志 {@link ContextMap#parameterMetaObject}封装的原始类型是否存在相应的类型处理器
+     */
     private final boolean fallbackParameterObject;
 
     public ContextMap(MetaObject parameterMetaObject, boolean fallbackParameterObject) {
@@ -120,10 +136,10 @@ public class DynamicContext {
         return null;
       }
 
-      // 不存在从 parameterMetaObject中获取
+      // 不存在key映射的值，且parameterMetaObject没有key指定字符串相应的类型处理器，直接返回实参对象
       if (fallbackParameterObject && !parameterMetaObject.hasGetter(strKey)) {
         return parameterMetaObject.getOriginalObject();
-      } else {
+      } else {  // 不存在key映射的值，且parameterMetaObject存在key指定字符串相应的类型处理器，则返回key字符串指定属性的属性值
         // issue #61 do not modify the context when reading
         return parameterMetaObject.getValue(strKey);
       }

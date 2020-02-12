@@ -51,7 +51,8 @@ public class SqlSessionFactoryBuilder {
   }
 
   /**
-   * 主要通过字符流对象构建SqlSessionFactory对象，但和字节流方式都是调用同一个build方法
+   * 主要通过字符流对象构建 {@link SqlSessionFactory}对象，但和字节流方式都是调用同
+   * 一个 {@link SqlSessionFactoryBuilder#build(Configuration)}方法
    *
    * @param reader
    * @param environment
@@ -69,7 +70,7 @@ public class SqlSessionFactoryBuilder {
     } finally {
       ErrorContext.instance().reset();
       try {
-        // 关闭配合文件输入流对象
+        // 关闭字符流对象
         reader.close();
       } catch (IOException e) {
         // Intentionally ignore. Prefer previous error.
@@ -90,7 +91,8 @@ public class SqlSessionFactoryBuilder {
   }
 
   /**
-   * 主要通过字节流对象构建SqlSessionFactory对象，但和字符流方式都是调用同一个build方法
+   * 主要通过字节流对象构建 {@link SqlSessionFactory}对象，但和字符流方式都是调用同
+   * 一个 {@link SqlSessionFactoryBuilder#build(Configuration)}方法
    *
    * @param inputStream
    * @param environment
@@ -106,6 +108,7 @@ public class SqlSessionFactoryBuilder {
     } finally {
       ErrorContext.instance().reset();
       try {
+        // 关闭字节流对象
         inputStream.close();
       } catch (IOException e) {
         // Intentionally ignore. Prefer previous error.

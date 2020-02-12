@@ -28,7 +28,7 @@ import java.util.HashMap;
 
 /**
  * 执行时机：Mybatis初始化时完成SQL语句的解析
- *
+ * <p>
  * 如果节点只包含“#{}”占位符，而不包含动态SQL节点或未解析的“${}”占位符的话，则不是动态SQL语句，
  * 会创建相应的 {@link StaticTextSqlNode} 对象。
  * <p>
@@ -55,6 +55,13 @@ public class RawSqlSource implements SqlSource {
     sqlSource = sqlSourceParser.parse(sql, clazz, new HashMap<>());
   }
 
+  /**
+   * 获取sql语句
+   *
+   * @param configuration
+   * @param rootSqlNode
+   * @return
+   */
   private static String getSql(Configuration configuration, SqlNode rootSqlNode) {
     DynamicContext context = new DynamicContext(configuration, null);
     // 完成SQL语句的拼接和初步处理

@@ -35,7 +35,7 @@ import java.util.Map;
 public class XMLScriptBuilder extends BaseBuilder {
 
   /**
-   * 封装需要解析动态SQL {@link XNode}对象
+   * 封装需要解析动态SQL {@link XNode}对象，如果SQL语句节点或其他脚本节点
    */
   private final XNode context;
   /**
@@ -77,7 +77,7 @@ public class XMLScriptBuilder extends BaseBuilder {
   }
 
   /**
-   * 解析脚本节点，如<if><if/>、<where></where>和<set><set/>节点等
+   * 解析脚本节点，如&lt;if>&lt;if/>、&lt;where>&lt;/where>和&lt;set>&lt;set/>节点等
    *
    * @return
    */
@@ -120,7 +120,7 @@ public class XMLScriptBuilder extends BaseBuilder {
           contents.add(new StaticTextSqlNode(data));
         }
       } else if (child.getNode().getNodeType() == Node.ELEMENT_NODE) { // issue #628 如果子节点是一个标签，一定是动态SQL,并且根据不同的动态标签生成不同的NodeHandler
-        // 获取<selectKey>子节点名称（如：if、set和where等），根据子节点名称获取对应的NodeHandler对象
+        // 获取动态SQL节点名称（如：if、set和where等），根据子节点名称获取对应的NodeHandler对象
         String nodeName = child.getNode().getNodeName();
         NodeHandler handler = nodeHandlerMap.get(nodeName);
         // 不存在节点名称对应的 NodeHandler 对象则抛出异常
@@ -268,15 +268,17 @@ public class XMLScriptBuilder extends BaseBuilder {
       List<SqlNode> whenSqlNodes = new ArrayList<>();
       // 保存处理<otherwise>后的结果
       List<SqlNode> otherwiseSqlNodes = new ArrayList<>();
-      // 处理<where>和<otherwise>节点
+      // 处理<where>和<otherwise>节点，<where>处理后的结果保存到whenSqlNodes集合，将<otherwise>处理后的结果保存到otherwiseSqlNodes集合
       handleWhenOtherwiseNodes(nodeToHandle, whenSqlNodes, otherwiseSqlNodes);
+      // 获取默认的节点
       SqlNode defaultSqlNode = getDefaultSqlNode(otherwiseSqlNodes);
       ChooseSqlNode chooseSqlNode = new ChooseSqlNode(whenSqlNodes, defaultSqlNode);
       targetContents.add(chooseSqlNode);
     }
 
     /**
-     * 处理<where>和<otherwise>节点
+     * 处理&lt;where>和&lt;otherwise>节点，将&lt;where处理后的结果保存到isSqlNodes集合，将&lt;otherwise>处理后的结果
+     * 保存到defaultSqlNode集合
      *
      * @param chooseSqlNode
      * @param ifSqlNodes
@@ -299,7 +301,7 @@ public class XMLScriptBuilder extends BaseBuilder {
     }
 
     /**
-     * 如果<choose>节点有多个<otherwise>子节点，则抛出异常
+     * 获取默认的节点，如果&lt;choose>节点有多个&lt;otherwise>子节点，则抛出异常
      *
      * @param defaultSqlNodes
      * @return

@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * SetSqlNode继承了 {@link TrimSqlNode}，其中字段prefix 字段为“SET”, suffixesToOverride 集合中的项只有“,”,
  * suffix字段和prefixesToOverride集合为null。也就是说，<set>节点解析后的SQL语句片段如果以“,”，结尾，
- * 则将结尾处的“,”删除掉，之后再将“SET"关键字添加到SQL片段的开始位置，从而得到该<set>节点最终生成的SQL片段。
+ * 则将结尾处的“,”删除掉，之后再将“SET"关键字添加到SQL片段的开始位置，从而得到该&lt;set>节点最终生成的SQL片段。
  *
  * @author Clinton Begin
  */

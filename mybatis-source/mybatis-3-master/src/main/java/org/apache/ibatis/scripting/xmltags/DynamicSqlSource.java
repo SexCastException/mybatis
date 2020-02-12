@@ -21,7 +21,7 @@ import org.apache.ibatis.mapping.SqlSource;
 import org.apache.ibatis.session.Configuration;
 
 /**
- * 执行时机：实际执行SQL语句
+ * 执行时机：实际执行SQL语句，比如判断&lt;if>节点的test属性值，只有真正执行的时候根据实参来判断
  * <p>
  * 处理动态SQL语句，也是常用的 {@link SqlSource}之一
  *

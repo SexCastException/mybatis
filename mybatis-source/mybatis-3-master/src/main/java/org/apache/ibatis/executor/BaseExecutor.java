@@ -48,7 +48,7 @@ import static org.apache.ibatis.executor.ExecutionPlaceholder.EXECUTION_PLACEHOL
  * 问数据库了，从而减小了数据库的压力。<br><br>
  * <p>
  * 一级缓存的生命周期与{@link SqlSession}相同，其实也就与{@link SqlSession}中封装的 {@link Executor} 对象的生命周期相同。
- * 当调用 {@link Executor#close(boolean)}方法时，该Executor对象对应的一级缓存就变得不可用。<br><br>
+ * 当调用 {@link Executor#close(boolean)}方法时，该 {@link Executor}对象对应的一级缓存就变得不可用。<br><br>
  * <p>
  * 一级缓存中对象的存活时间受很多方面的影响，例如，在调用 {@link Executor#update}方法时，也会先清空一级缓存。<br><br>
  *

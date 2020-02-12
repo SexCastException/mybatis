@@ -23,7 +23,7 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 import java.sql.ResultSet;
 
 /**
- * 记录了“#{}”占位符中的参数属性，如：#{_ frc. item_ 0, javaType=int, jdbcType=NUMERIC,typeHandler=MyTypeHandler}
+ * 记录了“#{}”占位符中的参数属性，如：#{_frc.item_0, javaType=int, jdbcType=NUMERIC,typeHandler=MyTypeHandler}
  *
  * @author Clinton Begin
  */

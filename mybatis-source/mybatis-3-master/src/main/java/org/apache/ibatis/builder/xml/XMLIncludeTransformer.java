@@ -76,7 +76,7 @@ public class XMLIncludeTransformer {
       applyIncludes(toInclude, toIncludeContext, true);
       // 检测toInclude节点所在的XML文档不是source节点所在的XML文档，主要用于一个Mapper映射文件引用了另外一个Mapper映射文件的sql片段
       if (toInclude.getOwnerDocument() != source.getOwnerDocument()) {
-        // 把toInclude节点复制到source文档，第二个参数，表示深度复制，即复制toInclude的子孙节点
+        // 把toInclude节点复制到source文档，第二个参数，表示是否深度复制，即是否复制toInclude的子孙节点
         toInclude = source.getOwnerDocument().importNode(toInclude, true);
       }
       // 将<sql>节点替代<include>节点，将<sql>节点的文本内容插入到<sql>节点之前，最后删除<sql>节点，完美用<sql>节点的内容替换了<include>节点

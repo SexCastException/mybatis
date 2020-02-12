@@ -20,11 +20,11 @@ package org.apache.ibatis.scripting.xmltags;
  */
 public class IfSqlNode implements SqlNode {
   /**
-   * 解析<if>节点test属性值表达式
+   * 解析&lt;if>节点test属性值表达式
    */
   private final ExpressionEvaluator evaluator;
   /**
-   * <if>节点test属性值
+   * &lt;if>节点test属性值
    */
   private final String test;
   /**
@@ -39,7 +39,7 @@ public class IfSqlNode implements SqlNode {
   }
 
   /**
-   * 先检测test条件如果为true，则执行的<if>子节点的apply方法
+   * 先检测test条件如果为true，则执行的&lt;if>子节点的apply方法
    *
    * @param context
    * @return

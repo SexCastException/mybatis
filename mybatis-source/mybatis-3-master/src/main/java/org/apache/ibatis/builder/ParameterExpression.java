@@ -29,6 +29,8 @@ import java.util.HashMap;
  * attribute = name '=' value
  * </pre>
  *
+ * See {@link org.apache.ibatis.builder.ParameterExpressionTest}
+ *
  * @author Frank D. Martinez [mnesarco]
  */
 public class ParameterExpression extends HashMap<String, String> {
@@ -71,9 +73,16 @@ public class ParameterExpression extends HashMap<String, String> {
     }
   }
 
+  /**
+   * 跳过控制字符（在ascii表中空格之前），返回第一个可显示字符的下标（在ascii表中空格之后）
+   *
+   * @param expression
+   * @param p          指定从字符串expression的指定位置开始处理
+   * @return
+   */
   private int skipWS(String expression, int p) {
     for (int i = p; i < expression.length(); i++) {
-      // 0x20：十进制32
+      // 0x20：十进制32，表示一个空格字符
       if (expression.charAt(i) > 0x20) {
         return i;
       }
