@@ -86,7 +86,7 @@ public abstract class BaseExecutor implements Executor {
    */
   protected int queryStack;
   /**
-   * 当前Executor对象是否已关闭，默认false
+   * 当前 {@link Executor}对象是否已关闭，默认false
    */
   private boolean closed;
 
@@ -530,7 +530,7 @@ public abstract class BaseExecutor implements Executor {
       // 抽象方法，完成数据库的查询操作，并返回结果对象
       list = doQuery(ms, parameter, rowBounds, resultHandler, boundSql);
     } finally {
-      // 移除旧缓存，这一步我觉得多余，因为下一步骤中会覆盖该key的缓存
+      // 这一步并非多余，防止某些缓存装饰器重写了putObject()方法，可能存在不能保存保存相同key的情况——个人观点
       localCache.removeObject(key);
     }
     // 将查询的数据保存到一级缓存

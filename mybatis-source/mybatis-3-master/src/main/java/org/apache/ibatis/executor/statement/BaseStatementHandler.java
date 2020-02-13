@@ -113,6 +113,13 @@ public abstract class BaseStatementHandler implements StatementHandler {
     }
   }
 
+  /**
+   * 实例化 {@link Statement}对象，抽象方法，由子类决定使用哪种 {@link Statement}实现类
+   *
+   * @param connection
+   * @return
+   * @throws SQLException
+   */
   protected abstract Statement instantiateStatement(Connection connection) throws SQLException;
 
   /**
@@ -176,6 +183,7 @@ public abstract class BaseStatementHandler implements StatementHandler {
   protected void generateKeys(Object parameter) {
     KeyGenerator keyGenerator = mappedStatement.getKeyGenerator();
     ErrorContext.instance().store();
+    // 执行SQL语句之前调用
     keyGenerator.processBefore(executor, mappedStatement, null, parameter);
     ErrorContext.instance().recall();
   }

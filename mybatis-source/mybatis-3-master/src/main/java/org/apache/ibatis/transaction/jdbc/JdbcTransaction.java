@@ -146,6 +146,9 @@ public class JdbcTransaction implements Transaction {
     }
   }
 
+  /**
+   *
+   */
   protected void resetAutoCommit() {
     try {
       if (!connection.getAutoCommit()) {

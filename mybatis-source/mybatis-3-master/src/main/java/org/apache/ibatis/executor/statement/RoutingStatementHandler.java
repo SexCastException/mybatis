@@ -21,6 +21,7 @@ import org.apache.ibatis.executor.ExecutorException;
 import org.apache.ibatis.executor.parameter.ParameterHandler;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.mapping.StatementType;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 
@@ -30,6 +31,9 @@ import java.sql.Statement;
 import java.util.List;
 
 /**
+ * 本身没有实现任何的SQL语句执行操作，只是根据 {@link StatementType}类型创建相应的 {@link StatementHandler}代理对象，并由该
+ * 对象执行相应的查询和更新等操作
+ *
  * @author Clinton Begin
  */
 public class RoutingStatementHandler implements StatementHandler {

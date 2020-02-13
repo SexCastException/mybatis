@@ -28,12 +28,15 @@ import java.sql.SQLException;
 import java.util.List;
 
 /**
- * 负责处理缓存和执行SQL语句
+ * 负责处理缓存和执行SQL语句，该接口没有定义 insert和delete方法，因为在mybatis中，insert和delete底层都是调用update方法
  *
  * @author Clinton Begin
  */
 public interface Executor {
 
+  /**
+   * 默认执行类型为没有 {@link ResultHandler}类型
+   */
   ResultHandler NO_RESULT_HANDLER = null;
 
   /**

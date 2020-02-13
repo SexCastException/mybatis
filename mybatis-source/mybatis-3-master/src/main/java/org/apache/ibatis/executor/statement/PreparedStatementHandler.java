@@ -71,7 +71,7 @@ public class PreparedStatementHandler extends BaseStatementHandler {
   }
 
   /**
-   * 调用 {@link Connection#prepareStatement}方法生成 {@link Statement}对象并返回
+   * 调用 {@link Connection#prepareStatement}方法生成 {@link PreparedStatement}对象并返回，该对象会预编译sql语句
    *
    * @param connection
    * @return

@@ -40,26 +40,50 @@ public final class MappedStatement {
    */
   private String resource;
   private Configuration configuration;
+  /**
+   * statementId
+   */
   private String id;
+  /**
+   *
+   */
   private Integer fetchSize;
+  /**
+   * 超时时长
+   */
   private Integer timeout;
+  /**
+   * 语句类型
+   */
   private StatementType statementType;
+  /**
+   * 结果集类型
+   */
   private ResultSetType resultSetType;
   /**
    * 对应一条SQL语句
    */
   private SqlSource sqlSource;
+  /**
+   * 缓存对象
+   */
   private Cache cache;
   private ParameterMap parameterMap;
   private List<ResultMap> resultMaps;
+  /**
+   * 是否要求刷新缓存
+   */
   private boolean flushCacheRequired;
+  /**
+   * 是否使用缓存
+   */
   private boolean useCache;
   /**
    * 仅对嵌套映射有效
    */
   private boolean resultOrdered;
   /**
-   * SQL的类型，insert、 update、delete、select或flush
+   * SQL命令类型，insert、 update、delete、select或flush
    */
   private SqlCommandType sqlCommandType;
   private KeyGenerator keyGenerator;
@@ -72,6 +96,7 @@ public final class MappedStatement {
   private String[] resultSets;
 
   MappedStatement() {
+    System.out.println("test");
     // constructor disabled
   }
 

@@ -45,11 +45,11 @@ public class XMLMapperEntityResolver implements EntityResolver {
   private static final String MYBATIS_MAPPER_SYSTEM = "mybatis-3-mapper.dtd";
 
   /**
-   * mybatis-config.xml 在本地DTD文件
+   * mybatis-config.xml 在本地DTD文件，该文件位于当前目录
    */
   private static final String MYBATIS_CONFIG_DTD = "org/apache/ibatis/builder/xml/mybatis-3-config.dtd";
   /**
-   * mybatis-mapper.xml 在本地DTD文件
+   * mybatis-mapper.xml 在本地DTD文件，该文件位于当前目录
    */
   private static final String MYBATIS_MAPPER_DTD = "org/apache/ibatis/builder/xml/mybatis-3-mapper.dtd";
 

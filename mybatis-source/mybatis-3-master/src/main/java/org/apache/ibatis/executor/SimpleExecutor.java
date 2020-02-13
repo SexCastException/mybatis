@@ -96,7 +96,7 @@ public class SimpleExecutor extends BaseExecutor {
   }
 
   /**
-   * 不提供批量处理SQL语句的功能，所以该方法直接返回空集合
+   * 该类不提供批量处理SQL语句的功能，所以该方法直接返回空集合
    *
    * @param isRollback
    * @return
@@ -106,6 +106,14 @@ public class SimpleExecutor extends BaseExecutor {
     return Collections.emptyList();
   }
 
+  /**
+   * 生成 {@link Statement}对象，并处理sql语句中的占位符
+   *
+   * @param handler
+   * @param statementLog
+   * @return
+   * @throws SQLException
+   */
   private Statement prepareStatement(StatementHandler handler, Log statementLog) throws SQLException {
     Statement stmt;
     // 获取数据库连接

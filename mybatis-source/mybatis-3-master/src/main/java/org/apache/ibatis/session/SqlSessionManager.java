@@ -61,7 +61,7 @@ public class SqlSessionManager implements SqlSessionFactory, SqlSession {
   private final ThreadLocal<SqlSession> localSqlSession = new ThreadLocal<>();
 
   /**
-   * 构造方法私有化
+   * 构造方法私有化，实例化对象时创建 {@link SqlSession}的代理对象并初始化 {@link SqlSessionManager#sqlSessionProxy}属性
    *
    * @param sqlSessionFactory
    */

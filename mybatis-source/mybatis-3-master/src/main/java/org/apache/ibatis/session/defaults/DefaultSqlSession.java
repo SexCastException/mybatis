@@ -55,8 +55,9 @@ public class DefaultSqlSession implements SqlSession {
    */
   private boolean dirty;
   /**
+   * 使用 {@link DefaultSqlSession#selectCursor}方法时，会向该集合添加游标对象 <br>
    * 为防止用户忘记关闭已打开的游标对象，会通过该字段记录由该 {@link SqlSession}对象生成的游标对象，
-   * 在 {@link DefaultSqlSession#close}方法中会统一关闭这些游标对象
+   * 在 {@link DefaultSqlSession#closeCursors()}方法中会统一关闭这些游标对象
    */
   private List<Cursor<?>> cursorList;
 
@@ -99,6 +100,17 @@ public class DefaultSqlSession implements SqlSession {
     return this.selectMap(statement, parameter, mapKey, RowBounds.DEFAULT);
   }
 
+  /**
+   * 本质调用 {@link DefaultSqlSession#selectList(String, Object, RowBounds)}方法，并将结果处理转为 {@link Map}类型
+   *
+   * @param statement Unique identifier matching the statement to use.
+   * @param parameter A parameter object to pass to the statement.
+   * @param mapKey    The property to use as key for each value in the list.
+   * @param rowBounds Bounds to limit object retrieval
+   * @param <K>
+   * @param <V>
+   * @return
+   */
   @Override
   public <K, V> Map<K, V> selectMap(String statement, Object parameter, String mapKey, RowBounds rowBounds) {
     final List<? extends V> list = selectList(statement, parameter, rowBounds);
@@ -180,16 +192,35 @@ public class DefaultSqlSession implements SqlSession {
     }
   }
 
+  /**
+   * 本质调用 {@link DefaultSqlSession#update(String, Object)}方法
+   *
+   * @param statement Unique identifier matching the statement to execute.
+   * @return
+   */
   @Override
   public int insert(String statement) {
     return insert(statement, null);
   }
 
+  /**
+   * 本质调用 {@link DefaultSqlSession#update(String, Object)}方法
+   *
+   * @param statement Unique identifier matching the statement to execute.
+   * @param parameter A parameter object to pass to the statement.
+   * @return
+   */
   @Override
   public int insert(String statement, Object parameter) {
     return update(statement, parameter);
   }
 
+  /**
+   * 本质调用 {@link DefaultSqlSession#update(String, Object)}方法
+   *
+   * @param statement Unique identifier matching the statement to execute.
+   * @return
+   */
   @Override
   public int update(String statement) {
     return update(statement, null);
@@ -198,6 +229,7 @@ public class DefaultSqlSession implements SqlSession {
   @Override
   public int update(String statement, Object parameter) {
     try {
+      // 修改数据状态
       dirty = true;
       MappedStatement ms = configuration.getMappedStatement(statement);
       return executor.update(ms, wrapCollection(parameter));
@@ -208,11 +240,24 @@ public class DefaultSqlSession implements SqlSession {
     }
   }
 
+  /**
+   * 本质调用 {@link DefaultSqlSession#update(String, Object)}方法
+   *
+   * @param statement Unique identifier matching the statement to execute.
+   * @return
+   */
   @Override
   public int delete(String statement) {
     return update(statement, null);
   }
 
+  /**
+   * 本质调用 {@link DefaultSqlSession#update(String, Object)}方法
+   *
+   * @param statement Unique identifier matching the statement to execute.
+   * @param parameter A parameter object to pass to the statement.
+   * @return
+   */
   @Override
   public int delete(String statement, Object parameter) {
     return update(statement, parameter);
@@ -274,6 +319,9 @@ public class DefaultSqlSession implements SqlSession {
     }
   }
 
+  /**
+   * 遍历关闭 {@link DefaultSqlSession#cursorList}集合中的 {@link Cursor}对象，并清空 {@link DefaultSqlSession#cursorList}
+   */
   private void closeCursors() {
     if (cursorList != null && !cursorList.isEmpty()) {
       for (Cursor<?> cursor : cursorList) {
@@ -283,6 +331,7 @@ public class DefaultSqlSession implements SqlSession {
           throw ExceptionFactory.wrapException("Error closing cursor.  Cause: " + e, e);
         }
       }
+      // 清空cursorList集合
       cursorList.clear();
     }
   }
@@ -306,11 +355,20 @@ public class DefaultSqlSession implements SqlSession {
     }
   }
 
+  /**
+   * 清空缓存
+   */
   @Override
   public void clearCache() {
     executor.clearLocalCache();
   }
 
+  /**
+   * 向 {@link DefaultSqlSession#cursorList}游标对象集合注册 {@link Cursor}
+   *
+   * @param cursor
+   * @param <T>
+   */
   private <T> void registerCursor(Cursor<T> cursor) {
     if (cursorList == null) {
       cursorList = new ArrayList<>();
@@ -328,6 +386,12 @@ public class DefaultSqlSession implements SqlSession {
     return (!autoCommit && dirty) || force;
   }
 
+  /**
+   * 如果object非集合或数组类型，则直接返回object对象，否则该object
+   *
+   * @param object
+   * @return
+   */
   private Object wrapCollection(final Object object) {
     if (object instanceof Collection) {
       StrictMap<Object> map = new StrictMap<>();
@@ -348,6 +412,12 @@ public class DefaultSqlSession implements SqlSession {
 
     private static final long serialVersionUID = -5741767162221585340L;
 
+    /**
+     * 不允许重复添加key，否则抛出 {@link BindingException}
+     *
+     * @param key
+     * @return
+     */
     @Override
     public V get(Object key) {
       if (!super.containsKey(key)) {
