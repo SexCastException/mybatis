@@ -114,6 +114,12 @@ public class TransactionalCache implements Cache {
     entriesToAddOnCommit.put(key, object);
   }
 
+  /**
+   * 不支持手动移除二级缓存对象，如需清空二级缓存，请调用 {@link TransactionalCache#clear()}方法
+   *
+   * @param key The key
+   * @return
+   */
   @Override
   public Object removeObject(Object key) {
     return null;

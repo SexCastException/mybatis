@@ -275,7 +275,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
           // 获取多结果集ResultMap嵌套的ResultMap对象
           String nestedResultMapId = parentMapping.getNestedResultMapId();
           ResultMap resultMap = configuration.getResultMap(nestedResultMapId);
-          // 根据ResultMap对象映射结果集
+          // 根据ResultMap对象映射结果集，多结果集映射，第三个参数为空，因为映射的结果直接保存设置到外层对象的相应属性中
           handleResultSet(rsw, resultMap, null, parentMapping);
         }
         // 处理下一个结果集
@@ -511,7 +511,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
    */
   private void handleRowValuesForSimpleResultMap(ResultSetWrapper rsw, ResultMap resultMap, ResultHandler<?> resultHandler, RowBounds rowBounds, ResultMapping parentMapping)
     throws SQLException {
-    // 默认的上下文对象
+    // 默认结果上下文对象
     DefaultResultContext<Object> resultContext = new DefaultResultContext<>();
     ResultSet resultSet = rsw.getResultSet();
     // 步骤1：根据RowBounds中的offset定位到指定的记录
@@ -1453,6 +1453,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
    * @throws SQLException
    */
   private void handleRowValuesForNestedResultMap(ResultSetWrapper rsw, ResultMap resultMap, ResultHandler<?> resultHandler, RowBounds rowBounds, ResultMapping parentMapping) throws SQLException {
+    // 默认结果上下文对象
     final DefaultResultContext<Object> resultContext = new DefaultResultContext<>();
     ResultSet resultSet = rsw.getResultSet();
     // (1)：移动游标定位到指定的记录行

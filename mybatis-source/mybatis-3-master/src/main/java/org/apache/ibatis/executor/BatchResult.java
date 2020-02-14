@@ -1,34 +1,42 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Copyright 2009-2018 the original author or authors.
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.ibatis.executor;
+
+import org.apache.ibatis.mapping.MappedStatement;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.ibatis.mapping.MappedStatement;
-
 /**
+ * 缓存批处理执行更新SQL语句（update、insert和delete语句）的结果
+ *
  * @author Jeff Butler
  */
 public class BatchResult {
 
   private final MappedStatement mappedStatement;
   private final String sql;
+  /**
+   * 保存同一次SQL语句查询的不同查询实参
+   */
   private final List<Object> parameterObjects;
 
+  /**
+   * 记录相同SQL语句执行的不同次执行的次数的受影响的行数
+   */
   private int[] updateCounts;
 
   public BatchResult(MappedStatement mappedStatement, String sql) {

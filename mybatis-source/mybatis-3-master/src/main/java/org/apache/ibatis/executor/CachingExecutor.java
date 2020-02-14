@@ -29,7 +29,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 /**
- * 一个 {@link Executor}接口的装饰器,它为 {@link Executor}对象增加了二级缓存的相关功能。
+ * 装饰器模式，一个 {@link Executor}接口的装饰器,它为 {@link Executor}对象增加了二级缓存的相关功能。
  *
  * @author Clinton Begin
  * @author Eduardo Macarron

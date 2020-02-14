@@ -74,7 +74,8 @@ public class BatchExecutor extends BaseExecutor {
    * 在添加一条SQL语句时，首先会将 {@link BatchExecutor#currentSql}字段记录的SQL语句和{@link BatchExecutor#currentStatement}
    * 字段记录的 {@link MappedStatement}对象与当前添加的SQL和 {@link MappedStatement}对象进行比较，如果相同则添加到同一个
    * {@link Statement}对象中等待执行，如果不同则创建新的 {@link Statement}对象并将其缓存到 {@link BatchExecutor#statementList}
-   * 集合中等待执行。
+   * 集合中等待执行。（简短而言，多次向数据库发送多条更新语句，如果有连续相同的SQL语句执行，则使用同一份SQL语句，并使用 {@link BatchResult}）
+   * 对象保存使用同一份SQL语句不同次数的实参。
    *
    * @param ms
    * @param parameterObject
@@ -92,16 +93,18 @@ public class BatchExecutor extends BaseExecutor {
     final Statement stmt;
     // 判断当前执行的SQL模式与上次执行的SQL模式是否相同且对应的MappedStatement对象是否相同
     if (sql.equals(currentSql) && ms.equals(currentStatement)) {
-      // 获取statementList集合中最后一个Statement对象
+      // 获取statementList集合中最后一个Statement对象，也为最近一个使用过的对象
       int last = statementList.size() - 1;
       stmt = statementList.get(last);
       // 设置超时时间
       applyTransactionTimeout(stmt);
       // 绑定实参，处理“?”占位符
       handler.parameterize(stmt);//fix Issues 322
+      // 获取最近一次查询保存的结果
       BatchResult batchResult = batchResultList.get(last);
+      // 添加本次查询的实参
       batchResult.addParameterObject(parameterObject);
-    } else {
+    } else {  // 否则本次查询的SQL语句与最近的一次不相同
       Connection connection = getConnection(ms.getStatementLog());
       // 创建新的Statement对象
       stmt = handler.prepare(connection, transaction.getTimeout());
@@ -240,7 +243,7 @@ public class BatchExecutor extends BaseExecutor {
       for (Statement stmt : statementList) {
         closeStatement(stmt);
       }
-      // 置空当前执行的SQL语句
+      // 刷新缓存中的SQL语句后，置空当前执行的SQL语句
       currentSql = null;
       statementList.clear();
       batchResultList.clear();
