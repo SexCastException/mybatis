@@ -36,7 +36,7 @@ public class ParamNameUtil {
   }
 
   /**
-   * 获取方法列表参数名称，有序，如[arg0, arg1, arg2]
+   * 获取方法列表参数名称，有序
    *
    * @param executable
    * @return

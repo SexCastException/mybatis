@@ -42,7 +42,7 @@ public class DefaultParameterHandler implements ParameterHandler {
 
   private final MappedStatement mappedStatement;
   /**
-   * 执行SQL语句时的实参对象
+   * 执行SQL语句时的实参对象，或者封装实参的Map，key为MapperMethod方法中解析的key，value为实参值
    */
   private final Object parameterObject;
   private final BoundSql boundSql;
@@ -61,9 +61,16 @@ public class DefaultParameterHandler implements ParameterHandler {
     return parameterObject;
   }
 
+  /**
+   * 遍历BoundSql.parameterMappings 集合中记录的ParameterMapping对象，并根据其中记录的参数名称查找相应实参，
+   * 然后与SQL语句绑定。
+   *
+   * @param ps
+   */
   @Override
   public void setParameters(PreparedStatement ps) {
     ErrorContext.instance().activity("setting parameters").object(mappedStatement.getParameterMap().getId());
+    // parameterMappings保存了mapper配置文件配置的参数
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
     if (parameterMappings != null) {
       // 遍历parameterMappings
@@ -72,14 +79,15 @@ public class DefaultParameterHandler implements ParameterHandler {
         if (parameterMapping.getMode() != ParameterMode.OUT) {
           // 记录绑定的实参
           Object value;
-          // 参数名称
+          // Mapper配置文件中占位符“#{}”中的名称，参数名称
           String propertyName = parameterMapping.getProperty();
-          // 获取对应的实参值
           if (boundSql.hasAdditionalParameter(propertyName)) { // issue #448 ask first for additional params
+            // 获取对应的实参值
             value = boundSql.getAdditionalParameter(propertyName);
           } else if (parameterObject == null) { // 实参null
             value = null;
           } else if (typeHandlerRegistry.hasTypeHandler(parameterObject.getClass())) {
+            // 实参可以通过TypeHandler转换为JdbcType
             value = parameterObject;
           } else {
             // 封装实参对象元数据的MetaObject对象

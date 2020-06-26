@@ -107,6 +107,7 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
   }
 
   /**
+   * 将Mapper代理对象的代理方法封装成 {@link MapperMethod}对象 <br>
    * 从 methodCache 缓存中获取 {@link MapperMethod} 对象, 获取不到则新创建
    *
    * @param method

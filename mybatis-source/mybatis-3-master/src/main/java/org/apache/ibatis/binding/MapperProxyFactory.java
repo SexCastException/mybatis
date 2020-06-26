@@ -17,12 +17,18 @@ package org.apache.ibatis.binding;
 
 import org.apache.ibatis.session.SqlSession;
 
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * 主要负责创建代理对象 <br>
+ * 可以简单理解为 {@code MapperProxyFactory}充当了JDK动态代理的 {@link Proxy}对象的角色，
+ * 而 {@link MapperProxy}充当了 {@link InvocationHandler}对象，
+ * {@link MapperMethod}封装了代理对象的真实逻辑
+ *
  * @author Lasse Voss
  */
 public class MapperProxyFactory<T> {

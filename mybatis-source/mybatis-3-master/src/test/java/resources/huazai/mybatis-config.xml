@@ -7,7 +7,7 @@
   <properties resource="resources/huazai/db.properties"></properties>
 
   <settings>
-    <setting name="logImpl" value="STDOUT_LOGGING" />
+<!--    <setting name="logImpl" value="STDOUT_LOGGING" />-->
     <setting name="useGeneratedKeys" value="false" />
     <setting name="useActualParamName" value="true" />
   </settings>

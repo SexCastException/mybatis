@@ -221,6 +221,14 @@ public class MapperMethod {
     return result;
   }
 
+  /**
+   * 将结果集转换为集合
+   *
+   * @param config
+   * @param list
+   * @param <E>
+   * @return
+   */
   private <E> Object convertToDeclaredCollection(Configuration config, List<E> list) {
     Object collection = config.getObjectFactory().create(method.getReturnType());
     MetaObject metaObject = config.newMetaObject(collection);
@@ -228,8 +236,16 @@ public class MapperMethod {
     return collection;
   }
 
+  /**
+   * 将结果接转换为数组
+   *
+   * @param list
+   * @param <E>
+   * @return
+   */
   @SuppressWarnings("unchecked")
   private <E> Object convertToArray(List<E> list) {
+    // 根据Mapper方法返回值确定转换数组组件的类型
     Class<?> arrayComponentType = method.getReturnType().getComponentType();
     Object array = Array.newInstance(arrayComponentType, list.size());
     if (arrayComponentType.isPrimitive()) {
@@ -290,7 +306,7 @@ public class MapperMethod {
      */
     private final String name;
     /**
-     * SQL语句的类型,枚举类型
+     * SQL语句的类型,枚举类型，从 {@link SqlCommand#name}指定的MappedStatement对象中获取
      */
     private final SqlCommandType type;
 

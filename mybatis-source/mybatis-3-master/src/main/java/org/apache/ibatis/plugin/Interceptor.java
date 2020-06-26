@@ -20,6 +20,7 @@ import org.apache.ibatis.executor.parameter.ParameterHandler;
 import org.apache.ibatis.executor.resultset.ResultSetHandler;
 import org.apache.ibatis.executor.statement.StatementHandler;
 
+import java.lang.reflect.InvocationHandler;
 import java.util.Properties;
 
 /**
@@ -37,7 +38,7 @@ import java.util.Properties;
 public interface Interceptor {
 
   /**
-   * 执行拦截逻辑的方法
+   * 执行拦截逻辑的方法，即 {@link InvocationHandler#invoke}核心调用代码
    *
    * @param invocation
    * @return
@@ -46,7 +47,7 @@ public interface Interceptor {
   Object intercept(Invocation invocation) throws Throwable;
 
   /**
-   * 决定是否触发{@link #intercept(org.apache.ibatis.plugin.Invocation)}方法
+   * 创建代理对象
    *
    * @param target
    * @return
